@@ -1,0 +1,251 @@
+========================================================================
+MingCare Supabase — Structure / RLS / Triggers / Enums  (EN ↔ 中文參考)
+Updated: 2025-08-13
+========================================================================
+
+# 命名一致性（關鍵對照）
+id = 系統 ID
+created_at = 建立時間
+updated_at = 更新時間
+service_date = 服務日期
+customer_id = 項目編號
+customer_name = 客戶姓名
+phone = 客戶電話
+service_address = 服務地址
+start_time = 開始時間
+end_time = 結束時間
+service_hours = 服務時數
+care_staff_name = 護理人員
+service_fee = 服務費用
+staff_salary = 護理人員工資
+hourly_rate = 每小時收費
+hourly_salary = 每小時工資
+service_type = 服務類型
+project_category = 所屬項目
+project_manager = 項目經理 / 負責同事（依表格語境）
+
+staff_id = 員工編號
+name_chinese = 中文姓名
+name_english = 英文姓名
+email = 電郵
+hkid = 身份證號碼
+dob = 出生日期
+gender = 性別
+nationality = 國籍
+preferred_area = 偏好工作區域
+emergency_contact = 緊急聯絡人
+emergency_contact_phone = 緊急聯絡電話
+language (text[]) = 語言（多選）
+job_position (text[]) = 申請職位（多選）
+experience_years = 年資（年）
+covid_vaccine = 新冠疫苗
+referrer = 介紹人姓名
+referrer_phone = 介紹人電話
+company_name = 公司名稱（前雇主）
+company_position = 職位（前雇主）
+employment_period = 任職期間
+main_duties = 主要職責
+hkid_copy_url = 身份證副本連結
+certificate_1..5 = 證書1..5（連結）
+scrc_status = SCRC（文件連結）
+contract_status = 合約狀態
+
+customer_type = 分類
+voucher_number = 社區券號碼
+charity_support = 是否需要慈善機構贊助
+district = 客戶地區
+age = 年齡
+health_status = 身體狀況
+introducer = 介紹人
+voucher_application_status = 社區券申請狀況
+lds_status = LDS 號碼狀況
+home_visit_status = 公司家訪狀況
+copay_level = 自付比例等級
+
+------------------------------------------------------------------------
+TABLES（表結構）
+
+[public.billing_salary_data]
+- id (uuid, NOT NULL, default uuid_generate_v4()) = 系統 ID
+- service_date (date) = 服務日期
+- customer_id (text) = 項目編號
+- customer_name (text) = 客戶姓名
+- phone (text) = 客戶電話
+- service_address (text) = 服務地址
+- start_time (text) = 開始時間
+- end_time (text) = 結束時間
+- service_hours (numeric) = 服務時數
+- care_staff_name (text) = 護理人員
+- service_fee (numeric) = 服務費用
+- staff_salary (numeric) = 護理人員工資
+- hourly_rate (numeric) = 每小時收費
+- hourly_salary (numeric) = 每小時工資
+- service_type (service_type_enum) = 服務類型
+- project_category (project_category_enum) = 所屬項目
+- project_manager (project_manager_enum) = 項目經理
+- created_at (timestamptz, default now()) = 建立時間
+- updated_at (timestamptz, default now()) = 更新時間
+
+[public.care_staff_profiles]
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- staff_id (text) = 員工編號
+- name_chinese (text) = 中文姓名
+- name_english (text) = 英文姓名
+- phone (text) = 客戶電話
+- email (text) = 電郵
+- hkid (text) = 身份證號碼
+- dob (date) = 出生日期
+- gender (gender_enum) = 性別
+- nationality (text) = 國籍
+- preferred_area (preferred_area_enum) = 偏好工作區域
+- emergency_contact (text) = 緊急聯絡人
+- emergency_contact_phone (text) = 緊急聯絡電話
+- language (text[]) = 語言（多選）
+- job_position (text[]) = 申請職位（多選）
+- experience_years (text) = 年資（年）
+- covid_vaccine (covid_vaccine_enum) = 新冠疫苗
+- referrer (text) = 介紹人姓名
+- referrer_phone (text) = 介紹人電話
+- company_name (text) = 公司名稱（前雇主）
+- company_position (text) = 職位（前雇主）
+- employment_period (text) = 任職期間
+- main_duties (text) = 主要職責
+- hkid_copy_url (text) = 身份證副本連結
+- certificate_1..5 (text) = 證書連結 1..5
+- scrc_status (text) = SCRC（文件連結）
+- contract_status (contract_status_enum) = 合約狀態
+- created_at (timestamptz, default now()) = 建立時間
+
+[public.customer_personal_data]
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- customer_id (text) = 項目編號
+- customer_type (customer_type_enum, NOT NULL) = 分類
+- voucher_number (text) = 社區券號碼
+- charity_support (boolean) = 是否需要慈善機構贊助
+- customer_name (text, NOT NULL) = 客戶姓名
+- phone (text) = 客戶電話
+- district (district_enum) = 客戶地區
+- service_address (text, NOT NULL) = 服務地址
+- hkid (text) = 身份證號碼
+- dob (date) = 出生日期
+- age (integer) = 年齡
+- health_status (health_status_enum) = 身體狀況
+- created_at (timestamptz, default now()) = 建立時間
+- introducer (introducer_enum) = 介紹人
+- voucher_application_status (voucher_application_status_enum) = 社區券申請狀況
+- lds_status (lds_status_enum) = LDS 號碼狀況
+- home_visit_status (home_visit_status_enum) = 公司家訪狀況
+- project_manager (staff_owner_enum) = 負責同事
+- copay_level (copay_level_enum) = 自付比例等級
+
+------------------------------------------------------------------------
+ENUM TYPES（列舉型別）
+contract_status_enum = { 同意, 不同意 }
+copay_level_enum = { 5%, 8%, 12%, 16%, 25%, 40% }
+covid_vaccine_enum = { 1針, 2針, 3針, 4針, 無接種, Other }
+customer_type_enum = { 社區券客戶, 明家街客 }
+district_enum = { 中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區, 屯門區, 東區, 沙田區, 油尖旺區, 深水埗區, 灣仔區, 荃灣區, 葵青區, 西貢區, 觀塘區, 離島區, 黃大仙區, 未分類（醫院,院舍) }
+gender_enum = { 男, 女 }
+health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
+home_visit_status_enum = { 已完成, 未完成 }
+introducer_enum = { Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生 }
+lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }
+preferred_area_enum = { 所有區域, 灣仔區, 中西區, 東區, 南區, 油尖旺區, 深水埗區, 九龍城區, 黃大仙區, 觀塘區, 西貢區, 沙田區, 大埔區, 北區, 荃灣區, 屯門區, 元朗區, 葵青區, 離島區 }
+project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
+project_manager_enum = { Candy Ho, Joe Cheung, Kanas Leung }
+service_type_enum = {
+  ES-護送服務(陪診),
+  HC-家居服務,
+  NC-護理服務(專業⼈員),
+  PC-到⼾看顧(輔助⼈員),
+  RA-復康運動(輔助⼈員),
+  RT-復康運動(OTA輔助⼈員),
+  RT-復康運動(專業⼈員),
+  上門評估服務, 傷口護理, 免費服務體驗
+}
+voucher_application_status_enum = { 已經持有, 申請中 }
+staff_owner_enum = { Kanas Leung, Joe Cheung, Candy Ho }
+
+------------------------------------------------------------------------
+RLS POLICIES（行級安全性）— 建議生產環境配置
+
+[public.billing_salary_data] 
+🔒 建議權限配置：
+- SELECT: 僅限已認證用戶 (auth.role() = 'authenticated')
+- INSERT: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin')
+- UPDATE: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin') 
+- DELETE: 僅限超級管理員 (auth.jwt() ->> 'role' = 'super_admin')
+
+⚠️ 當前設定：對 public 過寬，需收斂至上述建議
+
+[public.care_staff_profiles]
+🔒 建議權限配置：
+- SELECT: 已認證用戶可讀取 (auth.role() = 'authenticated')
+- INSERT: 管理員和HR角色 (auth.jwt() ->> 'role' IN ('admin', 'hr'))
+- UPDATE: 管理員、HR或本人 (auth.jwt() ->> 'role' IN ('admin', 'hr') OR auth.uid()::text = user_id)
+- DELETE: 僅限超級管理員 + 二次確認
+
+🔧 Storage 權限 (care-staff-files bucket)：
+- 上載: 已認證用戶限制檔案類型(.jpg,.png,.pdf) 最大10MB
+- 讀取: 簽名URL，24小時有效期
+- 刪除: 僅限管理員角色
+
+⚠️ 當前設定：允許 public 存取，需收斂至上述建議
+
+[public.customer_personal_data]
+🔒 建議權限配置：
+- SELECT: 已認證用戶 (auth.role() = 'authenticated')
+- INSERT: 管理員和業務角色 (auth.jwt() ->> 'role' IN ('admin', 'business'))
+- UPDATE: 管理員、業務或負責同事 (auth.jwt() ->> 'role' IN ('admin', 'business') OR auth.jwt() ->> 'email' = project_manager)
+- DELETE: 僅限超級管理員 + 軟刪除機制
+
+🔧 生產環境實施步驟：
+1. 建立用戶角色表 (user_roles) 
+2. 實作 JWT Claims 更新
+3. 段階式收斂權限 (先記錄，再限制)
+4. 實作審計日誌 (audit_logs)
+
+------------------------------------------------------------------------
+TRIGGERS（觸發器）
+[public.billing_salary_data] → update_billing_salary_data_updated_at()
+[public.care_staff_profiles] → auto_generate_staff_id()
+[public.customer_personal_data] → update_age_from_dob()
+
+------------------------------------------------------------------------
+OPTION TABLES（下拉 / 多選來源）
+
+[public.job_position_options] → 申請職位候選值來源
+| ID | Label |
+|----|--------------------------------|
+| 1  | 陪診員 (Medical Escort)        |
+| 2  | 居家照顧員(PCW)                |
+| 3  | 家務助理(Housekeeper)          |
+| 4  | 醫護支援人員(CRSW)             |
+| 5  | 保健員(HCW)                    |
+| 6  | 登記護士(EN)                   |
+| 7  | 註冊護士(RN)                   |
+| 8  | 護士學生                       |
+| 9  | 中國護士                       |
+| 10 | 註冊營養師(Dietitian)          |
+| 11 | 職業治療師(OT)                 |
+| 12 | 言語治療師(ST)                 |
+| 13 | 物理治療師(PT)                 |
+| 14 | 醫生(Doctor)                   |
+| 15 | 抽血員(Phlebotomist)           |
+| 16 | 物理治療助理 (PTA)             |
+| 17 | 職業治療助理 (OTA)             |
+
+[public.language_options] → 語言候選值來源
+| ID | Label   |
+|----|---------|
+| 1  | 廣東話  |
+| 2  | 英文    |
+| 3  | 普通話  |
+| 4  | 福建話  |
+| 5  | 潮州話  |
+| 6  | 客家話  |
+| 7  | 上海話  |
+| 8  | 四邑話  |
+
+------------------------------------------------------------------------
+（完）
