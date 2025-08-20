@@ -6,7 +6,11 @@ const nextConfig = {
     unoptimized: true
   },
   basePath: '/mingcare-intranet',
-  assetPrefix: '/mingcare-intranet/'
+  assetPrefix: '/mingcare-intranet/',
+  // For GitHub Pages static export
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  }
 }
 
 module.exports = nextConfig

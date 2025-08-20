@@ -1,16 +1,16 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/clients/edit-client/edit/page": "app/clients/edit-client/edit/page.js",
   "/api/billing-salary-management/route": "app/api/billing-salary-management/route.js",
   "/api/search-care-staff/route": "app/api/search-care-staff/route.js",
+  "/api/search-customers/route": "app/api/search-customers/route.js",
+  "/clients/new/page": "app/clients/new/page.js",
   "/commissions/page": "app/commissions/page.js",
   "/care-staff/page": "app/care-staff/page.js",
-  "/clients/new/page": "app/clients/new/page.js",
-  "/api/search-customers/route": "app/api/search-customers/route.js",
-  "/clients/page": "app/clients/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/payroll/page": "app/payroll/page.js",
   "/icon.png/route": "app/icon.png/route.js",
   "/page": "app/page.js",
+  "/payroll/page": "app/payroll/page.js",
   "/services/page": "app/services/page.js",
-  "/clients/[id]/edit/page": "app/clients/[id]/edit/page.js"
+  "/clients/page": "app/clients/page.js"
 }
