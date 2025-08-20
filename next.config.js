@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App Router is enabled by default in Next.js 14
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
+  basePath: '/mingcare-intranet',
+  assetPrefix: '/mingcare-intranet/'
 }
 
 module.exports = nextConfig
