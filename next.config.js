@@ -5,8 +5,11 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: '/mingcare-intranet',
-  assetPrefix: '/mingcare-intranet/',
+  // GitHub Pages config - only apply in production
+  ...(process.env.NODE_ENV === 'production' && {
+    basePath: '/mingcare-intranet',
+    assetPrefix: '/mingcare-intranet/',
+  }),
   // For GitHub Pages static export
   experimental: {
     missingSuspenseWithCSRBailout: false,

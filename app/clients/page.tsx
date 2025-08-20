@@ -574,7 +574,7 @@ export default function ClientsPage() {
                         key={customer.id}
                         className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative overflow-hidden transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
-                        onClick={() => router.push(`/clients/edit-client?id=${customer.customer_id || customer.id}`)}
+                        onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                       >
                         {/* Enhanced Customer Type Header Bar */}
                         <div className={`px-3 py-2 md:px-4 md:py-3 text-white font-medium text-xs md:text-sm rounded-t-2xl md:rounded-t-3xl ${
@@ -710,7 +710,7 @@ export default function ClientsPage() {
                           <tr 
                             key={customer.id} 
                             className="hover:bg-bg-tertiary transition-colors cursor-pointer"
-                            onClick={() => router.push(`/clients/edit-client?id=${customer.customer_id || customer.id}`)}
+                            onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
