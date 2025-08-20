@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CareStaffManagementService } from '../../services/care-staff-management'
@@ -35,6 +36,8 @@ export default function CareStaffPage() {
   const [searchSuggestions, setSearchSuggestions] = useState<CareStaffSearchSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [mounted, setMounted] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(20)
@@ -58,6 +61,26 @@ export default function CareStaffPage() {
   const [optionsLoading, setOptionsLoading] = useState(false)
   
   const router = useRouter()
+
+  // 確保只在客戶端渲染
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 計算下拉選單位置
+  const updateDropdownPosition = () => {
+    if (!searchInputRef.current) return
+
+    const rect = searchInputRef.current.getBoundingClientRect()
+    const scrollY = window.scrollY
+    const scrollX = window.scrollX
+
+    setDropdownPosition({
+      top: rect.bottom + scrollY + 2,
+      left: rect.left + scrollX,
+      width: rect.width
+    })
+  }
 
   // 職位顏色配置
   const getJobPositionColor = (position: string) => {
@@ -112,6 +135,22 @@ export default function CareStaffPage() {
     setSelectedSuggestionIndex(-1)
   }, [searchSuggestions])
 
+  // 監聽位置變化
+  useEffect(() => {
+    if (!showSuggestions) return
+
+    const handleScroll = () => updateDropdownPosition()
+    const handleResize = () => updateDropdownPosition()
+
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [showSuggestions])
+
   // 載入選項數據
   const loadOptions = async () => {
     try {
@@ -164,6 +203,7 @@ export default function CareStaffPage() {
       console.log('搜尋建議結果:', suggestions.length, '筆')
       setSearchSuggestions(suggestions)
       
+      updateDropdownPosition() // 更新位置
       // 確保有結果時顯示建議，沒有結果時也要更新狀態
       setShowSuggestions(true) // 總是顯示，即使沒有結果也要顯示空狀態
     } catch (error) {
@@ -515,32 +555,34 @@ export default function CareStaffPage() {
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      {/* Enhanced Header */}
-      <div className="bg-white border-b border-border-light sticky top-0 z-40">
-        <div className="container-apple py-6">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h1 className="text-apple-title text-text-primary mb-2 fade-in-apple">
-                護理人員管理
-              </h1>
-              <p className="text-apple-body text-text-secondary fade-in-apple" style={{ animationDelay: '0.1s' }}>
-                管理護理人員資料和文件
-              </p>
+      {/* Header */}
+      <header className="card-apple border-b border-border-light fade-in-apple sticky top-0 z-10">
+        <div className="px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center py-3 sm:py-4 lg:py-6">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-text-primary mb-1 truncate">護理人員管理</h1>
+              <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">管理護理人員資料和文件</p>
             </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-apple-secondary text-xs px-3 py-2 ml-3 flex-shrink-0"
+            >
+              返回
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <main className="container-apple py-6">
+      <main className="px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-6">
         {/* Search and Filter Section */}
-        <div className="card-apple mb-6 fade-in-apple" style={{ animationDelay: '0.1s' }}>
-          <div className="card-apple-content">
+        <div className="card-apple mb-3 sm:mb-4 lg:mb-6 fade-in-apple" style={{ animationDelay: '0.1s' }}>
+          <div className="card-apple-content p-3 sm:p-4 lg:p-6">
             {/* Enhanced Search Bar */}
             {/* Search Bar */}
             <div className="relative">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                  <svg className="h-5 w-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -553,6 +595,7 @@ export default function CareStaffPage() {
                   onCompositionEnd={handleCompositionEnd}
                   onKeyDown={handleKeyDown}
                   onFocus={() => {
+                    updateDropdownPosition() // 更新位置
                     // 根據新的搜尋邏輯判斷是否顯示建議
                     const shouldShowSuggestions = (
                       searchQuery.length >= 1 && searchSuggestions.length > 0
@@ -568,15 +611,15 @@ export default function CareStaffPage() {
                     }, 150)
                   }}
                   placeholder="智慧搜尋：姓名1字/員工編號3字/電話4字..."
-                  className="w-full pl-12 pr-12 py-3 border border-border-light rounded-apple-pill bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200"
+                  className="w-full pl-8 sm:pl-12 pr-8 sm:pr-12 py-2 sm:py-3 border border-border-light rounded-apple-pill bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                  {searchQuery && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4">{
+                  searchQuery && (
                     <button
                       onClick={handleClearSearch}
                       className="p-1 text-text-tertiary hover:text-text-secondary transition-colors rounded-full hover:bg-bg-tertiary"
                     >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -584,17 +627,20 @@ export default function CareStaffPage() {
                 </div>
               </div>
 
-              {/* Search Suggestions */}
-              {showSuggestions && searchQuery.length >= 1 && (
+              {/* Search Suggestions Portal */}
+              {mounted && showSuggestions && searchQuery.length >= 1 && createPortal(
                 <div 
-                  className="absolute top-full left-0 right-0 bg-white border border-border-light rounded-apple-sm shadow-apple-card mt-2 max-h-80 overflow-y-auto z-50 scrollbar-thin scrollbar-thumb-bg-tertiary scrollbar-track-transparent"
-                  onMouseDown={(e) => e.preventDefault()} // 防止 blur 事件觸發
+                  className="fixed bg-white border border-border-light rounded-apple-sm shadow-apple-card max-h-80 overflow-y-auto z-[9999] scrollbar-thin scrollbar-thumb-bg-tertiary scrollbar-track-transparent"
                   style={{
+                    top: `${dropdownPosition.top}px`,
+                    left: `${dropdownPosition.left}px`,
+                    width: `${dropdownPosition.width}px`,
+                    minWidth: '300px',
                     scrollBehavior: 'smooth',
-                    // 自定義滾動條樣式
                     scrollbarWidth: 'thin',
                     scrollbarColor: 'rgb(156 163 175) transparent'
                   }}
+                  onMouseDown={(e) => e.preventDefault()} // 防止 blur 事件觸發
                 >
                   {searchSuggestions.length > 0 ? (
                     <>
@@ -674,12 +720,13 @@ export default function CareStaffPage() {
                       <div className="text-xs">請嘗試其他關鍵字</div>
                     </div>
                   )}
-                </div>
+                </div>,
+                document.body
               )}
             </div>            {/* Filter Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div className="form-group-apple">
-                <label className="form-label-apple">性別</label>
+                <label className="form-label-apple text-sm sm:text-base">性別</label>
                 <select 
                   value={filters.gender || ''}
                   onChange={(e) => {
@@ -693,7 +740,7 @@ export default function CareStaffPage() {
                     setCurrentPage(1)
                     loadCareStaff(newFilters, 1)
                   }}
-                  className="form-select-apple"
+                  className="form-select-apple text-sm sm:text-base py-2 sm:py-3"
                 >
                   <option value="">全部性別</option>
                   <option value="男">男性</option>
@@ -701,7 +748,7 @@ export default function CareStaffPage() {
                 </select>
               </div>
               <div className="form-group-apple">
-                <label className="form-label-apple">偏好地區</label>
+                <label className="form-label-apple text-sm sm:text-base">偏好地區</label>
                 <select 
                   value={filters.preferred_area || ''}
                   onChange={(e) => {
@@ -715,7 +762,7 @@ export default function CareStaffPage() {
                     setCurrentPage(1)
                     loadCareStaff(newFilters, 1)
                   }}
-                  className="form-select-apple"
+                  className="form-select-apple text-sm sm:text-base py-2 sm:py-3"
                 >
                   <option value="">全部地區</option>
                   <option value="所有區域">所有區域</option>
@@ -739,8 +786,8 @@ export default function CareStaffPage() {
                   <option value="離島區">離島區</option>
                 </select>
               </div>
-              <div className="form-group-apple">
-                <label className="form-label-apple">職位</label>
+              <div className="form-group-apple sm:col-span-2 lg:col-span-1">
+                <label className="form-label-apple text-sm sm:text-base">職位</label>
                 <select 
                   value={filters.job_position || ''}
                   onChange={(e) => {
@@ -754,7 +801,7 @@ export default function CareStaffPage() {
                     setCurrentPage(1)
                     loadCareStaff(newFilters, 1)
                   }}
-                  className="form-select-apple"
+                  className="form-select-apple text-sm sm:text-base py-2 sm:py-3"
                 >
                   <option value="">全部職位</option>
                   <option value="陪診員 (Medical Escort)">陪診員 (Medical Escort)</option>
@@ -818,11 +865,11 @@ export default function CareStaffPage() {
         </div>
 
         {/* View Controls Section */}
-        <div className="card-apple mb-6 fade-in-apple" style={{ animationDelay: '0.2s' }}>
-          <div className="card-apple-content">
-            <div className="flex justify-between items-center">
+        <div className="card-apple mb-3 sm:mb-4 lg:mb-6 fade-in-apple" style={{ animationDelay: '0.2s' }}>
+          <div className="card-apple-content p-3 sm:p-4 lg:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center space-x-6">
-                <span className="text-apple-body text-text-primary">
+                <span className="text-sm sm:text-base text-text-primary">
                   共 <span className="font-semibold text-mingcare-blue">{totalCount}</span> 位護理人員
                 </span>
               </div>
@@ -832,32 +879,34 @@ export default function CareStaffPage() {
                 <div className="flex rounded-apple-sm border border-border-light p-1 bg-bg-tertiary">
                   <button
                     onClick={() => setViewMode('card')}
-                    className={`px-4 py-2 text-sm font-medium rounded-apple-xs transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
                       viewMode === 'card' 
                         ? 'bg-white text-mingcare-blue shadow-apple' 
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
-                    <div className="flex items-center space-x-2">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
-                      <span>卡片檢視</span>
+                      <span className="hidden sm:inline">卡片檢視</span>
+                      <span className="sm:hidden">卡片</span>
                     </div>
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`px-4 py-2 text-sm font-medium rounded-apple-xs transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
                       viewMode === 'list' 
                         ? 'bg-white text-mingcare-blue shadow-apple' 
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
-                    <div className="flex items-center space-x-2">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                       </svg>
-                      <span>列表檢視</span>
+                      <span className="hidden sm:inline">列表檢視</span>
+                      <span className="sm:hidden">列表</span>
                     </div>
                   </button>
                 </div>
@@ -868,7 +917,7 @@ export default function CareStaffPage() {
 
         {/* Content Area */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
-          <div className="card-apple-content">
+          <div className="card-apple-content p-3 sm:p-4 lg:p-6">
             {careStaff.length === 0 ? (
               /* Empty State */
               <div className="text-center py-12">
@@ -981,10 +1030,10 @@ export default function CareStaffPage() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
-                              {staff.staff_id || '未分配編號'}
+                              {staff.staff_id || '沒有提供'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
-                              {staff.preferred_area || '未設定'}
+                              {staff.preferred_area || '沒有提供'}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex flex-wrap gap-1 max-w-xs">
@@ -999,7 +1048,7 @@ export default function CareStaffPage() {
                                   ))
                                 ) : (
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    未設定
+                                    沒有提供
                                   </span>
                                 )}
                               </div>
@@ -1012,7 +1061,7 @@ export default function CareStaffPage() {
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-gray-100 text-gray-800'
                               }`}>
-                                {staff.contract_status || '未設定'}
+                                {staff.contract_status || '沒有提供'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
@@ -1040,7 +1089,7 @@ export default function CareStaffPage() {
                                 {staff.name_chinese}
                               </h3>
                               <p className="text-apple-caption text-text-secondary">
-                                {staff.staff_id || '未分配編號'}
+                                {staff.staff_id || '沒有提供'}
                               </p>
                             </div>
                           </div>
@@ -1058,7 +1107,7 @@ export default function CareStaffPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              <span>{staff.preferred_area || '未設定'}</span>
+                              <span>{staff.preferred_area || '沒有提供'}</span>
                             </div>
                           </div>
                           
@@ -1076,7 +1125,7 @@ export default function CareStaffPage() {
                                 ))
                               ) : (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                  未設定職位
+                                  沒有提供
                                 </span>
                               )}
                             </div>
@@ -1184,6 +1233,9 @@ export default function CareStaffPage() {
                           className="form-input-apple"
                           placeholder="請輸入英文姓名"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.name_english ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">電子郵箱</label>
@@ -1194,6 +1246,9 @@ export default function CareStaffPage() {
                           className="form-input-apple"
                           placeholder="請輸入電子郵箱"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.email ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">身份證號碼</label>
@@ -1204,6 +1259,9 @@ export default function CareStaffPage() {
                           className="form-input-apple"
                           placeholder="請輸入身份證號碼"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.hkid ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">出生日期</label>
@@ -1213,6 +1271,9 @@ export default function CareStaffPage() {
                           defaultValue={editingStaff.dob || ''}
                           className="form-input-apple"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.dob ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">聯絡電話 *</label>
@@ -1235,6 +1296,9 @@ export default function CareStaffPage() {
                           <option value="男">男性</option>
                           <option value="女">女性</option>
                         </select>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.gender ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">偏好工作區域</label>
@@ -1264,6 +1328,9 @@ export default function CareStaffPage() {
                           <option value="葵青區">葵青區</option>
                           <option value="離島區">離島區</option>
                         </select>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.preferred_area ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">合約狀態 *</label>
@@ -1276,6 +1343,9 @@ export default function CareStaffPage() {
                           <option value="同意">同意</option>
                           <option value="不同意">不同意</option>
                         </select>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.contract_status ? '' : '沒有提供'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1295,6 +1365,9 @@ export default function CareStaffPage() {
                           className="form-input-apple"
                           placeholder="請輸入緊急聯絡人姓名"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.emergency_contact ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">緊急聯絡人電話</label>
@@ -1305,6 +1378,159 @@ export default function CareStaffPage() {
                           className="form-input-apple"
                           placeholder="請輸入緊急聯絡人電話"
                         />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.emergency_contact_phone ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 其他資料 */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium text-text-primary mb-4 border-b border-border-light pb-2">
+                      其他資料
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">國籍</label>
+                        <input
+                          type="text"
+                          name="nationality"
+                          defaultValue={editingStaff.nationality || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入國籍"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.nationality ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">年資（年）</label>
+                        <input
+                          type="text"
+                          name="experience_years"
+                          defaultValue={editingStaff.experience_years || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入年資"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.experience_years ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">新冠疫苗</label>
+                        <select
+                          name="covid_vaccine"
+                          defaultValue={editingStaff.covid_vaccine || ''}
+                          className="form-select-apple"
+                        >
+                          <option value="">請選擇疫苗狀態</option>
+                          <option value="1針">1針</option>
+                          <option value="2針">2針</option>
+                          <option value="3針">3針</option>
+                          <option value="4針">4針</option>
+                          <option value="無接種">無接種</option>
+                          <option value="Other">其他</option>
+                        </select>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.covid_vaccine ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 介紹人資料 */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium text-text-primary mb-4 border-b border-border-light pb-2">
+                      介紹人資料
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">介紹人姓名</label>
+                        <input
+                          type="text"
+                          name="referrer"
+                          defaultValue={editingStaff.referrer || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入介紹人姓名"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.referrer ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">介紹人電話</label>
+                        <input
+                          type="tel"
+                          name="referrer_phone"
+                          defaultValue={editingStaff.referrer_phone || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入介紹人電話"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.referrer_phone ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 前雇主資料 */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium text-text-primary mb-4 border-b border-border-light pb-2">
+                      前雇主資料
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">公司名稱</label>
+                        <input
+                          type="text"
+                          name="company_name"
+                          defaultValue={editingStaff.company_name || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入前雇主公司名稱"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.company_name ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">職位</label>
+                        <input
+                          type="text"
+                          name="company_position"
+                          defaultValue={editingStaff.company_position || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入在前雇主的職位"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.company_position ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple">
+                        <label className="form-label-apple">任職期間</label>
+                        <input
+                          type="text"
+                          name="employment_period"
+                          defaultValue={editingStaff.employment_period || ''}
+                          className="form-input-apple"
+                          placeholder="請輸入任職期間"
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.employment_period ? '' : '沒有提供'}
+                        </p>
+                      </div>
+                      <div className="form-group-apple md:col-span-2">
+                        <label className="form-label-apple">主要職責</label>
+                        <textarea
+                          name="main_duties"
+                          defaultValue={editingStaff.main_duties || ''}
+                          className="form-textarea-apple"
+                          placeholder="請輸入主要職責"
+                          rows={3}
+                        />
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.main_duties ? '' : '沒有提供'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1347,6 +1573,9 @@ export default function CareStaffPage() {
                             </label>
                           ))}
                         </div>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.job_position && editingStaff.job_position.length > 0 ? '' : '沒有提供'}
+                        </p>
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">語言能力</label>
@@ -1355,12 +1584,34 @@ export default function CareStaffPage() {
                             <label key={language} className="flex items-center">
                               <input
                                 type="checkbox"
+                                checked={editingStaff?.language?.includes(language) || false}
+                                onChange={(e) => {
+                                  if (!editingStaff) return
+                                  const currentLanguages = editingStaff.language || []
+                                  let newLanguages: string[]
+                                  
+                                  if (e.target.checked) {
+                                    // 添加語言
+                                    newLanguages = [...currentLanguages, language]
+                                  } else {
+                                    // 移除語言
+                                    newLanguages = currentLanguages.filter(lang => lang !== language)
+                                  }
+                                  
+                                  setEditingStaff({
+                                    ...editingStaff,
+                                    language: newLanguages
+                                  })
+                                }}
                                 className="rounded border-border-light text-mingcare-blue focus:ring-mingcare-blue mr-2"
                               />
                               <span className="text-sm text-text-secondary">{language}</span>
                             </label>
                           ))}
                         </div>
+                        <p className="text-xs text-text-tertiary mt-1">
+                          {editingStaff.language && editingStaff.language.length > 0 ? '' : '沒有提供'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1376,7 +1627,7 @@ export default function CareStaffPage() {
                         fieldName="hkid_copy_url"
                         staffId={editingStaff.staff_id || ''}
                         currentUrl={fileUrls.hkid_copy_url}
-                        onUploadSuccess={(url) => handleFileUploadSuccess('hkid_copy_url', url)}
+                        onUploadSuccess={(url: string) => handleFileUploadSuccess('hkid_copy_url', url)}
                         onRemove={() => handleFileRemove('hkid_copy_url')}
                         disabled={fileUploadDisabled}
                       />
@@ -1388,7 +1639,7 @@ export default function CareStaffPage() {
                           fieldName={`certificate_${num}`}
                           staffId={editingStaff.staff_id || ''}
                           currentUrl={fileUrls[`certificate_${num}`]}
-                          onUploadSuccess={(url) => handleFileUploadSuccess(`certificate_${num}`, url)}
+                          onUploadSuccess={(url: string) => handleFileUploadSuccess(`certificate_${num}`, url)}
                           onRemove={() => handleFileRemove(`certificate_${num}`)}
                           disabled={fileUploadDisabled}
                         />
@@ -1399,7 +1650,7 @@ export default function CareStaffPage() {
                         fieldName="scrc_status"
                         staffId={editingStaff.staff_id || ''}
                         currentUrl={fileUrls.scrc_status}
-                        onUploadSuccess={(url) => handleFileUploadSuccess('scrc_status', url)}
+                        onUploadSuccess={(url: string) => handleFileUploadSuccess('scrc_status', url)}
                         onRemove={() => handleFileRemove('scrc_status')}
                         disabled={fileUploadDisabled}
                       />

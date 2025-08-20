@@ -15,6 +15,11 @@ module.exports = {
         'mingcare-green': '#22C55E',
         'mingcare-gray': '#6B7280',
         
+        // Primary Colors
+        'primary': '#3B82F6',
+        'primary-dark': '#2563EB',
+        'primary-light': '#EBF5FF',
+        
         // Background Colors
         'bg-primary': '#FFFFFF',
         'bg-secondary': '#F5F5F7',
@@ -27,6 +32,8 @@ module.exports = {
         'warning-light': '#FEF3C7',
         'error': '#EF4444',
         'error-light': '#FEE2E2',
+        'danger': '#EF4444',
+        'danger-light': '#FEE2E2',
         
         // Text Colors
         'text-primary': '#111827',

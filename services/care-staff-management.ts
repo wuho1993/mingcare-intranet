@@ -369,8 +369,9 @@ export class CareStaffManagementService {
       const fileName = `${timestamp}_${file.name}`
       const filePath = `care-staff/${staffId}/${field_name}/${fileName}`
 
+      // 上載檔案到 Storage
       const { data, error } = await supabase.storage
-        .from('mingcare-files')
+        .from('care-staff-files')
         .upload(filePath, file)
 
       if (error) {
@@ -380,7 +381,7 @@ export class CareStaffManagementService {
 
       // 獲取公開 URL
       const { data: urlData } = supabase.storage
-        .from('mingcare-files')
+        .from('care-staff-files')
         .getPublicUrl(data.path)
 
       return urlData.publicUrl
@@ -399,7 +400,7 @@ export class CareStaffManagementService {
       // 從 URL 提取檔案路徑
       const url = new URL(fileUrl)
       const pathParts = url.pathname.split('/')
-      const bucketIndex = pathParts.findIndex(part => part === 'mingcare-files')
+      const bucketIndex = pathParts.findIndex(part => part === 'care-staff-files')
       if (bucketIndex === -1) {
         throw new Error('無效的檔案 URL')
       }
@@ -407,7 +408,7 @@ export class CareStaffManagementService {
       const filePath = pathParts.slice(bucketIndex + 1).join('/')
 
       const { error } = await supabase.storage
-        .from('mingcare-files')
+        .from('care-staff-files')
         .remove([filePath])
 
       if (error) {

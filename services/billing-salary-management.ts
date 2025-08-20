@@ -54,7 +54,11 @@ export async function fetchBillingSalaryRecords(
       query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
     }
 
-    if (filters.searchTerm && filters.searchTerm.length >= 2) {
+    // 優先處理多選客戶
+    if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+      query = query.in('customer_id', filters.selectedCustomerIds)
+    } else if (filters.searchTerm && filters.searchTerm.length >= 2) {
+      // 只有在沒有選中特定客戶時才使用模糊搜尋
       query = query.or(`customer_name.ilike.%${filters.searchTerm}%,phone.ilike.%${filters.searchTerm}%,customer_id.ilike.%${filters.searchTerm}%`)
     }
 
@@ -101,12 +105,15 @@ export async function fetchBillingSalaryRecords(
 }
 
 export async function createBillingSalaryRecord(
-  formData: BillingSalaryFormData
+  formData: Omit<BillingSalaryFormData, 'hourly_rate' | 'hourly_salary'> | BillingSalaryFormData
 ): Promise<ApiResponse<BillingSalaryRecord>> {
   try {
+    // 移除 hourly_rate 和 hourly_salary，讓資料庫觸發器自動計算
+    const { hourly_rate, hourly_salary, ...dataToInsert } = formData as BillingSalaryFormData
+    
     const { data, error } = await supabase
       .from('billing_salary_data')
-      .insert([formData])
+      .insert([dataToInsert])
       .select()
       .single()
 
@@ -532,7 +539,11 @@ export async function exportToCSV(
       query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
     }
 
-    if (filters.searchTerm && filters.searchTerm.length >= 2) {
+    // 優先處理多選客戶
+    if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+      query = query.in('customer_id', filters.selectedCustomerIds)
+    } else if (filters.searchTerm && filters.searchTerm.length >= 2) {
+      // 只有在沒有選中特定客戶時才使用模糊搜尋
       query = query.or(`customer_name.ilike.%${filters.searchTerm}%,phone.ilike.%${filters.searchTerm}%,customer_id.ilike.%${filters.searchTerm}%`)
     }
 
@@ -723,21 +734,84 @@ function isTimeOverlapping(
 // =============================================================================
 
 // 客戶搜尋功能
-export async function searchCustomers(searchTerm: string): Promise<ApiResponse<any[]>> {
+export interface CustomerSearchResult {
+  customer_name: string
+  customer_id: string
+  phone: string
+  service_address?: string // 新增服務地址欄位
+  display_text: string // 格式："王大明 (MC0001) - 98765432"
+}
+
+export async function searchCustomers(searchTerm: string): Promise<ApiResponse<CustomerSearchResult[]>> {
   try {
-    if (!searchTerm.trim()) {
+    if (!searchTerm.trim() || searchTerm.length < 1) {
       return { success: true, data: [] }
     }
 
-    const { data, error } = await supabase
-      .from('customer_personal_data')
-      .select('customer_id, customer_name, phone, service_address')
-      .or(`customer_name.ilike.%${searchTerm}%,customer_id.ilike.%${searchTerm}%`)
-      .limit(10)
+    // 從 billing_salary_data 和 customer_personal_data 兩個表搜尋
+    const [billingResults, customerResults] = await Promise.all([
+      // 從計費記錄表搜尋
+      supabase
+        .from('billing_salary_data')
+        .select('customer_name, customer_id, phone, service_address')
+        .or(`customer_name.ilike.%${searchTerm}%,customer_id.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
+        .not('customer_name', 'is', null)
+        .not('customer_id', 'is', null)
+        .limit(20),
 
-    if (error) throw error
+      // 從客戶資料表搜尋
+      supabase
+        .from('customer_personal_data')
+        .select('customer_name, customer_id, phone, service_address')
+        .or(`customer_name.ilike.%${searchTerm}%,customer_id.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
+        .not('customer_name', 'is', null)
+        .not('customer_id', 'is', null)
+        .limit(20)
+    ])
 
-    return { success: true, data: data || [] }
+    if (billingResults.error) {
+      console.error('計費記錄搜尋錯誤:', billingResults.error)
+    }
+    if (customerResults.error) {
+      console.error('客戶資料搜尋錯誤:', customerResults.error)
+    }
+
+    // 合併結果並去重
+    const allResults = [
+      ...(billingResults.data || []),
+      ...(customerResults.data || [])
+    ]
+
+    // 使用 Map 去重，以 customer_id 為鍵
+    const uniqueResults = new Map<string, CustomerSearchResult>()
+
+    allResults.forEach(item => {
+      if (item.customer_name && item.customer_id) {
+        const key = item.customer_id
+        if (!uniqueResults.has(key)) {
+          uniqueResults.set(key, {
+            customer_name: item.customer_name,
+            customer_id: item.customer_id,
+            phone: item.phone || '',
+            service_address: item.service_address || '', // 新增服務地址
+            display_text: `${item.customer_name} (${item.customer_id})${item.phone ? ' - ' + item.phone : ''}`
+          })
+        } else {
+          // 如果已存在，但當前項目有服務地址而現有項目沒有，則更新服務地址
+          const existing = uniqueResults.get(key)!
+          if (!existing.service_address && item.service_address) {
+            existing.service_address = item.service_address
+          }
+        }
+      }
+    })
+
+    // 轉換為陣列並排序，限制前8個結果
+    const sortedResults = Array.from(uniqueResults.values())
+      .sort((a, b) => a.customer_name.localeCompare(b.customer_name))
+      .slice(0, 8)
+
+    return { success: true, data: sortedResults }
   } catch (error) {
     console.error('客戶搜尋失敗:', error)
     return {
@@ -747,7 +821,35 @@ export async function searchCustomers(searchTerm: string): Promise<ApiResponse<a
   }
 }
 
-// 護理人員搜尋功能
+// 獲取所有護理人員列表（用於下拉選單）
+export async function getAllCareStaff(): Promise<ApiResponse<{ name_chinese: string }[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('care_staff_profiles')
+      .select('name_chinese')
+      .not('name_chinese', 'is', null)
+      .order('name_chinese')
+
+    if (error) throw error
+
+    // 去重並過濾
+    const uniqueNames = Array.from(new Set(
+      (data || [])
+        .map(item => item.name_chinese)
+        .filter(name => name && name.trim().length > 0)
+    )).map(name => ({ name_chinese: name }))
+
+    return { success: true, data: uniqueNames }
+  } catch (error) {
+    console.error('獲取護理人員列表失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '獲取護理人員列表失敗'
+    }
+  }
+}
+
+// 護理人員搜尋功能 - Step 2: 增強版，返回完整資料
 export async function searchCareStaff(searchTerm: string): Promise<ApiResponse<any[]>> {
   try {
     if (!searchTerm.trim()) {
@@ -756,9 +858,18 @@ export async function searchCareStaff(searchTerm: string): Promise<ApiResponse<a
 
     const { data, error } = await supabase
       .from('care_staff_profiles')
-      .select('staff_id, name_chinese')
-      .or(`name_chinese.ilike.%${searchTerm}%,staff_id.ilike.%${searchTerm}%`)
-      .limit(10)
+      .select(`
+        staff_id, 
+        name_chinese, 
+        name_english,
+        phone, 
+        email,
+        job_position,
+        preferred_area,
+        language
+      `)
+      .or(`name_chinese.ilike.%${searchTerm}%,name_english.ilike.%${searchTerm}%,staff_id.ilike.%${searchTerm}%`)
+      .limit(8)
 
     if (error) throw error
 

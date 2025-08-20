@@ -74,6 +74,7 @@ export interface BillingSalaryFilters {
   projectManager?: ProjectManager
   careStaffName?: string
   searchTerm?: string // customer_name / phone / customer_id
+  selectedCustomerIds?: string[] // 多選客戶的 ID 陣列
 }
 
 export interface SearchSuggestion {
@@ -97,8 +98,8 @@ export interface BillingSalaryFormData {
   end_time: string
   service_hours: number
   care_staff_name: string
-  service_fee: number | string
-  staff_salary: number | string
+  service_fee: number
+  staff_salary: number
   hourly_rate: number
   hourly_salary: number
   service_type: ServiceType | ''
