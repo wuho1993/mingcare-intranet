@@ -1560,6 +1560,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
   const [customerSearchLoading, setCustomerSearchLoading] = useState(false)
+  const customerSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCustomers, setSelectedCustomers] = useState<CustomerSearchResult[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
@@ -1586,7 +1587,13 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     }
 
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      // 清理搜尋timeout
+      if (customerSearchTimeoutRef.current) {
+        clearTimeout(customerSearchTimeoutRef.current)
+      }
+    }
   }, [])
 
   // 載入護理人員列表
@@ -1713,10 +1720,20 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       }))
     }
     
+    // 清除之前的timeout
+    if (customerSearchTimeoutRef.current) {
+      clearTimeout(customerSearchTimeoutRef.current)
+    }
+    
     // 觸發搜尋建議（降低門檻，輸入1個字符就開始搜尋）
     if (value.length >= 1) {
+      setShowCustomerSuggestions(true)
       updateDropdownPosition() // 更新位置
-      handleCustomerSearch(value)
+      
+      // 使用debounce，250ms後才執行搜尋
+      customerSearchTimeoutRef.current = setTimeout(() => {
+        handleCustomerSearch(value)
+      }, 250)
     } else {
       // 清空建議並隱藏下拉選單
       setCustomerSuggestions([])
@@ -3975,14 +3992,28 @@ function ScheduleFormModal({
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   
+  // 清理搜尋timeout
+  useEffect(() => {
+    return () => {
+      if (customerSearchTimeoutRef2.current) {
+        clearTimeout(customerSearchTimeoutRef2.current)
+      }
+      if (staffSearchTimeoutRef.current) {
+        clearTimeout(staffSearchTimeoutRef.current)
+      }
+    }
+  }, [])
+  
   // 搜尋功能狀態
   const [customerSearchTerm, setCustomerSearchTerm] = useState(existingRecord ? existingRecord.customer_name : '')
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
+  const customerSearchTimeoutRef2 = useRef<NodeJS.Timeout | null>(null)
   
   const [staffSearchTerm, setStaffSearchTerm] = useState(existingRecord ? existingRecord.care_staff_name : '')
   const [staffSuggestions, setStaffSuggestions] = useState<any[]>([])
   const [showStaffSuggestions, setShowStaffSuggestions] = useState(false)
+  const staffSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // 檢查是否為多日期排班（使用參數中的isMultiDay或根據selectedDates計算）
   const isMultipleDays = isMultiDay || selectedDates.length > 1
@@ -4099,6 +4130,24 @@ function ScheduleFormModal({
     // 同步更新搜索項
     if (field === 'customer_name') {
       setCustomerSearchTerm(value)
+      
+      // 清除之前的timeout
+      if (customerSearchTimeoutRef2.current) {
+        clearTimeout(customerSearchTimeoutRef2.current)
+      }
+      
+      // 觸發客戶搜尋建議（debounce）
+      if (value.length >= 1) {
+        setShowCustomerSuggestions(true)
+        // 使用debounce，250ms後才執行搜尋
+        customerSearchTimeoutRef2.current = setTimeout(() => {
+          handleCustomerSearch(value)
+        }, 250)
+      } else {
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(false)
+      }
+      
     } else if (field === 'care_staff_name') {
       setStaffSearchTerm(value)
     }
@@ -4106,8 +4155,6 @@ function ScheduleFormModal({
 
   // 客戶搜尋功能
   const handleCustomerSearch = async (searchTerm: string) => {
-    setCustomerSearchTerm(searchTerm)
-    
     if (searchTerm.trim().length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
@@ -4115,6 +4162,9 @@ function ScheduleFormModal({
     }
 
     try {
+      // 立即顯示載入狀態
+      setShowCustomerSuggestions(true)
+      
       const response = await fetch('/api/search-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4124,10 +4174,12 @@ function ScheduleFormModal({
       if (response.ok) {
         const data = await response.json()
         setCustomerSuggestions(data.data || [])
-        setShowCustomerSuggestions(true)
+        setShowCustomerSuggestions(data.data && data.data.length > 0)
       }
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
+      setCustomerSuggestions([])
+      setShowCustomerSuggestions(false)
     }
   }
 
@@ -4143,8 +4195,6 @@ function ScheduleFormModal({
 
   // 護理人員搜尋功能
   const handleStaffSearch = async (searchTerm: string) => {
-    setStaffSearchTerm(searchTerm)
-    
     if (searchTerm.trim().length < 1) {
       setStaffSuggestions([])
       setShowStaffSuggestions(false)
@@ -4152,6 +4202,9 @@ function ScheduleFormModal({
     }
 
     try {
+      // 立即顯示載入狀態
+      setShowStaffSuggestions(true)
+      
       const response = await fetch('/api/search-care-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4161,10 +4214,12 @@ function ScheduleFormModal({
       if (response.ok) {
         const data = await response.json()
         setStaffSuggestions(data.data || [])
-        setShowStaffSuggestions(true)
+        setShowStaffSuggestions(data.data && data.data.length > 0)
       }
     } catch (error) {
       console.error('護理人員搜尋失敗:', error)
+      setStaffSuggestions([])
+      setShowStaffSuggestions(false)
     }
   }
 
@@ -4330,28 +4385,35 @@ function ScheduleFormModal({
                       />
                       
                       {/* 客戶搜尋建議 */}
-                      {showCustomerSuggestions && customerSuggestions.length > 0 && (
+                      {showCustomerSuggestions && (
                         <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {customerSuggestions.map((customer, index) => (
-                            <div
-                              key={customer.customer_id || index}
-                              onClick={() => selectCustomer(customer)}
-                              className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
-                            >
-                              <div className="font-medium text-text-primary">
-                                {customer.customer_name}
-                                {customer.customer_id && (
-                                  <span className="text-text-secondary ml-1">（{customer.customer_id}）</span>
+                          {customerSuggestions.length === 0 ? (
+                            <div className="p-3 text-center text-text-secondary">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
+                              <span className="text-sm">搜尋中...</span>
+                            </div>
+                          ) : (
+                            customerSuggestions.map((customer, index) => (
+                              <div
+                                key={customer.customer_id || index}
+                                onClick={() => selectCustomer(customer)}
+                                className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
+                              >
+                                <div className="font-medium text-text-primary">
+                                  {customer.customer_name}
+                                  {customer.customer_id && (
+                                    <span className="text-text-secondary ml-1">（{customer.customer_id}）</span>
+                                  )}
+                                </div>
+                                {customer.phone && (
+                                  <div className="text-sm text-text-secondary">{customer.phone}</div>
+                                )}
+                                {customer.service_address && (
+                                  <div className="text-sm text-text-secondary truncate">{customer.service_address}</div>
                                 )}
                               </div>
-                              {customer.phone && (
-                                <div className="text-sm text-text-secondary">{customer.phone}</div>
-                              )}
-                              {customer.service_address && (
-                                <div className="text-sm text-text-secondary truncate">{customer.service_address}</div>
-                              )}
-                            </div>
-                          ))}
+                            ))
+                          )}
                         </div>
                       )}
                       {errors.customer_name && (
@@ -4429,8 +4491,18 @@ function ScheduleFormModal({
                         const value = e.target.value
                         setStaffSearchTerm(value)
                         updateField('care_staff_name', value) // 同步更新表單數據
+                        
+                        // 清除之前的timeout
+                        if (staffSearchTimeoutRef.current) {
+                          clearTimeout(staffSearchTimeoutRef.current)
+                        }
+                        
                         if (value.length >= 1) {
-                          handleStaffSearch(value)
+                          setShowStaffSuggestions(true)
+                          // 使用debounce，250ms後才執行搜尋
+                          staffSearchTimeoutRef.current = setTimeout(() => {
+                            handleStaffSearch(value)
+                          }, 250)
                         } else {
                           setShowStaffSuggestions(false)
                         }
@@ -4441,22 +4513,29 @@ function ScheduleFormModal({
                     />
                     
                     {/* 護理人員搜尋建議 */}
-                    {showStaffSuggestions && staffSuggestions.length > 0 && (
+                    {showStaffSuggestions && (
                       <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {staffSuggestions.map((staff, index) => (
-                          <div
-                            key={staff.staff_id || index}
-                            onClick={() => selectStaff(staff)}
-                            className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
-                          >
-                            <div className="font-medium text-text-primary">
-                              {staff.name_chinese}
-                              {staff.staff_id && (
-                                <span className="text-text-secondary ml-1">（{staff.staff_id}）</span>
-                              )}
-                            </div>
+                        {staffSuggestions.length === 0 ? (
+                          <div className="p-3 text-center text-text-secondary">
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
+                            <span className="text-sm">搜尋中...</span>
                           </div>
-                        ))}
+                        ) : (
+                          staffSuggestions.map((staff, index) => (
+                            <div
+                              key={staff.staff_id || index}
+                              onClick={() => selectStaff(staff)}
+                              className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
+                            >
+                              <div className="font-medium text-text-primary">
+                                {staff.name_chinese}
+                                {staff.staff_id && (
+                                  <span className="text-text-secondary ml-1">（{staff.staff_id}）</span>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     )}
                     {errors.care_staff_name && (
