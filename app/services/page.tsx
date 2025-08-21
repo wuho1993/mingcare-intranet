@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { searchCustomers, searchCareStaff } from '../../services/billing-salary-management'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -30,7 +31,6 @@ import {
   createMultipleDayRecords,
   exportToCSV,
   getAllCareStaff,
-  searchCustomers,
   CustomerSearchResult
 } from '../../services/billing-salary-management'
 
@@ -4173,7 +4173,7 @@ function ScheduleFormModal({
         setShowCustomerSuggestions(true)
         // 使用debounce，250ms後才執行搜尋
         customerSearchTimeoutRef2.current = setTimeout(() => {
-          handleCustomerSearch(value)
+          handleModalCustomerSearch(value)
         }, 250)
       } else {
         setCustomerSuggestions([])
@@ -4185,8 +4185,8 @@ function ScheduleFormModal({
     }
   }
 
-  // 客戶搜尋功能
-  const handleCustomerSearch = async (searchTerm: string) => {
+  // 客戶搜尋功能（模態框專用）
+  const handleModalCustomerSearch = async (searchTerm: string) => {
     if (searchTerm.trim().length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
@@ -4199,40 +4199,32 @@ function ScheduleFormModal({
       setShowCustomerSuggestions(true)
       setCustomerSearchError('')
       
-      // 創建AbortController來支援timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒timeout
-      
-      const response = await fetch('/api/search-customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm }),
-        signal: controller.signal
+      // 設定10秒超時並直接使用本地函數（適用於靜態和開發環境）
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
       })
       
-      clearTimeout(timeoutId)
+      const searchPromise = searchCustomers(searchTerm)
+      const data = await Promise.race([searchPromise, timeoutPromise]) as any
       
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setCustomerSuggestions(data.data || [])
-          setShowCustomerSuggestions(data.data && data.data.length > 0)
-        } else {
-          console.error('客戶搜尋錯誤:', data.error)
-          setCustomerSuggestions([])
-          setShowCustomerSuggestions(true)
-          setCustomerSearchError('搜尋失敗')
-        }
+      if (data.success) {
+        setCustomerSuggestions(data.data || [])
+        setShowCustomerSuggestions(data.data && data.data.length > 0)
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        console.error('客戶搜尋錯誤:', data.error)
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(true)
+        setCustomerSearchError('搜尋失敗')
       }
     } catch (error) {
       let errorMessage = '搜尋失敗'
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn('客戶搜尋請求逾時')
-        errorMessage = '搜尋逾時，請重試'
-      } else {
-        console.error('客戶搜尋失敗:', error)
+      if (error instanceof Error) {
+        if (error.message === '搜尋逾時') {
+          console.warn('客戶搜尋請求逾時')
+          errorMessage = '搜尋逾時，請重試'
+        } else {
+          console.error('客戶搜尋失敗:', error)
+        }
       }
       setCustomerSuggestions([])
       setShowCustomerSuggestions(true)
@@ -4250,8 +4242,8 @@ function ScheduleFormModal({
     setShowCustomerSuggestions(false)
   }
 
-  // 護理人員搜尋功能
-  const handleStaffSearch = async (searchTerm: string) => {
+  // 護理人員搜尋功能（模態框專用）
+  const handleModalStaffSearch = async (searchTerm: string) => {
     if (searchTerm.trim().length < 1) {
       setStaffSuggestions([])
       setShowStaffSuggestions(false)
@@ -4264,40 +4256,32 @@ function ScheduleFormModal({
       setShowStaffSuggestions(true)
       setStaffSearchError('')
       
-      // 創建AbortController來支援timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒timeout
-      
-      const response = await fetch('/api/search-care-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm }),
-        signal: controller.signal
+      // 設定10秒超時並直接使用本地函數（適用於靜態和開發環境）
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
       })
       
-      clearTimeout(timeoutId)
+      const searchPromise = searchCareStaff(searchTerm)
+      const data = await Promise.race([searchPromise, timeoutPromise]) as any
       
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setStaffSuggestions(data.data || [])
-          setShowStaffSuggestions(data.data && data.data.length > 0)
-        } else {
-          console.error('護理人員搜尋錯誤:', data.error)
-          setStaffSuggestions([])
-          setShowStaffSuggestions(true)
-          setStaffSearchError('搜尋失敗')
-        }
+      if (data.success) {
+        setStaffSuggestions(data.data || [])
+        setShowStaffSuggestions(data.data && data.data.length > 0)
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        console.error('護理人員搜尋錯誤:', data.error)
+        setStaffSuggestions([])
+        setShowStaffSuggestions(true)
+        setStaffSearchError('搜尋失敗')
       }
     } catch (error) {
       let errorMessage = '搜尋失敗'
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn('護理人員搜尋請求逾時')
-        errorMessage = '搜尋逾時，請重試'
-      } else {
-        console.error('護理人員搜尋失敗:', error)
+      if (error instanceof Error) {
+        if (error.message === '搜尋逾時') {
+          console.warn('護理人員搜尋請求逾時')
+          errorMessage = '搜尋逾時，請重試'
+        } else {
+          console.error('護理人員搜尋失敗:', error)
+        }
       }
       setStaffSuggestions([])
       setShowStaffSuggestions(true)
@@ -4455,7 +4439,7 @@ function ScheduleFormModal({
                           setCustomerSearchTerm(value)
                           updateField('customer_name', value) // 同步更新表單數據
                           if (value.length >= 1) {
-                            handleCustomerSearch(value)
+                            handleModalCustomerSearch(value)
                           } else {
                             setShowCustomerSuggestions(false)
                           }
@@ -4474,7 +4458,7 @@ function ScheduleFormModal({
                               <div className="text-sm">{customerSearchError}</div>
                               <button 
                                 className="mt-2 text-xs underline hover:no-underline"
-                                onClick={() => handleCustomerSearch(customerSearchTerm)}
+                                onClick={() => handleModalCustomerSearch(customerSearchTerm)}
                               >
                                 重試
                               </button>
@@ -4593,7 +4577,7 @@ function ScheduleFormModal({
                           setShowStaffSuggestions(true)
                           // 使用debounce，250ms後才執行搜尋
                           staffSearchTimeoutRef.current = setTimeout(() => {
-                            handleStaffSearch(value)
+                            handleModalStaffSearch(value)
                           }, 250)
                         } else {
                           setShowStaffSuggestions(false)
@@ -4612,7 +4596,7 @@ function ScheduleFormModal({
                             <div className="text-sm">{staffSearchError}</div>
                             <button 
                               className="mt-2 text-xs underline hover:no-underline"
-                              onClick={() => handleStaffSearch(staffSearchTerm)}
+                              onClick={() => handleModalStaffSearch(staffSearchTerm)}
                             >
                               重試
                             </button>
