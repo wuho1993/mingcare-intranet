@@ -4289,6 +4289,16 @@ function ScheduleFormModal({
     }
   }
 
+  // 選擇客戶（模態框專用）
+  const selectModalCustomer = (customer: CustomerSearchResult) => {
+    updateField('customer_name', customer.customer_name)
+    updateField('customer_id', customer.customer_id)
+    if (customer.phone) updateField('phone', customer.phone)
+    if (customer.service_address) updateField('service_address', customer.service_address)
+    setCustomerSearchTerm(customer.display_text)
+    setShowCustomerSuggestions(false)
+  }
+
   // 選擇護理人員
   const selectStaff = (staff: any) => {
     updateField('care_staff_name', staff.name_chinese)
@@ -4472,7 +4482,7 @@ function ScheduleFormModal({
                             customerSuggestions.map((customer, index) => (
                               <div
                                 key={customer.customer_id || index}
-                                onClick={() => selectCustomer(customer)}
+                                onClick={() => selectModalCustomer(customer)}
                                 className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
                               >
                                 <div className="font-medium text-text-primary">
