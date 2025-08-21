@@ -1560,6 +1560,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
   const [customerSearchLoading, setCustomerSearchLoading] = useState(false)
+  const [customerSearchError, setCustomerSearchError] = useState('')
   const customerSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCustomers, setSelectedCustomers] = useState<CustomerSearchResult[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -1622,12 +1623,22 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     if (searchTerm.length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
+      setCustomerSearchError('')
       return
     }
 
     try {
       setCustomerSearchLoading(true)
-      const response = await searchCustomers(searchTerm)
+      setCustomerSearchError('')
+      
+      // 設定10秒超時
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
+      })
+      
+      const searchPromise = searchCustomers(searchTerm)
+      
+      const response = await Promise.race([searchPromise, timeoutPromise]) as any
       
       console.log('搜尋結果:', response) // 除錯輸出
       
@@ -1638,11 +1649,19 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       } else {
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
+        setCustomerSearchError('搜尋失敗')
       }
     } catch (error) {
-      console.error('客戶搜尋失敗:', error)
+      let errorMessage = '搜尋失敗'
+      if (error instanceof Error && error.message === '搜尋逾時') {
+        console.warn('客戶搜尋請求逾時')
+        errorMessage = '搜尋逾時，請重試'
+      } else {
+        console.error('客戶搜尋失敗:', error)
+      }
       setCustomerSuggestions([])
-      setShowCustomerSuggestions(false)
+      setShowCustomerSuggestions(true) // 顯示錯誤訊息
+      setCustomerSearchError(errorMessage)
     } finally {
       setCustomerSearchLoading(false)
     }
@@ -1851,7 +1870,18 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   >
                     {customerSearchLoading ? (
                       <div className="p-3 text-center text-text-secondary">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
+                        <span className="text-sm">搜尋中...</span>
+                      </div>
+                    ) : customerSearchError ? (
+                      <div className="p-3 text-center text-danger">
+                        <div className="text-sm">{customerSearchError}</div>
+                        <button 
+                          className="mt-2 text-xs underline hover:no-underline"
+                          onClick={() => handleCustomerSearch(customerSearchTerm)}
+                        >
+                          重試
+                        </button>
                       </div>
                     ) : customerSuggestions.length > 0 ? (
                       customerSuggestions.map((customer, index) => (
@@ -4008,11 +4038,13 @@ function ScheduleFormModal({
   const [customerSearchTerm, setCustomerSearchTerm] = useState(existingRecord ? existingRecord.customer_name : '')
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
+  const [customerSearchError, setCustomerSearchError] = useState('')
   const customerSearchTimeoutRef2 = useRef<NodeJS.Timeout | null>(null)
   
   const [staffSearchTerm, setStaffSearchTerm] = useState(existingRecord ? existingRecord.care_staff_name : '')
   const [staffSuggestions, setStaffSuggestions] = useState<any[]>([])
   const [showStaffSuggestions, setShowStaffSuggestions] = useState(false)
+  const [staffSearchError, setStaffSearchError] = useState('')
   const staffSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // 檢查是否為多日期排班（使用參數中的isMultiDay或根據selectedDates計算）
@@ -4158,28 +4190,53 @@ function ScheduleFormModal({
     if (searchTerm.trim().length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
+      setCustomerSearchError('')
       return
     }
 
     try {
       // 立即顯示載入狀態
       setShowCustomerSuggestions(true)
+      setCustomerSearchError('')
+      
+      // 創建AbortController來支援timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒timeout
       
       const response = await fetch('/api/search-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm })
+        body: JSON.stringify({ searchTerm }),
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
       
       if (response.ok) {
         const data = await response.json()
-        setCustomerSuggestions(data.data || [])
-        setShowCustomerSuggestions(data.data && data.data.length > 0)
+        if (data.success) {
+          setCustomerSuggestions(data.data || [])
+          setShowCustomerSuggestions(data.data && data.data.length > 0)
+        } else {
+          console.error('客戶搜尋錯誤:', data.error)
+          setCustomerSuggestions([])
+          setShowCustomerSuggestions(true)
+          setCustomerSearchError('搜尋失敗')
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
     } catch (error) {
-      console.error('客戶搜尋失敗:', error)
+      let errorMessage = '搜尋失敗'
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('客戶搜尋請求逾時')
+        errorMessage = '搜尋逾時，請重試'
+      } else {
+        console.error('客戶搜尋失敗:', error)
+      }
       setCustomerSuggestions([])
-      setShowCustomerSuggestions(false)
+      setShowCustomerSuggestions(true)
+      setCustomerSearchError(errorMessage)
     }
   }
 
@@ -4198,28 +4255,53 @@ function ScheduleFormModal({
     if (searchTerm.trim().length < 1) {
       setStaffSuggestions([])
       setShowStaffSuggestions(false)
+      setStaffSearchError('')
       return
     }
 
     try {
       // 立即顯示載入狀態
       setShowStaffSuggestions(true)
+      setStaffSearchError('')
+      
+      // 創建AbortController來支援timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒timeout
       
       const response = await fetch('/api/search-care-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm })
+        body: JSON.stringify({ searchTerm }),
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
       
       if (response.ok) {
         const data = await response.json()
-        setStaffSuggestions(data.data || [])
-        setShowStaffSuggestions(data.data && data.data.length > 0)
+        if (data.success) {
+          setStaffSuggestions(data.data || [])
+          setShowStaffSuggestions(data.data && data.data.length > 0)
+        } else {
+          console.error('護理人員搜尋錯誤:', data.error)
+          setStaffSuggestions([])
+          setShowStaffSuggestions(true)
+          setStaffSearchError('搜尋失敗')
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
     } catch (error) {
-      console.error('護理人員搜尋失敗:', error)
+      let errorMessage = '搜尋失敗'
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('護理人員搜尋請求逾時')
+        errorMessage = '搜尋逾時，請重試'
+      } else {
+        console.error('護理人員搜尋失敗:', error)
+      }
       setStaffSuggestions([])
-      setShowStaffSuggestions(false)
+      setShowStaffSuggestions(true)
+      setStaffSearchError(errorMessage)
     }
   }
 
@@ -4387,7 +4469,17 @@ function ScheduleFormModal({
                       {/* 客戶搜尋建議 */}
                       {showCustomerSuggestions && (
                         <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {customerSuggestions.length === 0 ? (
+                          {customerSearchError ? (
+                            <div className="p-3 text-center text-danger">
+                              <div className="text-sm">{customerSearchError}</div>
+                              <button 
+                                className="mt-2 text-xs underline hover:no-underline"
+                                onClick={() => handleCustomerSearch(customerSearchTerm)}
+                              >
+                                重試
+                              </button>
+                            </div>
+                          ) : customerSuggestions.length === 0 ? (
                             <div className="p-3 text-center text-text-secondary">
                               <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
                               <span className="text-sm">搜尋中...</span>
@@ -4515,7 +4607,17 @@ function ScheduleFormModal({
                     {/* 護理人員搜尋建議 */}
                     {showStaffSuggestions && (
                       <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {staffSuggestions.length === 0 ? (
+                        {staffSearchError ? (
+                          <div className="p-3 text-center text-danger">
+                            <div className="text-sm">{staffSearchError}</div>
+                            <button 
+                              className="mt-2 text-xs underline hover:no-underline"
+                              onClick={() => handleStaffSearch(staffSearchTerm)}
+                            >
+                              重試
+                            </button>
+                          </div>
+                        ) : staffSuggestions.length === 0 ? (
                           <div className="p-3 text-center text-text-secondary">
                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
                             <span className="text-sm">搜尋中...</span>
