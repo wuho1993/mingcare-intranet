@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/clients/page": "app/clients/page.js",
-  "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/icon.png/route": "app/icon.png/route.js",
-  "/clients/edit-client/edit/page": "app/clients/edit-client/edit/page.js",
-  "/services/page": "app/services/page.js"
-}
