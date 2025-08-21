@@ -4291,11 +4291,17 @@ function ScheduleFormModal({
 
   // 選擇客戶（模態框專用）
   const selectModalCustomer = (customer: CustomerSearchResult) => {
-    updateField('customer_name', customer.customer_name)
-    updateField('customer_id', customer.customer_id)
-    if (customer.phone) updateField('phone', customer.phone)
-    if (customer.service_address) updateField('service_address', customer.service_address)
-    setCustomerSearchTerm(customer.customer_name) // 只顯示純姓名
+    // 直接更新表單資料，不觸發搜尋
+    setFormData(prev => ({
+      ...prev,
+      customer_name: customer.customer_name,
+      customer_id: customer.customer_id,
+      phone: customer.phone || prev.phone,
+      service_address: customer.service_address || prev.service_address
+    }))
+    
+    // 設定搜尋框只顯示純姓名
+    setCustomerSearchTerm(customer.customer_name)
     setShowCustomerSuggestions(false)
   }
 
@@ -4486,7 +4492,10 @@ function ScheduleFormModal({
                             customerSuggestions.map((customer, index) => (
                               <div
                                 key={customer.customer_id || index}
-                                onClick={() => selectModalCustomer(customer)}
+                                onMouseDown={(e) => {
+                                  e.preventDefault() // 防止失去焦點
+                                  selectModalCustomer(customer)
+                                }}
                                 className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
                               >
                                 <div className="font-medium text-text-primary">
@@ -4628,7 +4637,10 @@ function ScheduleFormModal({
                           staffSuggestions.map((staff, index) => (
                             <div
                               key={staff.staff_id || index}
-                              onClick={() => selectStaff(staff)}
+                              onMouseDown={(e) => {
+                                e.preventDefault() // 防止失去焦點
+                                selectStaff(staff)
+                              }}
                               className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
                             >
                               <div className="font-medium text-text-primary">
