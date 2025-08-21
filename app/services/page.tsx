@@ -4295,7 +4295,7 @@ function ScheduleFormModal({
     updateField('customer_id', customer.customer_id)
     if (customer.phone) updateField('phone', customer.phone)
     if (customer.service_address) updateField('service_address', customer.service_address)
-    setCustomerSearchTerm(customer.display_text)
+    setCustomerSearchTerm(customer.customer_name) // 只顯示純姓名
     setShowCustomerSuggestions(false)
   }
 
@@ -4454,6 +4454,10 @@ function ScheduleFormModal({
                             setShowCustomerSuggestions(false)
                           }
                         }}
+                        onBlur={() => {
+                          // 延遲隱藏，讓點擊建議項目有時間執行
+                          setTimeout(() => setShowCustomerSuggestions(false), 200)
+                        }}
                         className={`form-input-apple w-full ${errors.customer_name ? 'border-danger' : ''}`}
                         placeholder="請輸入客戶姓名或編號（≥1字元）"
                         autoComplete="off"
@@ -4592,6 +4596,10 @@ function ScheduleFormModal({
                         } else {
                           setShowStaffSuggestions(false)
                         }
+                      }}
+                      onBlur={() => {
+                        // 延遲隱藏，讓點擊建議項目有時間執行
+                        setTimeout(() => setShowStaffSuggestions(false), 200)
                       }}
                       className={`form-input-apple w-full ${errors.care_staff_name ? 'border-danger' : ''}`}
                       placeholder="輸入護理人員中文姓名或編號（≥1字元）"
