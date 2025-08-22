@@ -1034,7 +1034,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             phone: schedule.phone,
             customer_name: schedule.customer_name,
             service_hours: schedule.service_hours,
-            hourly_salary: schedule.hourly_salary || schedule.hourly_rate,
+            hourly_salary: schedule.hourly_rate,
             project_category: schedule.project_category,
             project_manager: schedule.project_manager,
             customer_id: schedule.customer_id,
@@ -1352,7 +1352,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   </select>
                 </div>
               )}
-            </div>
+            </div
             
             {/* 多天排班控制 */}
             <div className="flex items-center gap-4">
@@ -1641,539 +1641,151 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   )
 }
 
-// 社區券計數機組件
-interface VoucherCalculatorTabProps {
-  filters: BillingSalaryFilters
-  setFilters: (filters: BillingSalaryFilters) => void
-  updateDateRange: (startDate: string, endDate: string) => void
-}
-
-interface VoucherCustomer {
-  id: string
-  customer_id: string
-  customer_name: string
-  customer_type: string
-  copay_level: string | null
-  voucher_number: string | null
-  service_address: string
-  project_manager: string
-}
-
-interface VoucherCalculationResult {
-  customer: VoucherCustomer
-  service_type: string
-  service_rate: number | null
-  total_hours: number
-  total_service_fee: number
-  copay_amount: number
-  voucher_amount: number
-  copay_percentage: number
-}
-
-function VoucherCalculatorTab({ filters, setFilters, updateDateRange }: VoucherCalculatorTabProps) {
-  const [voucherCustomers, setVoucherCustomers] = useState<VoucherCustomer[]>([])
-  const [searchResults, setSearchResults] = useState<VoucherCalculationResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [customerSearchTerm, setCustomerSearchTerm] = useState('')
-  const [customerSuggestions, setCustomerSuggestions] = useState<VoucherCustomer[]>([])
-  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<VoucherCustomer | null>(null)
-  const [projectSearchTerm, setProjectSearchTerm] = useState('')
-  const [selectedProject, setSelectedProject] = useState<string>('')
-
-  // 獲取社區券客戶列表
-  useEffect(() => {
-    const fetchVoucherCustomers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('customer_personal_data')
-          .select('*')
-          .eq('customer_type', '社區券客戶')
-          .order('customer_name')
-
-        if (error) {
-          console.error('Error fetching voucher customers:', error)
-          return
-        }
-
-        setVoucherCustomers(data || [])
-      } catch (error) {
-        console.error('Error:', error)
-      }
-    }
-
-    fetchVoucherCustomers()
-  }, [])
-
-  // 處理客戶搜尋
-  const handleCustomerSearch = (searchTerm: string) => {
-    setCustomerSearchTerm(searchTerm)
-    
-    if (searchTerm.length >= 1) {
-      const filtered = voucherCustomers.filter(customer =>
-        customer.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.customer_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (customer.voucher_number && customer.voucher_number.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-      setCustomerSuggestions(filtered.slice(0, 10))
-      setShowCustomerSuggestions(true)
-    } else {
-      setCustomerSuggestions([])
-      setShowCustomerSuggestions(false)
-    }
-  }
-
-  // 選擇客戶
-  const selectCustomer = (customer: VoucherCustomer) => {
-    setSelectedCustomer(customer)
-    setCustomerSearchTerm(customer.customer_name)
-    setShowCustomerSuggestions(false)
-  }
-
-  // 處理項目搜尋
-  const handleProjectSearch = (searchTerm: string) => {
-    setProjectSearchTerm(searchTerm)
-    setSelectedProject(searchTerm)
-  }
-
-  // 計算社區券費用
-  const calculateVoucherFees = async () => {
-    if (!selectedCustomer) {
-      alert('請選擇客戶')
-      return
-    }
-
-    setLoading(true)
-    try {
-      // 1. 獲取該客戶在選定日期範圍內的服務記錄
-      const { data: billingData, error: billingError } = await supabase
-        .from('billing_salary_data')
-        .select('*')
-        .eq('customer_id', selectedCustomer.customer_id)
-        .gte('service_date', filters.dateRange.start)
-        .lte('service_date', filters.dateRange.end)
-        .ilike('project_category', projectSearchTerm ? `%${projectSearchTerm}%` : '%')
-
-      if (billingError) {
-        console.error('Error fetching billing data:', billingError)
-        return
-      }
-
-      // 2. 獲取收費標準
-      const { data: voucherRates, error: rateError } = await supabase
-        .from('voucher_rate')
-        .select('*')
-
-      if (rateError) {
-        console.error('Error fetching voucher rates:', rateError)
-        return
-      }
-
-      // 3. 按服務類型分組計算
-      const serviceTypeGroups: Record<string, any[]> = {}
-      billingData?.forEach(record => {
-        if (!serviceTypeGroups[record.service_type]) {
-          serviceTypeGroups[record.service_type] = []
-        }
-        serviceTypeGroups[record.service_type].push(record)
-      })
-
-      // 4. 計算每個服務類型的費用
-      const calculations: VoucherCalculationResult[] = []
-      
-      for (const [serviceType, records] of Object.entries(serviceTypeGroups)) {
-        const totalHours = records.reduce((sum, record) => sum + (record.service_hours || 0), 0)
-        const rate = voucherRates?.find(r => r.service_type === serviceType)
-        const serviceRate = rate?.service_rate || 0
-        const totalServiceFee = totalHours * serviceRate
-
-        // 計算自付金額
-        let copayPercentage = 0
-        if (selectedCustomer.copay_level) {
-          copayPercentage = parseFloat(selectedCustomer.copay_level.replace('%', '')) / 100
-        }
-        
-        const copayAmount = totalServiceFee * copayPercentage
-        const voucherAmount = totalServiceFee - copayAmount
-
-        calculations.push({
-          customer: selectedCustomer,
-          service_type: serviceType,
-          service_rate: serviceRate,
-          total_hours: totalHours,
-          total_service_fee: totalServiceFee,
-          copay_amount: copayAmount,
-          voucher_amount: voucherAmount,
-          copay_percentage: copayPercentage * 100
-        })
-      }
-
-      setSearchResults(calculations)
-    } catch (error) {
-      console.error('Error calculating voucher fees:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 格式化自付比例顯示
-  const formatCopayLevel = (copayLevel: string | null) => {
-    return copayLevel || '未設定自付比例'
-  }
-
+// 社區券計數機分頁組件
+function VoucherCalculatorTab() {
   return (
-    <div className="space-y-6">
-      {/* 搜尋區域 */}
-      <div className="bg-white rounded-lg shadow border border-border-light p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">社區券計數機</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 客戶搜尋 */}
-          <div className="relative">
-            <label className="block text-sm font-medium text-text-primary mb-2">搜尋客戶</label>
-            <input
-              type="text"
-              value={customerSearchTerm}
-              onChange={(e) => handleCustomerSearch(e.target.value)}
-              placeholder="客戶姓名、項目編號或社區券號碼"
-              className="w-full px-3 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
-            />
-            
-            {/* 客戶建議列表 */}
-            {showCustomerSuggestions && customerSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-border-light rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {customerSuggestions.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => selectCustomer(customer)}
-                    className="w-full px-3 py-2 text-left hover:bg-bg-secondary border-b border-border-light last:border-b-0"
-                  >
-                    <div className="text-sm">
-                      <div className="font-medium text-text-primary">{customer.customer_name}</div>
-                      <div className="text-text-secondary">
-                        {customer.customer_id} • {formatCopayLevel(customer.copay_level)}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 所屬項目搜尋 */}
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">所屬項目</label>
-            <input
-              type="text"
-              value={projectSearchTerm}
-              onChange={(e) => handleProjectSearch(e.target.value)}
-              placeholder="輸入項目關鍵字（可選）"
-              className="w-full px-3 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
-            />
-          </div>
-
-          {/* 開始日期 */}
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">開始日期</label>
-            <input
-              type="date"
-              value={filters.dateRange.start}
-              onChange={(e) => updateDateRange(e.target.value, filters.dateRange.end)}
-              className="w-full px-3 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
-            />
-          </div>
-
-          {/* 結束日期 */}
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">結束日期</label>
-            <input
-              type="date"
-              value={filters.dateRange.end}
-              onChange={(e) => updateDateRange(filters.dateRange.start, e.target.value)}
-              className="w-full px-3 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* 搜尋按鈕 */}
-        <div className="mt-4">
-          <button
-            onClick={calculateVoucherFees}
-            disabled={loading || !selectedCustomer}
-            className="px-6 py-2 bg-mingcare-blue text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? '計算中...' : '計算社區券費用'}
+    <div className="card-apple fade-in-apple">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-apple-heading text-text-primary">社區券計數機</h2>
+        <div className="flex space-x-3">
+          <button className="btn-apple-secondary text-sm">
+            <span className="mr-2">📄</span>
+            匯出計算結果
+          </button>
+          <button className="btn-apple-primary text-sm">
+            <span className="mr-2">🔍</span>
+            進階設定
           </button>
         </div>
+      </div>
 
-        {/* 選中客戶信息 */}
-        {selectedCustomer && (
-          <div className="mt-4 p-4 bg-bg-secondary rounded-lg border border-border-light">
-            <h4 className="font-medium text-text-primary mb-2">選中客戶信息</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      {/* 計算器主體 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 左側：輸入區域 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">基本資料</h3>
+            
+            <div className="space-y-4">
               <div>
-                <span className="text-text-secondary">客戶姓名：</span>
-                <span className="text-text-primary font-medium">{selectedCustomer.customer_name}</span>
+                <label className="block text-sm font-medium text-text-primary mb-1">客戶姓名</label>
+                <input
+                  type="text"
+                  placeholder="請輸入客戶姓名"
+                  className="form-input-apple w-full"
+                />
               </div>
+              
               <div>
-                <span className="text-text-secondary">項目編號：</span>
-                <span className="text-text-primary font-medium">{selectedCustomer.customer_id}</span>
+                <label className="block text-sm font-medium text-text-primary mb-1">社區券號碼</label>
+                <input
+                  type="text"
+                  placeholder="請輸入社區券號碼"
+                  className="form-input-apple w-full"
+                />
               </div>
+              
               <div>
-                <span className="text-text-secondary">社區券號碼：</span>
-                <span className="text-text-primary font-medium">{selectedCustomer.voucher_number || '未設定'}</span>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務類型</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇服務類型</option>
+                  <option value="HC-家居服務">HC-家居服務</option>
+                  <option value="NC-護理服務(專業人員)">NC-護理服務(專業人員)</option>
+                  <option value="PC-到戶看顧(輔助人員)">PC-到戶看顧(輔助人員)</option>
+                  <option value="ES-護送服務(陪診)">ES-護送服務(陪診)</option>
+                  <option value="RA-復康運動(輔助人員)">RA-復康運動(輔助人員)</option>
+                  <option value="RT-復康運動(專業人員)">RT-復康運動(專業人員)</option>
+                </select>
               </div>
+              
               <div>
-                <span className="text-text-secondary">自付比例：</span>
-                <span className={`font-medium ${selectedCustomer.copay_level ? 'text-text-primary' : 'text-orange-600'}`}>
-                  {formatCopayLevel(selectedCustomer.copay_level)}
-                </span>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務時數</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="請輸入服務時數"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">自付比例</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇自付比例</option>
+                  <option value="5">5%</option>
+                  <option value="8">8%</option>
+                  <option value="12">12%</option>
+                  <option value="16">16%</option>
+                  <option value="25">25%</option>
+                  <option value="40">40%</option>
+                </select>
+              </div>
+            </div>
+            
+            <button className="w-full mt-6 btn-apple-primary">
+              <span className="mr-2">🧮</span>
+              計算費用
+            </button>
+          </div>
+        </div>
+
+        {/* 右側：計算結果 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算結果</h3>
+            
+            {/* 費用明細卡片 */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">服務總費用</span>
+                  <span className="text-lg font-semibold text-text-primary">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">按照標準收費計算</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">政府資助金額</span>
+                  <span className="text-lg font-semibold text-green-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">社區券資助部分</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">客戶自付金額</span>
+                  <span className="text-lg font-semibold text-blue-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">客戶需要支付的金額</div>
+              </div>
+              
+              <div className="bg-mingcare-blue rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-white">本次收費總額</span>
+                  <span className="text-xl font-bold text-white">$0.00</span>
+                </div>
+                <div className="text-xs text-blue-100">實際向客戶收取的費用</div>
               </div>
             </div>
           </div>
-        )}
+          
+          {/* 費用說明 */}
+          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+            <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 費用說明</h4>
+            <ul className="text-xs text-yellow-700 space-y-1">
+              <li>• 服務費用按照政府核定的收費標準計算</li>
+              <li>• 政府資助金額會根據客戶的自付比例自動計算</li>
+              <li>• 客戶只需支付自付部分的費用</li>
+              <li>• 計算結果僅供參考，實際費用以政府最新政策為準</li>
+            </ul>
+          </div>
+        </div>
       </div>
-
-      {/* 計算結果 */}
-      {searchResults.length > 0 && (
-        <div className="bg-white rounded-lg shadow border border-border-light overflow-hidden">
-          <div className="px-6 py-4 border-b border-border-light">
-            <h3 className="text-lg font-semibold text-text-primary">計算結果</h3>
-            <p className="text-sm text-text-secondary mt-1">
-              期間：{filters.dateRange.start} 至 {filters.dateRange.end}
-            </p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border-light">
-              <thead className="bg-bg-secondary">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    服務類型
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    服務收費標準
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    總服務時數
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    總服務費用
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    自付金額 ({selectedCustomer?.copay_level || '未設定'}）
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    社區券金額
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-border-light">
-                {searchResults.map((result, index) => (
-                  <tr key={index} className="hover:bg-bg-secondary">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                      {result.service_type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
-                      {result.service_rate ? `$${result.service_rate.toFixed(2)}` : '未設定收費標準'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
-                      {result.total_hours.toFixed(2)} 小時
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                      ${result.total_service_fee.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-medium">
-                      ${result.copay_amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-mingcare-blue font-medium">
-                      ${result.voucher_amount.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-bg-secondary">
-                <tr>
-                  <td colSpan={3} className="px-6 py-4 text-sm font-medium text-text-primary">
-                    總計
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-text-primary">
-                    ${searchResults.reduce((sum, result) => sum + result.total_service_fee, 0).toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-orange-600">
-                    ${searchResults.reduce((sum, result) => sum + result.copay_amount, 0).toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-mingcare-blue">
-                    ${searchResults.reduce((sum, result) => sum + result.voucher_amount, 0).toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 空狀態 */}
-      {searchResults.length === 0 && !loading && (
-        <div className="bg-white rounded-lg shadow border border-border-light p-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-text-primary">尚未計算</h3>
-          <p className="mt-1 text-sm text-text-secondary">
-            請選擇客戶和日期範圍，然後點擊「計算社區券費用」按鈕
-          </p>
-        </div>
-      )}
     </div>
   )
 }
-
-// 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit }: ReportsTabProps) {
-  const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
-  const [careStaffLoading, setCareStaffLoading] = useState(true)
-  
-  // 客戶搜尋相關狀態
-  const [customerSearchTerm, setCustomerSearchTerm] = useState('')
-  const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
-  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
-  const [customerSearchLoading, setCustomerSearchLoading] = useState(false)
-  const [customerSearchError, setCustomerSearchError] = useState('')
-  const customerSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const [selectedCustomers, setSelectedCustomers] = useState<CustomerSearchResult[]>([])
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
-
-  // 計算下拉選單位置
-  const updateDropdownPosition = () => {
-    if (searchInputRef.current) {
-      const rect = searchInputRef.current.getBoundingClientRect()
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      })
-    }
-  }
-
-  // 點擊外部關閉下拉選單
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (!target.closest('.customer-search-container')) {
-        setShowCustomerSuggestions(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      // 清理搜尋timeout
-      if (customerSearchTimeoutRef.current) {
-        clearTimeout(customerSearchTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // 載入護理人員列表
-  useEffect(() => {
-    loadCareStaffList()
-  }, [])
-
-  const loadCareStaffList = async () => {
-    try {
-      setCareStaffLoading(true)
-      const response = await getAllCareStaff()
-      if (response.success && response.data) {
-        setCareStaffList(response.data)
-      }
-    } catch (error) {
-      console.error('載入護理人員列表失敗:', error)
-    } finally {
-      setCareStaffLoading(false)
-    }
-  }
-
-  // 客戶搜尋函數
-  const handleCustomerSearch = async (searchTerm: string) => {
-    console.log('客戶搜尋開始:', searchTerm) // 除錯輸出
-    
-    if (searchTerm.length < 1) {
-      setCustomerSuggestions([])
-      setShowCustomerSuggestions(false)
-      setCustomerSearchError('')
-      return
-    }
-
-    try {
-      setCustomerSearchLoading(true)
-      setCustomerSearchError('')
-      
-      // 設定10秒超時
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
-      })
-      
-      const searchPromise = searchCustomers(searchTerm)
-      
-      const response = await Promise.race([searchPromise, timeoutPromise]) as any
-      
-      console.log('搜尋結果:', response) // 除錯輸出
-      
-      if (response.success && response.data) {
-        setCustomerSuggestions(response.data)
-        setShowCustomerSuggestions(true)
-        console.log('設定建議列表:', response.data.length, '筆資料') // 除錯輸出
-      } else {
-        setCustomerSuggestions([])
-        setShowCustomerSuggestions(false)
-        setCustomerSearchError('搜尋失敗')
-      }
-    } catch (error) {
-      let errorMessage = '搜尋失敗'
-      if (error instanceof Error && error.message === '搜尋逾時') {
-        console.warn('客戶搜尋請求逾時')
-        errorMessage = '搜尋逾時，請重試'
-      } else {
-        console.error('客戶搜尋失敗:', error)
-      }
-      setCustomerSuggestions([])
-      setShowCustomerSuggestions(true) // 顯示錯誤訊息
-      setCustomerSearchError(errorMessage)
-    } finally {
-      setCustomerSearchLoading(false)
-    }
-  }
-
-  // 選擇客戶 (單選)
-  const selectCustomer = (customer: CustomerSearchResult) => {
-    setCustomerSearchTerm(customer.display_text)
-    setFilters(prev => ({
-      ...prev,
-      searchTerm: customer.customer_name
-    }))
-    setShowCustomerSuggestions(false)
-  }
-
-  // 切換客戶選擇狀態 (多選)
-  const toggleCustomerSelection = (customer: CustomerSearchResult) => {
-    console.log('切換客戶選擇:', customer.customer_name) // 除錯輸出
-    setSelectedCustomers(prev => {
-      const isSelected = prev.some(c => c.customer_id === customer.customer_id)
-      let newSelection
-      
-      if (isSelected) {
-        newSelection = prev.filter(c => c.customer_id !== customer.customer_id)
-        console.log('移除客戶:', customer.customer_name) // 除錯輸出
-      } else {
-        newSelection = [...prev, customer]
-        console.log('新增客戶:', customer.customer_name) // 除錯輸出
-      }
-      
-      return newSelection
-    })
-    
     // 選擇客戶後不要立即隱藏下拉選單，讓用戶可以繼續選擇
     // setCustomerSearchTerm('')
     // setShowCustomerSuggestions(false)
@@ -2575,7 +2187,7 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const [kpiLoading, setKpiLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports' | 'voucher'>('reports')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports' | 'voucher-calculator'>('reports')
   const [reportsViewMode, setReportsViewMode] = useState<'list' | 'calendar'>('list') // 報表檢視模式
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -2585,7 +2197,7 @@ export default function ServicesPage() {
     const tab = searchParams.get('tab')
     const date = searchParams.get('date')
     
-    if (tab === 'overview' || tab === 'schedule' || tab === 'reports' || tab === 'voucher') {
+    if (tab === 'overview' || tab === 'schedule' || tab === 'reports' || tab === 'voucher-calculator') {
       setActiveTab(tab)
     }
     
@@ -4229,16 +3841,16 @@ export default function ServicesPage() {
 
               {/* 4. 社區券計數機 */}
               <button
-                onClick={() => setActiveTab('voucher')}
+                onClick={() => setActiveTab('voucher-calculator')}
                 className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'voucher'
+                  activeTab === 'voucher-calculator'
                     ? 'border-mingcare-blue text-mingcare-blue'
                     : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
                 }`}
               >
                 <div className="flex items-center space-x-1 sm:space-x-2">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <span>社區券計數機</span>
                 </div>
@@ -4276,12 +3888,8 @@ export default function ServicesPage() {
           />
         )}
 
-        {activeTab === 'voucher' && (
-          <VoucherCalculatorTab
-            filters={filters}
-            setFilters={setFilters}
-            updateDateRange={updateDateRange}
-          />
+        {activeTab === 'voucher-calculator' && (
+          <VoucherCalculatorTab />
         )}
       </main>
 
@@ -5538,6 +5146,183 @@ function LocalScheduleEditModal({
           >
             取消
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 社區券計數機分頁組件
+function VoucherCalculatorTab() {
+  return (
+    <div className="card-apple fade-in-apple">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-apple-heading text-text-primary">社區券計數機</h2>
+        <div className="flex space-x-3">
+          <button className="btn-apple-secondary text-sm">
+            <span className="mr-2">📄</span>
+            匯出計算結果
+          </button>
+          <button className="btn-apple-primary text-sm">
+            <span className="mr-2">🔍</span>
+            進階設定
+          </button>
+        </div>
+      </div>
+
+      {/* 計算器主體 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 左側：輸入區域 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">基本資料</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">客戶姓名</label>
+                <input
+                  type="text"
+                  placeholder="請輸入客戶姓名"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">社區券號碼</label>
+                <input
+                  type="text"
+                  placeholder="請輸入社區券號碼"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務類型</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇服務類型</option>
+                  <option value="HC-家居服務">HC-家居服務</option>
+                  <option value="NC-護理服務(專業人員)">NC-護理服務(專業人員)</option>
+                  <option value="PC-到戶看顧(輔助人員)">PC-到戶看顧(輔助人員)</option>
+                  <option value="ES-護送服務(陪診)">ES-護送服務(陪診)</option>
+                  <option value="RA-復康運動(輔助人員)">RA-復康運動(輔助人員)</option>
+                  <option value="RT-復康運動(專業人員)">RT-復康運動(專業人員)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務時數</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="請輸入服務時數"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">自付比例</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇自付比例</option>
+                  <option value="5">5%</option>
+                  <option value="8">8%</option>
+                  <option value="12">12%</option>
+                  <option value="16">16%</option>
+                  <option value="25">25%</option>
+                  <option value="40">40%</option>
+                </select>
+              </div>
+            </div>
+            
+            <button className="w-full mt-6 btn-apple-primary">
+              <span className="mr-2">🧮</span>
+              計算費用
+            </button>
+          </div>
+        </div>
+
+        {/* 右側：計算結果 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算結果</h3>
+            
+            {/* 費用明細卡片 */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">服務總費用</span>
+                  <span className="text-lg font-semibold text-text-primary">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">按照標準收費計算</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">政府資助金額</span>
+                  <span className="text-lg font-semibold text-green-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">社區券資助部分</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">客戶自付金額</span>
+                  <span className="text-lg font-semibold text-blue-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">客戶需要支付的金額</div>
+              </div>
+              
+              <div className="bg-mingcare-blue rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-white">本次收費總額</span>
+                  <span className="text-xl font-bold text-white">$0.00</span>
+                </div>
+                <div className="text-xs text-blue-100">實際向客戶收取的費用</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 費用說明 */}
+          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+            <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 費用說明</h4>
+            <ul className="text-xs text-yellow-700 space-y-1">
+              <li>• 服務費用按照政府核定的收費標準計算</li>
+              <li>• 政府資助金額會根據客戶的自付比例自動計算</li>
+              <li>• 客戶只需支付自付部分的費用</li>
+              <li>• 計算結果僅供參考，實際費用以政府最新政策為準</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* 歷史記錄區域 */}
+      <div className="mt-8">
+        <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算記錄</h3>
+        <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-bg-secondary">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">計算時間</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">客戶姓名</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務時數</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">自付比例</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">收費金額</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-text-secondary">
+                  <div className="flex flex-col items-center">
+                    <span className="text-4xl mb-2">🧮</span>
+                    <p>暫無計算記錄</p>
+                    <p className="text-sm">使用計算器進行費用計算後會顯示記錄</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
