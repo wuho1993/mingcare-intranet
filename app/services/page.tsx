@@ -1898,7 +1898,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                           重試
                         </button>
                       </div>
-                    ) : customerSuggestions.length > 0 ? (
+                    ) : customerSuggestions && customerSuggestions.length > 0 ? (
                       customerSuggestions.map((customer, index) => (
                         <div
                           key={`${customer.customer_id}-${index}`}
