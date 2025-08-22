@@ -62,6 +62,7 @@ export default function CommissionsPage() {
       let totalServiceHours = 0
       let totalQualifiedCustomers = 0
       let totalCommission = 0
+      const allIntroducers = new Set<string>() // 用來統計所有出現的介紹人
 
       // 為每個月計算統計並按介紹人分組
       const monthlyStats = sortedMonths.map(month => {
@@ -93,6 +94,11 @@ export default function CommissionsPage() {
         totalServiceHours += monthServiceHours
         totalQualifiedCustomers += monthQualifiedCount
         totalCommission += monthCommission
+
+        // 收集所有介紹人（只計算有佣金率設定的）
+        Array.from(introducerGroups.keys()).forEach(introducerName => {
+          allIntroducers.add(introducerName)
+        })
 
         // 計算介紹人佣金和詳細客戶資料
         const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]) => {
@@ -454,6 +460,10 @@ export default function CommissionsPage() {
           <div class="overall-summary">
             <h2>總結報告</h2>
             <div class="total-stats">
+              <div class="total-stat">
+                <span class="total-stat-label">介紹人總數</span>
+                <span class="total-stat-value">${allIntroducers.size}</span>
+              </div>
               <div class="total-stat">
                 <span class="total-stat-label">總達標客戶</span>
                 <span class="total-stat-value">${totalQualifiedCustomers}</span>
