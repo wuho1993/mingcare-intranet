@@ -1702,7 +1702,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
   // 當選中客戶變化時，更新篩選條件
   useEffect(() => {
-    if (selectedCustomers.length > 0) {
+    if (selectedCustomers && selectedCustomers.length > 0) {
       // 使用選中客戶的 ID 陣列進行精確搜尋
       const customerIds = selectedCustomers.map(c => c.customer_id)
       setFilters(prevFilters => ({
@@ -1732,7 +1732,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     setCustomerSearchTerm(value)
     
     // 只在沒有選中客戶時才直接更新篩選條件
-    if (selectedCustomers.length === 0) {
+    if (!selectedCustomers || selectedCustomers.length === 0) {
       setFilters(prev => ({
         ...prev,
         searchTerm: value
@@ -1897,7 +1897,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         >
                           <input
                             type="checkbox"
-                            checked={selectedCustomers.some(c => c.customer_id === customer.customer_id)}
+                            checked={selectedCustomers ? selectedCustomers.some(c => c.customer_id === customer.customer_id) : false}
                             className="mr-3 rounded border-border-light focus:ring-mingcare-blue pointer-events-none"
                             readOnly
                           />
@@ -1920,7 +1920,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </div>
               
               {/* 選中客戶的 chips 顯示 */}
-              {selectedCustomers.length > 0 && (
+              {selectedCustomers && selectedCustomers.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedCustomers.map((customer) => (
                     <div
