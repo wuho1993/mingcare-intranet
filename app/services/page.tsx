@@ -1012,38 +1012,71 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
     try {
       setFormSubmitting(true)
-      
-      // 將篩選後的本地排程轉換為API格式並儲存
-      for (const [dateStr, daySchedules] of Object.entries(filteredSchedules)) {
+
+      // 收集所有要儲存的排程，使用批次插入 (Supabase) 以避免多次往返
+      const recordsToInsert: any[] = []
+      for (const [, daySchedules] of Object.entries(filteredSchedules)) {
         for (const schedule of daySchedules) {
-          const apiData = {
-            customer_id: schedule.customer_id,
-            care_staff_name: schedule.care_staff_name,
+          if (!schedule) continue
+          recordsToInsert.push({
             service_date: schedule.service_date,
+            care_staff_name: schedule.care_staff_name,
             start_time: schedule.start_time,
             end_time: schedule.end_time,
-            service_type: schedule.service_type,
-            service_address: schedule.service_address,
-            hourly_rate: schedule.hourly_rate,
-            service_fee: schedule.service_fee,
             staff_salary: schedule.staff_salary,
             phone: schedule.phone,
             customer_name: schedule.customer_name,
             service_hours: schedule.service_hours,
-            hourly_salary: schedule.hourly_salary,
+            hourly_salary: schedule.hourly_salary || schedule.hourly_rate,
             project_category: schedule.project_category,
-            project_manager: schedule.project_manager
-          }
-
-          const response = await fetch('/api/billing-salary-management', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(apiData)
+            project_manager: schedule.project_manager,
+            customer_id: schedule.customer_id,
+            service_type: schedule.service_type,
+            service_address: schedule.service_address,
+            service_fee: schedule.service_fee,
+            hourly_rate: schedule.hourly_rate
           })
+        }
+      }
 
-          if (!response.ok) {
-            throw new Error(`儲存排程失敗: ${response.statusText}`)
-          }
+      if (recordsToInsert.length === 0) {
+        alert('沒有可儲存的有效排程')
+        return
+      }
+
+      // 先嘗試使用 API route (若在動態部署環境，例如 Vercel)
+      let apiRouteAvailable = true
+      try {
+        const testResp = await fetch('/api/billing-salary-management', { method: 'OPTIONS' })
+        // 若返回 405/404 則視為不可用 (靜態匯出環境，如 GitHub Pages)
+        if (testResp.status === 404 || testResp.status === 405) {
+          apiRouteAvailable = false
+        }
+      } catch (e) {
+        apiRouteAvailable = false
+      }
+
+      if (apiRouteAvailable) {
+        // 仍採用逐筆，以利用 route 內部欄位對應及驗證邏輯
+        for (const rec of recordsToInsert) {
+            const resp = await fetch('/api/billing-salary-management', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(rec)
+            })
+            if (!resp.ok) {
+              const text = await resp.text().catch(()=> '')
+              throw new Error(`API(POST) 失敗 status=${resp.status} ${resp.statusText} body=${text}`)
+            }
+        }
+      } else {
+        // 靜態匯出情境: 直接透過 Supabase client 批次插入
+        const { error: insertError } = await supabase
+          .from('billing_salary_data')
+          .insert(recordsToInsert)
+        if (insertError) {
+          console.error('Supabase 批次插入錯誤:', insertError)
+          throw new Error(`批次插入失敗: ${insertError.message}`)
         }
       }
 
@@ -1073,8 +1106,8 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
       alert(`成功儲存 ${customerInfo} 的 ${filteredTotal} 個排程到資料庫！`)
       
     } catch (error) {
-      console.error('儲存本地排程失敗:', error)
-      alert('儲存排程時發生錯誤，請稍後再試')
+      console.error('儲存本地排程失敗 (含詳細):', error)
+      alert(`儲存排程時發生錯誤: ${(error as any)?.message || ''}`)
     } finally {
       setFormSubmitting(false)
     }
