@@ -2187,7 +2187,7 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const [kpiLoading, setKpiLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports' | 'voucher-calculator'>('reports')
   const [reportsViewMode, setReportsViewMode] = useState<'list' | 'calendar'>('list') // 報表檢視模式
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -2197,7 +2197,7 @@ export default function ServicesPage() {
     const tab = searchParams.get('tab')
     const date = searchParams.get('date')
     
-    if (tab === 'overview' || tab === 'schedule' || tab === 'reports') {
+    if (tab === 'overview' || tab === 'schedule' || tab === 'reports' || tab === 'voucher-calculator') {
       setActiveTab(tab)
     }
     
@@ -3838,6 +3838,23 @@ export default function ServicesPage() {
                   <span>業務概覽</span>
                 </div>
               </button>
+
+              {/* 4. 社區券計數機 */}
+              <button
+                onClick={() => setActiveTab('voucher-calculator')}
+                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                  activeTab === 'voucher-calculator'
+                    ? 'border-mingcare-blue text-mingcare-blue'
+                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
+                }`}
+              >
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span>社區券計數機</span>
+                </div>
+              </button>
             </nav>
           </div>
         </div>
@@ -3869,6 +3886,10 @@ export default function ServicesPage() {
             setReportsViewMode={setReportsViewMode}
             onEdit={handleEdit}
           />
+        )}
+
+        {activeTab === 'voucher-calculator' && (
+          <VoucherCalculatorTab />
         )}
       </main>
 
@@ -5125,6 +5146,183 @@ function LocalScheduleEditModal({
           >
             取消
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 社區券計數機分頁組件
+function VoucherCalculatorTab() {
+  return (
+    <div className="card-apple fade-in-apple">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-apple-heading text-text-primary">社區券計數機</h2>
+        <div className="flex space-x-3">
+          <button className="btn-apple-secondary text-sm">
+            <span className="mr-2">📄</span>
+            匯出計算結果
+          </button>
+          <button className="btn-apple-primary text-sm">
+            <span className="mr-2">🔍</span>
+            進階設定
+          </button>
+        </div>
+      </div>
+
+      {/* 計算器主體 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 左側：輸入區域 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">基本資料</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">客戶姓名</label>
+                <input
+                  type="text"
+                  placeholder="請輸入客戶姓名"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">社區券號碼</label>
+                <input
+                  type="text"
+                  placeholder="請輸入社區券號碼"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務類型</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇服務類型</option>
+                  <option value="HC-家居服務">HC-家居服務</option>
+                  <option value="NC-護理服務(專業人員)">NC-護理服務(專業人員)</option>
+                  <option value="PC-到戶看顧(輔助人員)">PC-到戶看顧(輔助人員)</option>
+                  <option value="ES-護送服務(陪診)">ES-護送服務(陪診)</option>
+                  <option value="RA-復康運動(輔助人員)">RA-復康運動(輔助人員)</option>
+                  <option value="RT-復康運動(專業人員)">RT-復康運動(專業人員)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">服務時數</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="請輸入服務時數"
+                  className="form-input-apple w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">自付比例</label>
+                <select className="form-input-apple w-full">
+                  <option value="">請選擇自付比例</option>
+                  <option value="5">5%</option>
+                  <option value="8">8%</option>
+                  <option value="12">12%</option>
+                  <option value="16">16%</option>
+                  <option value="25">25%</option>
+                  <option value="40">40%</option>
+                </select>
+              </div>
+            </div>
+            
+            <button className="w-full mt-6 btn-apple-primary">
+              <span className="mr-2">🧮</span>
+              計算費用
+            </button>
+          </div>
+        </div>
+
+        {/* 右側：計算結果 */}
+        <div className="space-y-6">
+          <div className="bg-bg-secondary rounded-lg p-6">
+            <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算結果</h3>
+            
+            {/* 費用明細卡片 */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">服務總費用</span>
+                  <span className="text-lg font-semibold text-text-primary">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">按照標準收費計算</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">政府資助金額</span>
+                  <span className="text-lg font-semibold text-green-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">社區券資助部分</div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-border-light">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-text-secondary">客戶自付金額</span>
+                  <span className="text-lg font-semibold text-blue-600">$0.00</span>
+                </div>
+                <div className="text-xs text-text-secondary">客戶需要支付的金額</div>
+              </div>
+              
+              <div className="bg-mingcare-blue rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-white">本次收費總額</span>
+                  <span className="text-xl font-bold text-white">$0.00</span>
+                </div>
+                <div className="text-xs text-blue-100">實際向客戶收取的費用</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 費用說明 */}
+          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+            <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 費用說明</h4>
+            <ul className="text-xs text-yellow-700 space-y-1">
+              <li>• 服務費用按照政府核定的收費標準計算</li>
+              <li>• 政府資助金額會根據客戶的自付比例自動計算</li>
+              <li>• 客戶只需支付自付部分的費用</li>
+              <li>• 計算結果僅供參考，實際費用以政府最新政策為準</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* 歷史記錄區域 */}
+      <div className="mt-8">
+        <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算記錄</h3>
+        <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-bg-secondary">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">計算時間</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">客戶姓名</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務時數</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">自付比例</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">收費金額</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-text-secondary">
+                  <div className="flex flex-col items-center">
+                    <span className="text-4xl mb-2">🧮</span>
+                    <p>暫無計算記錄</p>
+                    <p className="text-sm">使用計算器進行費用計算後會顯示記錄</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
