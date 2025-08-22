@@ -420,8 +420,15 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
   }
 
   // 截斷地址顯示
-  const truncateAddress = (address: string, maxLength: number = 30) => {
-    return address.length > maxLength ? address.substring(0, maxLength) + '...' : address
+  const truncateAddress = (address: string | null | undefined, maxLength: number = 30) => {
+    if (address == null) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('truncateAddress: 遇到 null/undefined service_address')
+      }
+      return ''
+    }
+    const value = String(address)
+    return value.length > maxLength ? value.substring(0, maxLength) + '...' : value
   }
 
   if (loading) {
