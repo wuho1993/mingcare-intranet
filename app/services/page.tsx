@@ -4170,7 +4170,8 @@ function ScheduleFormModal({
     if (!data.phone.trim()) errors.phone = '聯絡電話不能為空'
     if (!data.service_address.trim()) errors.service_address = '服務地址不能為空'
     if (!data.care_staff_name.trim()) errors.care_staff_name = '護理人員不能為空'
-    if (data.service_fee <= 0) errors.service_fee = '服務費用必須大於 0'
+  // 允許服務費用為 0（免費 / 促銷等情境）
+  if (data.service_fee < 0) errors.service_fee = '服務費用不能為負數'
     if (data.staff_salary < 0) errors.staff_salary = '員工薪資不能為負數'
     if (data.service_hours <= 0) errors.service_hours = '服務時數必須大於 0'
     if (!data.service_type) errors.service_type = '請選擇服務類型'
