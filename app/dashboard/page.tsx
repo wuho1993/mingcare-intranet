@@ -115,15 +115,15 @@ export default function Dashboard() {
     {
       title: '員工排班',
       description: '管理護理人員排班',
-      href: '/care-staff?tab=schedule',
+      href: '/services?tab=schedule',
       iconType: 'clock',
       bgColor: 'bg-purple-50 hover:bg-purple-100',
       iconColor: 'text-purple-600'
     },
     {
       title: '財務報表',
-      description: '查看財務統計報表',
-      href: '/commissions?tab=reports',
+      description: '查看業務概覽與財務統計',
+      href: '/services?tab=overview',
       iconType: 'trending',
       bgColor: 'bg-orange-50 hover:bg-orange-100',
       iconColor: 'text-orange-600'

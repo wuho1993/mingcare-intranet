@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { searchCustomers, searchCareStaff } from '../../services/billing-salary-management'
 import type {
@@ -2099,6 +2099,15 @@ export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
   const [reportsViewMode, setReportsViewMode] = useState<'list' | 'calendar'>('list') // 報表檢視模式
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // 從 URL 參數設定預設 tab
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'overview' || tab === 'schedule' || tab === 'reports') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   // 狀態管理
   const [filters, setFilters] = useState<BillingSalaryFilters>(() => {
