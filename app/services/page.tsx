@@ -2217,17 +2217,22 @@ export default function ServicesPage() {
 
   // 狀態管理
   const [filters, setFilters] = useState<BillingSalaryFilters>(() => {
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    
+    // 預設為極大範圍 (可視為 "全部日期")
     return {
       dateRange: {
-        start: formatDateSafely(startOfMonth),
-        end: formatDateSafely(endOfMonth)
+        start: '2000-01-01',
+        end: '2099-12-31'
       }
     }
   })
+
+  // 快速切換為全部日期
+  const setAllDateRange = () => {
+    setFilters(prev => ({
+      ...prev,
+      dateRange: { start: '2000-01-01', end: '2099-12-31' }
+    }))
+  }
 
   const [kpiData, setKpiData] = useState<BusinessKPI | null>(null)
   const [categorySummary, setCategorySummary] = useState<ProjectCategorySummary[]>([])
