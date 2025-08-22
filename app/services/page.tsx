@@ -2217,11 +2217,14 @@ export default function ServicesPage() {
 
   // 狀態管理
   const [filters, setFilters] = useState<BillingSalaryFilters>(() => {
-    // 預設為極大範圍 (可視為 "全部日期")
+    // 預設為當月 (業務概覽/詳細報表月曆需求)
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     return {
       dateRange: {
-        start: '2000-01-01',
-        end: '2099-12-31'
+        start: formatDateSafely(startOfMonth),
+        end: formatDateSafely(endOfMonth)
       }
     }
   })
