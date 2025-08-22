@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import jsPDF from 'jspdf'
 
 interface CommissionRate {
   introducer: string
@@ -42,6 +43,168 @@ export default function CommissionsPage() {
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
   const router = useRouter()
+
+  // PDF生成函數
+  const generatePDF = () => {
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    let currentY = 20
+    
+    // 設置中文字體 (基本支援)
+    pdf.setFont('helvetica', 'normal')
+    
+    // 標題
+    pdf.setFontSize(20)
+    pdf.text('佣金計算報告', pageWidth / 2, currentY, { align: 'center' })
+    currentY += 15
+    
+    // 日期和篩選條件
+    pdf.setFontSize(12)
+    const today = new Date().toLocaleDateString('zh-TW')
+    pdf.text(`生成日期: ${today}`, 20, currentY)
+    currentY += 8
+    
+    if (selectedIntroducer !== 'all') {
+      pdf.text(`介紹人: ${selectedIntroducer}`, 20, currentY)
+      currentY += 8
+    }
+    if (selectedYear !== 'all') {
+      pdf.text(`年份: ${selectedYear}`, 20, currentY)
+      currentY += 8
+    }
+    if (selectedMonth !== 'all') {
+      pdf.text(`月份: ${selectedMonth}`, 20, currentY)
+      currentY += 8
+    }
+    
+    currentY += 10
+    
+    // 按月份分組數據
+    const monthlyData = new Map<string, CustomerCommissionData[]>()
+    filteredCommissionData.forEach(item => {
+      if (!monthlyData.has(item.service_month)) {
+        monthlyData.set(item.service_month, [])
+      }
+      monthlyData.get(item.service_month)!.push(item)
+    })
+    
+    const sortedMonths = Array.from(monthlyData.keys()).sort()
+    
+    // 總計數據
+    let totalServiceFee = 0
+    let totalServiceHours = 0
+    let totalQualifiedCustomers = 0
+    let totalCommission = 0
+    
+    // 逐月處理
+    sortedMonths.forEach((month, index) => {
+      const monthData = monthlyData.get(month)!
+      
+      // 檢查是否需要新頁面
+      if (currentY > pageHeight - 60) {
+        pdf.addPage()
+        currentY = 20
+      }
+      
+      // 月份標題
+      pdf.setFontSize(16)
+      const [year, monthNum] = month.split('-')
+      pdf.text(`${year}年${monthNum}月`, 20, currentY)
+      currentY += 12
+      
+      // 月份統計
+      const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
+      const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
+      const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
+      const monthCommission = monthData.reduce((sum, item) => sum + item.commission_amount, 0)
+      
+      // 累加到總計
+      totalServiceFee += monthServiceFee
+      totalServiceHours += monthServiceHours
+      totalQualifiedCustomers += monthQualifiedCount
+      totalCommission += monthCommission
+      
+      // 表格標題
+      pdf.setFontSize(10)
+      pdf.text('客戶編號', 20, currentY)
+      pdf.text('客戶姓名', 50, currentY)
+      pdf.text('介紹人', 80, currentY)
+      pdf.text('服務費用', 110, currentY)
+      pdf.text('服務時數', 140, currentY)
+      pdf.text('狀態', 165, currentY)
+      pdf.text('佣金', 180, currentY)
+      
+      currentY += 5
+      pdf.line(20, currentY, pageWidth - 20, currentY) // 分隔線
+      currentY += 5
+      
+      // 客戶數據
+      monthData.forEach(customer => {
+        if (currentY > pageHeight - 30) {
+          pdf.addPage()
+          currentY = 20
+        }
+        
+        pdf.text(customer.customer_id.substring(0, 10), 20, currentY)
+        pdf.text(customer.customer_name.substring(0, 8), 50, currentY)
+        pdf.text(customer.introducer.substring(0, 8), 80, currentY)
+        pdf.text(`$${customer.monthly_fee.toLocaleString()}`, 110, currentY)
+        pdf.text(`${customer.monthly_hours.toFixed(1)}h`, 140, currentY)
+        pdf.text(customer.is_qualified ? '達標' : '不達標', 165, currentY)
+        pdf.text(customer.is_qualified ? `$${customer.commission_amount}` : '不達標', 180, currentY)
+        
+        currentY += 6
+      })
+      
+      // 月份小結
+      currentY += 5
+      pdf.line(20, currentY, pageWidth - 20, currentY)
+      currentY += 8
+      
+      pdf.setFontSize(12)
+      pdf.text(`${year}年${monthNum}月 小結:`, 20, currentY)
+      currentY += 8
+      
+      pdf.setFontSize(10)
+      pdf.text(`總服務費用: $${monthServiceFee.toLocaleString()}`, 30, currentY)
+      currentY += 6
+      pdf.text(`總服務時數: ${monthServiceHours.toFixed(1)} 小時`, 30, currentY)
+      currentY += 6
+      pdf.text(`達標客戶數: ${monthQualifiedCount} 位`, 30, currentY)
+      currentY += 6
+      pdf.text(`月佣金總額: $${monthCommission.toLocaleString()}`, 30, currentY)
+      currentY += 15
+    })
+    
+    // 總結
+    if (currentY > pageHeight - 80) {
+      pdf.addPage()
+      currentY = 20
+    }
+    
+    pdf.line(20, currentY, pageWidth - 20, currentY)
+    currentY += 10
+    
+    pdf.setFontSize(16)
+    pdf.text('總結', 20, currentY)
+    currentY += 12
+    
+    pdf.setFontSize(12)
+    pdf.text(`報告期間: ${sortedMonths.length > 0 ? `${sortedMonths[0]} 至 ${sortedMonths[sortedMonths.length - 1]}` : '無數據'}`, 30, currentY)
+    currentY += 8
+    pdf.text(`總服務費用: $${totalServiceFee.toLocaleString()}`, 30, currentY)
+    currentY += 8
+    pdf.text(`總服務時數: ${totalServiceHours.toFixed(1)} 小時`, 30, currentY)
+    currentY += 8
+    pdf.text(`達標客戶總數: ${totalQualifiedCustomers} 位`, 30, currentY)
+    currentY += 8
+    pdf.text(`佣金總額: $${totalCommission.toLocaleString()}`, 30, currentY)
+    
+    // 保存PDF
+    const fileName = `佣金計算報告_${today.replace(/\//g, '-')}.pdf`
+    pdf.save(fileName)
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -120,10 +283,12 @@ export default function CommissionsPage() {
       // 在前端處理數據分組和計算
       const monthlyStats = new Map()
 
-      // 合併客戶和服務數據
-      const qualifiedCustomers = customerData.filter(customer =>
-        billingData.some(billing => billing.customer_id === customer.customer_id)
-      )
+      // 合併客戶和服務數據，同時過濾掉沒有佣金率設定的介紹人
+      const qualifiedCustomers = customerData.filter(customer => {
+        const hasCommissionRate = commissionRates?.some(rate => rate.introducer === customer.introducer)
+        const hasBillingData = billingData.some(billing => billing.customer_id === customer.customer_id)
+        return hasCommissionRate && hasBillingData
+      })
 
       qualifiedCustomers.forEach(customer => {
         const customerBilling = billingData.filter(b => b.customer_id === customer.customer_id)
@@ -424,6 +589,12 @@ export default function CommissionsPage() {
                   className="btn-apple-primary flex-1"
                 >
                   重新載入
+                </button>
+                <button
+                  onClick={generatePDF}
+                  className="btn-apple-primary flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  📄 導出PDF
                 </button>
               </div>
             </div>
