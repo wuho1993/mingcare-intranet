@@ -42,6 +42,27 @@ const formatDateSafely = (date: Date): string => {
   return `${year}-${month}-${day}`
 }
 
+// 通用安全陣列助手，避免偶發 null 導致 .length / .map 錯誤
+function safeArray<T>(input: T[] | null | undefined): T[] {
+  return Array.isArray(input) ? input : []
+}
+
+// 包一層安全 map（除錯用）
+function safeMap<T, R>(input: T[] | null | undefined, mapper: (v: T, i: number) => R): R[] {
+  if (!Array.isArray(input)) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('safeMap: input 非陣列，已自動轉為空陣列', input)
+    }
+    return []
+  }
+  try {
+    return input.map(mapper)
+  } catch (e) {
+    console.error('safeMap 執行失敗:', e, input)
+    return []
+  }
+}
+
 // 詳細記錄列表組件
 interface DetailedRecordsListProps {
   filters: BillingSalaryFilters
@@ -169,16 +190,22 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
 
       {/* 月曆網格 */}
       <div className="grid grid-cols-7 gap-1">
-        {calendarDays && calendarDays.map((date, index) => {
+        {safeMap(calendarDays, (date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
           const isToday = dateStr === formatDateSafely(new Date())
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
-          const dayRecords = (calendarData && calendarData[dateStr]) || []
+          // 確保 dayRecords 一定是陣列
+          const raw = calendarData ? calendarData[dateStr] : []
+          const dayRecords = safeArray(raw)
+          if (!Array.isArray(raw) && raw != null) {
+            console.warn('dayRecords 非標準陣列，已轉換', dateStr, raw)
+          }
           
           // 根據記錄數量動態調整高度
-          const minHeight = dayRecords.length > 0 
-            ? Math.max(120, 120 + (dayRecords.length - 1) * 80) 
+          const recordCount = dayRecords ? dayRecords.length : 0
+          const minHeight = recordCount > 0 
+            ? Math.max(120, 120 + (recordCount - 1) * 80) 
             : 120
           
           return (
@@ -201,9 +228,9 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
               </div>
               
               {/* 服務記錄 */}
-              {isCurrentMonth && dayRecords && dayRecords.length > 0 && (
+        {isCurrentMonth && recordCount > 0 && (
                 <div className="space-y-1">
-                  {dayRecords.slice(0, 3).map((record, i) => (
+          {safeArray(dayRecords).slice(0, 3).map((record, i) => (
                     <div
                       key={`${record.id}-${i}`}
                       onClick={() => onEdit(record)}
@@ -220,16 +247,15 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
                       </div>
                     </div>
                   ))}
-                  {dayRecords && dayRecords.length > 3 && (
+          {recordCount > 3 && (
                     <div className="text-sm text-text-secondary text-center py-1">
-                      還有 {dayRecords.length - 3} 筆記錄...
+            還有 {recordCount - 3} 筆記錄...
                     </div>
                   )}
                 </div>
               )}
             </div>
-          )
-        })}
+      )})}
       </div>
     </div>
   )
@@ -437,7 +463,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     )
   }
 
-  if (!records || records.length === 0) {
+  if (!records || !Array.isArray(records) || records.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -535,13 +561,13 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
         {/* 記錄數量顯示 */}
         <div className="text-sm text-text-secondary">
-          共 {records ? records.length : 0} 筆記錄
+          共 {Array.isArray(records) ? records.length : 0} 筆記錄
         </div>
       </div>
 
       {/* 記錄列表 */}
       <div className="space-y-3">
-        {records && records.length > 0 ? records.map((record) => (
+  {Array.isArray(records) && records.length > 0 ? records.map((record) => (
           <div 
             key={record.id}
             className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
