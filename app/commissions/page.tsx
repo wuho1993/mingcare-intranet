@@ -161,7 +161,8 @@ export default function CommissionsPage() {
       Array.from(monthlyStats.values())
         .sort((a, b) => a.service_month.localeCompare(b.service_month))
         .forEach(monthData => {
-          const isQualified = monthData.monthly_hours >= 25 || monthData.monthly_fee >= 6200
+          // 修改達標條件：只計算服務費用，超過$6000就有佣金
+          const isQualified = monthData.monthly_fee >= 6000
           
           let commissionAmount = 0
           let monthSequence = 0
@@ -342,6 +343,7 @@ export default function CommissionsPage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary mb-1 truncate">佣金計算</h1>
               <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">計算業務佣金、獎金及績效獎勵</p>
+              <p className="text-xs text-orange-600 mt-1">達標條件：每月服務費用 ≥ $6,000</p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
