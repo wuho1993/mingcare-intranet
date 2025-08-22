@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import jsPDF from 'jspdf'
 
 interface CommissionRate {
   introducer: string
@@ -46,164 +45,346 @@ export default function CommissionsPage() {
 
   // PDF生成函數
   const generatePDF = () => {
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pageWidth = pdf.internal.pageSize.getWidth()
-    const pageHeight = pdf.internal.pageSize.getHeight()
-    let currentY = 20
-    
-    // 設置中文字體 (基本支援)
-    pdf.setFont('helvetica', 'normal')
-    
-    // 標題
-    pdf.setFontSize(20)
-    pdf.text('佣金計算報告', pageWidth / 2, currentY, { align: 'center' })
-    currentY += 15
-    
-    // 日期和篩選條件
-    pdf.setFontSize(12)
-    const today = new Date().toLocaleDateString('zh-TW')
-    pdf.text(`生成日期: ${today}`, 20, currentY)
-    currentY += 8
-    
-    if (selectedIntroducer !== 'all') {
-      pdf.text(`介紹人: ${selectedIntroducer}`, 20, currentY)
-      currentY += 8
-    }
-    if (selectedYear !== 'all') {
-      pdf.text(`年份: ${selectedYear}`, 20, currentY)
-      currentY += 8
-    }
-    if (selectedMonth !== 'all') {
-      pdf.text(`月份: ${selectedMonth}`, 20, currentY)
-      currentY += 8
-    }
-    
-    currentY += 10
-    
-    // 按月份分組數據
-    const monthlyData = new Map<string, CustomerCommissionData[]>()
-    filteredCommissionData.forEach(item => {
-      if (!monthlyData.has(item.service_month)) {
-        monthlyData.set(item.service_month, [])
-      }
-      monthlyData.get(item.service_month)!.push(item)
-    })
-    
-    const sortedMonths = Array.from(monthlyData.keys()).sort()
-    
-    // 總計數據
-    let totalServiceFee = 0
-    let totalServiceHours = 0
-    let totalQualifiedCustomers = 0
-    let totalCommission = 0
-    
-    // 逐月處理
-    sortedMonths.forEach((month, index) => {
-      const monthData = monthlyData.get(month)!
-      
-      // 檢查是否需要新頁面
-      if (currentY > pageHeight - 60) {
-        pdf.addPage()
-        currentY = 20
-      }
-      
-      // 月份標題
-      pdf.setFontSize(16)
-      const [year, monthNum] = month.split('-')
-      pdf.text(`${year}年${monthNum}月`, 20, currentY)
-      currentY += 12
-      
-      // 月份統計
-      const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
-      const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
-      const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
-      const monthCommission = monthData.reduce((sum, item) => sum + item.commission_amount, 0)
-      
-      // 累加到總計
-      totalServiceFee += monthServiceFee
-      totalServiceHours += monthServiceHours
-      totalQualifiedCustomers += monthQualifiedCount
-      totalCommission += monthCommission
-      
-      // 表格標題
-      pdf.setFontSize(10)
-      pdf.text('客戶編號', 20, currentY)
-      pdf.text('客戶姓名', 50, currentY)
-      pdf.text('介紹人', 80, currentY)
-      pdf.text('服務費用', 110, currentY)
-      pdf.text('服務時數', 140, currentY)
-      pdf.text('狀態', 165, currentY)
-      pdf.text('佣金', 180, currentY)
-      
-      currentY += 5
-      pdf.line(20, currentY, pageWidth - 20, currentY) // 分隔線
-      currentY += 5
-      
-      // 客戶數據
-      monthData.forEach(customer => {
-        if (currentY > pageHeight - 30) {
-          pdf.addPage()
-          currentY = 20
+    try {
+      // 按月份分組數據
+      const monthlyData = new Map<string, CustomerCommissionData[]>()
+      filteredCommissionData.forEach(item => {
+        if (!monthlyData.has(item.service_month)) {
+          monthlyData.set(item.service_month, [])
         }
-        
-        pdf.text(customer.customer_id.substring(0, 10), 20, currentY)
-        pdf.text(customer.customer_name.substring(0, 8), 50, currentY)
-        pdf.text(customer.introducer.substring(0, 8), 80, currentY)
-        pdf.text(`$${customer.monthly_fee.toLocaleString()}`, 110, currentY)
-        pdf.text(`${customer.monthly_hours.toFixed(1)}h`, 140, currentY)
-        pdf.text(customer.is_qualified ? '達標' : '不達標', 165, currentY)
-        pdf.text(customer.is_qualified ? `$${customer.commission_amount}` : '不達標', 180, currentY)
-        
-        currentY += 6
+        monthlyData.get(item.service_month)!.push(item)
       })
+
+      const sortedMonths = Array.from(monthlyData.keys()).sort()
       
-      // 月份小結
-      currentY += 5
-      pdf.line(20, currentY, pageWidth - 20, currentY)
-      currentY += 8
+      // 總計數據
+      let totalServiceFee = 0
+      let totalServiceHours = 0
+      let totalQualifiedCustomers = 0
+      let totalCommission = 0
+
+      // 為每個月計算統計並按介紹人分組
+      const monthlyStats = sortedMonths.map(month => {
+        const monthData = monthlyData.get(month)!
+        const [year, monthNum] = month.split('-')
+        
+        // 按介紹人分組
+        const introducerGroups = new Map<string, CustomerCommissionData[]>()
+        monthData.forEach(item => {
+          if (!introducerGroups.has(item.introducer)) {
+            introducerGroups.set(item.introducer, [])
+          }
+          introducerGroups.get(item.introducer)!.push(item)
+        })
+
+        // 計算月統計
+        const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
+        const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
+        const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
+        const monthCommission = monthData.reduce((sum, item) => sum + item.commission_amount, 0)
+
+        // 累加到總計
+        totalServiceFee += monthServiceFee
+        totalServiceHours += monthServiceHours
+        totalQualifiedCustomers += monthQualifiedCount
+        totalCommission += monthCommission
+
+        // 計算介紹人佣金
+        const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]) => {
+          const qualifiedCustomers = customers.filter(c => c.is_qualified)
+          const totalFee = qualifiedCustomers.reduce((sum, c) => sum + c.monthly_fee, 0)
+          const commissionAmount = qualifiedCustomers.reduce((sum, c) => sum + c.commission_amount, 0)
+          
+          // 獲取佣金率
+          const commissionRate = commissionRatesData.find(r => r.introducer === introducerName)?.first_month_commission || 0
+          
+          return {
+            introducerName,
+            rate: commissionRate,
+            qualifiedCustomers: qualifiedCustomers.length,
+            totalFee,
+            amount: commissionAmount
+          }
+        }).filter(commission => commission.rate > 0) // 只顯示有設定佣金率的介紹人
+
+        return {
+          year,
+          month: monthNum,
+          qualifiedCustomers: monthQualifiedCount,
+          totalHours: monthServiceHours,
+          totalFee: monthServiceFee,
+          totalCommission: monthCommission,
+          commissions: introducerCommissions
+        }
+      })
+
+      // 創建 HTML 內容
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="zh-TW">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>佣金計算報告</title>
+          <style>
+            body {
+              font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+              margin: 20px;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #428bca;
+              padding-bottom: 15px;
+            }
+            
+            .header h1 {
+              color: #428bca;
+              margin: 0;
+              font-size: 24px;
+            }
+            
+            .date-range {
+              color: #666;
+              margin-top: 10px;
+              font-size: 14px;
+            }
+            
+            .filters {
+              margin-top: 10px;
+              font-size: 12px;
+              color: #888;
+            }
+            
+            .month-section {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            
+            .month-header {
+              background-color: #f8f9fa;
+              padding: 10px;
+              border-left: 4px solid #428bca;
+              margin-bottom: 15px;
+            }
+            
+            .month-title {
+              font-size: 16px;
+              font-weight: bold;
+              color: #428bca;
+              margin: 0;
+            }
+            
+            .month-summary {
+              display: flex;
+              justify-content: space-around;
+              background-color: #e7f3ff;
+              padding: 10px;
+              border-radius: 5px;
+              margin: 10px 0;
+            }
+            
+            .summary-item {
+              text-align: center;
+            }
+            
+            .summary-label {
+              font-weight: bold;
+              color: #428bca;
+              display: block;
+              font-size: 11px;
+            }
+            
+            .summary-value {
+              font-size: 14px;
+              font-weight: bold;
+              color: #333;
+            }
+            
+            .commissions-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            
+            .commissions-table th,
+            .commissions-table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            
+            .commissions-table th {
+              background-color: #428bca;
+              color: white;
+              font-weight: bold;
+            }
+            
+            .commissions-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            
+            .number {
+              text-align: right;
+            }
+            
+            .overall-summary {
+              margin-top: 40px;
+              padding: 20px;
+              border: 2px solid #428bca;
+              background-color: #f8f9fa;
+              page-break-inside: avoid;
+            }
+            
+            .overall-summary h2 {
+              text-align: center;
+              color: #428bca;
+              margin-bottom: 20px;
+            }
+            
+            .total-stats {
+              display: flex;
+              justify-content: space-around;
+              margin-top: 15px;
+            }
+            
+            .total-stat {
+              text-align: center;
+            }
+            
+            .total-stat-label {
+              font-weight: bold;
+              color: #428bca;
+              display: block;
+              margin-bottom: 5px;
+            }
+            
+            .total-stat-value {
+              font-size: 18px;
+              font-weight: bold;
+              color: #333;
+            }
+            
+            @media print {
+              body { margin: 15px; }
+              .month-section { page-break-inside: avoid; }
+              .overall-summary { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>佣金計算報告</h1>
+            <div class="date-range">
+              生成日期: ${new Date().toLocaleDateString('zh-TW')}
+            </div>
+            <div class="filters">
+              ${selectedIntroducer !== 'all' ? `介紹人: ${selectedIntroducer} | ` : ''}${selectedYear !== 'all' ? `年份: ${selectedYear} | ` : ''}${selectedMonth !== 'all' ? `月份: ${selectedMonth}` : ''}
+            </div>
+          </div>
+          
+          ${monthlyStats.map(monthData => `
+            <div class="month-section">
+              <div class="month-header">
+                <h3 class="month-title">${monthData.year}年${monthData.month}月 佣金統計</h3>
+              </div>
+              
+              <div class="month-summary">
+                <div class="summary-item">
+                  <span class="summary-label">達標客戶</span>
+                  <span class="summary-value">${monthData.qualifiedCustomers}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">總服務時數</span>
+                  <span class="summary-value">${monthData.totalHours.toFixed(1)}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">總服務金額</span>
+                  <span class="summary-value">$${monthData.totalFee.toLocaleString()}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">總佣金</span>
+                  <span class="summary-value">$${monthData.totalCommission.toLocaleString()}</span>
+                </div>
+              </div>
+              
+              ${monthData.commissions.length > 0 ? `
+                <table class="commissions-table">
+                  <thead>
+                    <tr>
+                      <th>介紹人</th>
+                      <th>佣金率</th>
+                      <th>達標客戶</th>
+                      <th>總服務金額</th>
+                      <th>佣金金額</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${monthData.commissions.map(commission => `
+                      <tr>
+                        <td>${commission.introducerName}</td>
+                        <td class="number">${(commission.rate * 100).toFixed(1)}%</td>
+                        <td class="number">${commission.qualifiedCustomers}</td>
+                        <td class="number">$${commission.totalFee.toLocaleString()}</td>
+                        <td class="number">$${commission.amount.toLocaleString()}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : '<p style="text-align: center; color: #666; font-style: italic;">本月無佣金記錄</p>'}
+            </div>
+          `).join('')}
+          
+          <div class="overall-summary">
+            <h2>總結報告</h2>
+            <div class="total-stats">
+              <div class="total-stat">
+                <span class="total-stat-label">總達標客戶</span>
+                <span class="total-stat-value">${totalQualifiedCustomers}</span>
+              </div>
+              <div class="total-stat">
+                <span class="total-stat-label">總服務時數</span>
+                <span class="total-stat-value">${totalServiceHours.toFixed(1)}</span>
+              </div>
+              <div class="total-stat">
+                <span class="total-stat-label">總服務金額</span>
+                <span class="total-stat-value">$${totalServiceFee.toLocaleString()}</span>
+              </div>
+              <div class="total-stat">
+                <span class="total-stat-label">總佣金</span>
+                <span class="total-stat-value">$${totalCommission.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
       
-      pdf.setFontSize(12)
-      pdf.text(`${year}年${monthNum}月 小結:`, 20, currentY)
-      currentY += 8
+      // 創建並下載 HTML 文件
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
       
-      pdf.setFontSize(10)
-      pdf.text(`總服務費用: $${monthServiceFee.toLocaleString()}`, 30, currentY)
-      currentY += 6
-      pdf.text(`總服務時數: ${monthServiceHours.toFixed(1)} 小時`, 30, currentY)
-      currentY += 6
-      pdf.text(`達標客戶數: ${monthQualifiedCount} 位`, 30, currentY)
-      currentY += 6
-      pdf.text(`月佣金總額: $${monthCommission.toLocaleString()}`, 30, currentY)
-      currentY += 15
-    })
-    
-    // 總結
-    if (currentY > pageHeight - 80) {
-      pdf.addPage()
-      currentY = 20
+      const today = new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')
+      const fileName = `佣金報告_${today}.html`
+      
+      link.href = url
+      link.download = fileName
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      alert('已下載HTML文件，請在瀏覽器中打開後列印或儲存為PDF')
+      
+    } catch (error) {
+      console.error('PDF導出錯誤:', error)
+      alert('PDF導出失敗，請稍後再試')
     }
-    
-    pdf.line(20, currentY, pageWidth - 20, currentY)
-    currentY += 10
-    
-    pdf.setFontSize(16)
-    pdf.text('總結', 20, currentY)
-    currentY += 12
-    
-    pdf.setFontSize(12)
-    pdf.text(`報告期間: ${sortedMonths.length > 0 ? `${sortedMonths[0]} 至 ${sortedMonths[sortedMonths.length - 1]}` : '無數據'}`, 30, currentY)
-    currentY += 8
-    pdf.text(`總服務費用: $${totalServiceFee.toLocaleString()}`, 30, currentY)
-    currentY += 8
-    pdf.text(`總服務時數: ${totalServiceHours.toFixed(1)} 小時`, 30, currentY)
-    currentY += 8
-    pdf.text(`達標客戶總數: ${totalQualifiedCustomers} 位`, 30, currentY)
-    currentY += 8
-    pdf.text(`佣金總額: $${totalCommission.toLocaleString()}`, 30, currentY)
-    
-    // 保存PDF
-    const fileName = `佣金計算報告_${today.replace(/\//g, '-')}.pdf`
-    pdf.save(fileName)
   }
 
   useEffect(() => {
