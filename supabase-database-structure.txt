@@ -138,6 +138,12 @@ TABLES（表結構）
 - project_manager (staff_owner_enum) = 負責同事
 - copay_level (copay_level_enum) = 自付比例等級
 
+[public.commission_rate_introducer]
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- introducer (introducer_enum, NOT NULL) = 介紹人
+- first_month_commission (numeric) = 首月佣金
+- subsequent_month_commission (numeric) = 後續月份佣金
+
 ------------------------------------------------------------------------
 ENUM TYPES（列舉型別）
 contract_status_enum = { 同意, 不同意 }
@@ -148,7 +154,7 @@ district_enum = { 中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區,
 gender_enum = { 男, 女 }
 health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
 home_visit_status_enum = { 已完成, 未完成 }
-introducer_enum = { Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生 }
+introducer_enum = { Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰 }
 lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }
 preferred_area_enum = { 所有區域, 灣仔區, 中西區, 東區, 南區, 油尖旺區, 深水埗區, 九龍城區, 黃大仙區, 觀塘區, 西貢區, 沙田區, 大埔區, 北區, 荃灣區, 屯門區, 元朗區, 葵青區, 離島區 }
 project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
