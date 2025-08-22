@@ -201,7 +201,7 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
               </div>
               
               {/* 服務記錄 */}
-              {isCurrentMonth && dayRecords.length > 0 && (
+              {isCurrentMonth && dayRecords && dayRecords.length > 0 && (
                 <div className="space-y-1">
                   {dayRecords.slice(0, 3).map((record, i) => (
                     <div
@@ -220,7 +220,7 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
                       </div>
                     </div>
                   ))}
-                  {dayRecords.length > 3 && (
+                  {dayRecords && dayRecords.length > 3 && (
                     <div className="text-sm text-text-secondary text-center py-1">
                       還有 {dayRecords.length - 3} 筆記錄...
                     </div>
@@ -535,7 +535,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
       {/* 記錄列表 */}
       <div className="space-y-3">
-        {records.map((record) => (
+        {records && records.length > 0 ? records.map((record) => (
           <div 
             key={record.id}
             className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
@@ -607,7 +607,11 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
               </span>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="text-center text-text-secondary py-8">
+            暫無記錄
+          </div>
+        )}
       </div>
       
       {/* 記錄統計信息 */}
@@ -1428,7 +1432,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   {isCurrentMonth && (
                     <div className="space-y-2">
                       {/* 遠端排程 - 不可刪除 */}
-                      {remoteSchedules.map((schedule, i) => (
+                      {remoteSchedules && remoteSchedules.length > 0 && remoteSchedules.map((schedule, i) => (
                         <div
                           key={`remote-${i}`}
                           className="text-base bg-white border border-gray-200 rounded p-3 shadow-sm"
@@ -1451,7 +1455,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                       ))}
                       
                       {/* 本地排程 - 可點擊編輯/刪除 */}
-                      {localDaySchedules.map((schedule, i) => (
+                      {localDaySchedules && localDaySchedules.length > 0 && localDaySchedules.map((schedule, i) => (
                         <div
                           key={`local-${i}`}
                           onClick={(e) => {
