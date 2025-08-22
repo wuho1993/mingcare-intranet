@@ -35,12 +35,8 @@ export default function CommissionsPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [commissionData, setCommissionData] = useState<IntroducerSummary[]>([])
-  const [commissionRatesData, setCommissionRatesData] = useState<CommissionRate[]>([])
-  const [allCommissionData, setAllCommissionData] = useState<CustomerCommissionData[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selectedIntroducer, setSelectedIntroducer] = useState<string>('all')
-  const [selectedYear, setSelectedYear] = useState<string>('all')
-  const [selectedMonth, setSelectedMonth] = useState<string>('all')
   const router = useRouter()
 
   useEffect(() => {
@@ -74,11 +70,6 @@ export default function CommissionsPage() {
       .select('*')
       
     console.log('佣金率數據:', commissionRates, '錯誤:', commissionError)
-    
-    // 儲存佣金率數據
-    if (commissionRates) {
-      setCommissionRatesData(commissionRates)
-    }
     
     if (commissionError) {
       console.error('佣金率錯誤:', commissionError)
@@ -154,8 +145,8 @@ export default function CommissionsPage() {
         })
       })
 
-      // 計算佣金 - 包含達標和不達標的記錄
-      const allResults: CustomerCommissionData[] = []
+      // 計算佣金
+      const commissionResults: CustomerCommissionData[] = []
       const customerMonthSequence = new Map()
 
       Array.from(monthlyStats.values())
@@ -163,40 +154,33 @@ export default function CommissionsPage() {
         .forEach(monthData => {
           const isQualified = monthData.monthly_hours >= 25 || monthData.monthly_fee >= 6200
           
-          let commissionAmount = 0
-          let monthSequence = 0
-
           if (isQualified) {
             const customerKey = monthData.customer_id
             const currentSequence = (customerMonthSequence.get(customerKey) || 0) + 1
             customerMonthSequence.set(customerKey, currentSequence)
-            monthSequence = currentSequence
 
             const commissionRate = commissionRates?.find(rate => rate.introducer === monthData.introducer)
+            let commissionAmount = 0
 
             if (commissionRate) {
               commissionAmount = currentSequence === 1 
                 ? commissionRate.first_month_commission 
                 : commissionRate.subsequent_month_commission
             }
-          }
 
-          // 添加所有記錄（達標和不達標）
-          allResults.push({
-            ...monthData,
-            is_qualified: isQualified,
-            month_sequence: monthSequence,
-            commission_amount: commissionAmount
-          })
+            commissionResults.push({
+              ...monthData,
+              is_qualified: true,
+              month_sequence: currentSequence,
+              commission_amount: commissionAmount
+            })
+          }
         })
 
-      // 儲存所有數據用於篩選
-      setAllCommissionData(allResults)
-
-      // 按介紹人分組（只計算達標的佣金）
+      // 按介紹人分組
       const groupedByIntroducer = new Map<string, IntroducerSummary>()
 
-      allResults.forEach(result => {
+      commissionResults.forEach(result => {
         if (!groupedByIntroducer.has(result.introducer)) {
           groupedByIntroducer.set(result.introducer, {
             introducer: result.introducer,
@@ -208,17 +192,8 @@ export default function CommissionsPage() {
         }
 
         const summary = groupedByIntroducer.get(result.introducer)!
+        summary.total_commission += result.commission_amount
         summary.customers.push(result)
-        
-        // 只計算達標的佣金
-        if (result.is_qualified) {
-          summary.total_commission += result.commission_amount
-          if (result.month_sequence === 1) {
-            summary.first_month_count++
-          } else {
-            summary.subsequent_month_count++
-          }
-        }
 
         if (result.month_sequence === 1) {
           summary.first_month_count++
@@ -247,61 +222,10 @@ export default function CommissionsPage() {
     return `${year}年${month}月`
   }
 
-  // 篩選邏輯
-  const getFilteredData = () => {
-    let filtered = allCommissionData
+  const filteredData = selectedIntroducer === 'all' 
+    ? commissionData 
+    : commissionData.filter(item => item.introducer === selectedIntroducer)
 
-    // 按介紹人篩選
-    if (selectedIntroducer !== 'all') {
-      filtered = filtered.filter(item => item.introducer === selectedIntroducer)
-    }
-
-    // 按年份篩選
-    if (selectedYear !== 'all') {
-      filtered = filtered.filter(item => item.service_month.startsWith(selectedYear))
-    }
-
-    // 按月份篩選
-    if (selectedMonth !== 'all') {
-      filtered = filtered.filter(item => item.service_month.endsWith(`-${selectedMonth.padStart(2, '0')}`))
-    }
-
-    return filtered
-  }
-
-  const filteredCommissionData = getFilteredData()
-
-  // 獲取可用的年份和月份選項
-  const availableYears = Array.from(new Set(allCommissionData.map(item => item.service_month.split('-')[0]))).sort()
-  const availableMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-
-  // 按介紹人重新分組已篩選的數據
-  const filteredGroupedData = new Map<string, IntroducerSummary>()
-  filteredCommissionData.forEach(result => {
-    if (!filteredGroupedData.has(result.introducer)) {
-      filteredGroupedData.set(result.introducer, {
-        introducer: result.introducer,
-        total_commission: 0,
-        first_month_count: 0,
-        subsequent_month_count: 0,
-        customers: []
-      })
-    }
-
-    const summary = filteredGroupedData.get(result.introducer)!
-    summary.customers.push(result)
-    
-    if (result.is_qualified) {
-      summary.total_commission += result.commission_amount
-      if (result.month_sequence === 1) {
-        summary.first_month_count++
-      } else {
-        summary.subsequent_month_count++
-      }
-    }
-  })
-
-  const filteredData = Array.from(filteredGroupedData.values())
   const totalCommission = filteredData.reduce((sum, item) => sum + item.total_commission, 0)
 
   if (loading) {
@@ -357,73 +281,26 @@ export default function CommissionsPage() {
         {/* 篩選器 */}
         <div className="card-apple fade-in-apple mb-6">
           <div className="card-apple-content">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">介紹人篩選：</label>
-                <select
-                  value={selectedIntroducer}
-                  onChange={(e) => setSelectedIntroducer(e.target.value)}
-                  className="form-input-apple w-full"
-                >
-                  <option value="all">全部介紹人</option>
-                  {Array.from(new Set(allCommissionData.map(item => item.introducer))).map(introducer => (
-                    <option key={introducer} value={introducer}>
-                      {introducer}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">年份篩選：</label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="form-input-apple w-full"
-                >
-                  <option value="all">全部年份</option>
-                  {availableYears.map(year => (
-                    <option key={year} value={year}>
-                      {year}年
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">月份篩選：</label>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="form-input-apple w-full"
-                >
-                  <option value="all">全部月份</option>
-                  {availableMonths.map(month => (
-                    <option key={month} value={month}>
-                      {month}月
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="sm:col-span-2 lg:col-span-2 flex items-end space-x-2">
-                <button
-                  onClick={() => {
-                    setSelectedIntroducer('all')
-                    setSelectedYear('all')
-                    setSelectedMonth('all')
-                  }}
-                  className="btn-apple-secondary flex-1"
-                >
-                  清除篩選
-                </button>
-                <button
-                  onClick={fetchCommissionData}
-                  className="btn-apple-primary flex-1"
-                >
-                  重新載入
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <label className="text-sm font-medium text-text-primary">介紹人篩選：</label>
+              <select
+                value={selectedIntroducer}
+                onChange={(e) => setSelectedIntroducer(e.target.value)}
+                className="form-input-apple"
+              >
+                <option value="all">全部介紹人</option>
+                {commissionData.map(item => (
+                  <option key={item.introducer} value={item.introducer}>
+                    {item.introducer}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={fetchCommissionData}
+                className="btn-apple-primary"
+              >
+                重新載入
+              </button>
             </div>
           </div>
         </div>
@@ -465,29 +342,10 @@ export default function CommissionsPage() {
           {filteredData.map((introducerData, index) => (
             <div key={introducerData.introducer} className="card-apple fade-in-apple" style={{ animationDelay: `${0.1 * (index + 1)}s` }}>
               <div className="bg-bg-secondary px-6 py-4 border-b border-border-light rounded-t-apple">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-                  <div className="mb-2 sm:mb-0">
-                    <h2 className="text-lg font-semibold text-text-primary mb-1">
-                      介紹人：{introducerData.introducer}
-                    </h2>
-                    {(() => {
-                      const rate = commissionRatesData.find(r => r.introducer === introducerData.introducer)
-                      return rate ? (
-                        <div className="text-sm text-text-secondary">
-                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
-                            首月: {formatCurrency(rate.first_month_commission)}
-                          </span>
-                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded">
-                            後續: {formatCurrency(rate.subsequent_month_commission)}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-red-600">
-                          未設定佣金率
-                        </div>
-                      )
-                    })()}
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <h2 className="text-lg font-semibold text-text-primary mb-2 sm:mb-0">
+                    介紹人：{introducerData.introducer}
+                  </h2>
                   <div className="text-right">
                     <p className="text-lg font-bold text-mingcare-green">
                       總佣金：{formatCurrency(introducerData.total_commission)}
@@ -521,30 +379,16 @@ export default function CommissionsPage() {
                         <td className="px-4 py-3 text-right text-text-secondary">{customer.monthly_hours.toFixed(1)}h</td>
                         <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(customer.monthly_fee)}</td>
                         <td className="px-4 py-3 text-center">
-                          {customer.is_qualified ? (
-                            <span className={`px-2 py-1 rounded-apple-sm text-xs font-medium ${
-                              customer.month_sequence === 1 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {customer.month_sequence === 1 ? '首月' : `第${customer.month_sequence}月`}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 rounded-apple-sm text-xs font-medium bg-red-100 text-red-800">
-                              不達標
-                            </span>
-                          )}
+                          <span className={`px-2 py-1 rounded-apple-sm text-xs font-medium ${
+                            customer.month_sequence === 1 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {customer.month_sequence === 1 ? '首月' : `第${customer.month_sequence}月`}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">
-                          {customer.is_qualified ? (
-                            <span className="text-mingcare-green">
-                              {formatCurrency(customer.commission_amount)}
-                            </span>
-                          ) : (
-                            <span className="text-red-600">
-                              不達標
-                            </span>
-                          )}
+                        <td className="px-4 py-3 text-right font-semibold text-mingcare-green">
+                          {formatCurrency(customer.commission_amount)}
                         </td>
                       </tr>
                     ))}
