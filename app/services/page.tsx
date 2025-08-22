@@ -169,12 +169,12 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
 
       {/* 月曆網格 */}
       <div className="grid grid-cols-7 gap-1">
-        {calendarDays.map((date, index) => {
+        {calendarDays && calendarDays.map((date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
           const isToday = dateStr === formatDateSafely(new Date())
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
-          const dayRecords = calendarData[dateStr] || []
+          const dayRecords = (calendarData && calendarData[dateStr]) || []
           
           // 根據記錄數量動態調整高度
           const minHeight = dayRecords.length > 0 
@@ -830,7 +830,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
         <div className="p-6">
           <h3 className="text-apple-heading text-text-primary mb-6">項目分類統計</h3>
           
-          {categorySummary.length > 0 ? (
+          {categorySummary && categorySummary.length > 0 ? (
             <div className="space-y-4">
               {categorySummary.slice(0, 5).map((summary, index) => (
                 <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-light">
@@ -854,9 +854,9 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
                 </div>
               ))}
               
-              {categorySummary.length > 5 && (
+              {categorySummary && categorySummary.length > 5 && (
                 <div className="text-center text-sm text-text-secondary">
-                  還有 {categorySummary.length - 5} 個項目，請到詳細報表查看
+                  還有 {categorySummary ? categorySummary.length - 5 : 0} 個項目，請到詳細報表查看
                 </div>
               )}
             </div>
@@ -1364,14 +1364,14 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
           {/* 月曆格子 - 排班視圖 */}
           <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((date, index) => {
+            {calendarDays && calendarDays.map((date, index) => {
               const dateStr = formatDateSafely(date)
               const isCurrentMonth = date.getMonth() === currentMonth
               const isToday = dateStr === formatDateSafely(new Date())
               const isWeekend = date.getDay() === 0 || date.getDay() === 6
               const isSelected = selectedDates.includes(dateStr)
               // 合併本地排程和遠端排程
-              const remoteSchedules = scheduleData[dateStr] || []
+              const remoteSchedules = (scheduleData && scheduleData[dateStr]) || []
               const filteredLocalSchedules = getFilteredLocalSchedules()
               const localDaySchedules = filteredLocalSchedules[dateStr] || []
               const allSchedules = [...remoteSchedules, ...localDaySchedules]
@@ -2130,18 +2130,10 @@ export default function ServicesPage() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     
-    // 使用本地日期格式，避免時區轉換問題
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    }
-    
     return {
       dateRange: {
-        start: formatLocalDate(startOfMonth),
-        end: formatLocalDate(endOfMonth)
+        start: formatDateSafely(startOfMonth),
+        end: formatDateSafely(endOfMonth)
       }
     }
   })
