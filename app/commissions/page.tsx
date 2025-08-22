@@ -146,6 +146,41 @@ export default function CommissionsPage() {
         }
       })
 
+      // 計算每個介紹人的總統計
+      const introducerSummary = new Map<string, {
+        introducerName: string,
+        totalCustomers: number,
+        totalServiceFee: number,
+        totalCommission: number
+      }>()
+
+      // 遍歷所有月份數據，按介紹人匯總
+      filteredCommissionData.forEach(item => {
+        // 只計算有佣金率設定的介紹人
+        const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
+        const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
+        
+        if (hasCommissionRate && item.is_qualified) {
+          if (!introducerSummary.has(item.introducer)) {
+            introducerSummary.set(item.introducer, {
+              introducerName: item.introducer,
+              totalCustomers: 0,
+              totalServiceFee: 0,
+              totalCommission: 0
+            })
+          }
+          
+          const summary = introducerSummary.get(item.introducer)!
+          summary.totalCustomers += 1
+          summary.totalServiceFee += item.monthly_fee
+          summary.totalCommission += item.commission_amount
+        }
+      })
+
+      // 轉換為數組並排序
+      const introducerSummaryArray = Array.from(introducerSummary.values())
+        .sort((a, b) => a.introducerName.localeCompare(b.introducerName, 'zh-TW'))
+
       // 創建 HTML 內容
       const htmlContent = `
         <!DOCTYPE html>
@@ -317,6 +352,29 @@ export default function CommissionsPage() {
               text-align: right;
             }
             
+            .introducer-summary-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            
+            .introducer-summary-table th,
+            .introducer-summary-table td {
+              border: 1px solid #ddd;
+              padding: 10px;
+              text-align: left;
+            }
+            
+            .introducer-summary-table th {
+              background-color: #428bca;
+              color: white;
+              font-weight: bold;
+            }
+            
+            .introducer-summary-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            
             .overall-summary {
               margin-top: 40px;
               padding: 20px;
@@ -459,6 +517,30 @@ export default function CommissionsPage() {
           
           <div class="overall-summary">
             <h2>總結報告</h2>
+            
+            <h3 style="color: #428bca; margin-bottom: 15px;">各介紹人統計明細</h3>
+            <table class="introducer-summary-table">
+              <thead>
+                <tr>
+                  <th>介紹人</th>
+                  <th>達標客戶總數</th>
+                  <th>總服務金額</th>
+                  <th>總佣金金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${introducerSummaryArray.map(summary => `
+                  <tr>
+                    <td>${summary.introducerName}</td>
+                    <td class="number">${summary.totalCustomers}</td>
+                    <td class="number">$${summary.totalServiceFee.toLocaleString()}</td>
+                    <td class="number">$${summary.totalCommission.toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <h3 style="color: #428bca; margin: 30px 0 15px 0;">整體統計總計</h3>
             <div class="total-stats">
               <div class="total-stat">
                 <span class="total-stat-label">介紹人總數</span>
