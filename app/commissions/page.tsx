@@ -71,10 +71,15 @@ export default function CommissionsPage() {
         // 按介紹人分組
         const introducerGroups = new Map<string, CustomerCommissionData[]>()
         monthData.forEach(item => {
-          if (!introducerGroups.has(item.introducer)) {
-            introducerGroups.set(item.introducer, [])
+          // 只處理有佣金率設定的介紹人
+          const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
+          const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
+          if (hasCommissionRate) {
+            if (!introducerGroups.has(item.introducer)) {
+              introducerGroups.set(item.introducer, [])
+            }
+            introducerGroups.get(item.introducer)!.push(item)
           }
-          introducerGroups.get(item.introducer)!.push(item)
         })
 
         // 計算月統計
@@ -89,7 +94,7 @@ export default function CommissionsPage() {
         totalQualifiedCustomers += monthQualifiedCount
         totalCommission += monthCommission
 
-        // 計算介紹人佣金
+        // 計算介紹人佣金和詳細客戶資料
         const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]) => {
           const qualifiedCustomers = customers.filter(c => c.is_qualified)
           const totalFee = qualifiedCustomers.reduce((sum, c) => sum + c.monthly_fee, 0)
@@ -103,9 +108,17 @@ export default function CommissionsPage() {
             rate: commissionRate,
             qualifiedCustomers: qualifiedCustomers.length,
             totalFee,
-            amount: commissionAmount
+            amount: commissionAmount,
+            customerDetails: customers.map(customer => ({
+              customerName: customer.customer_name,
+              customerId: customer.customer_id,
+              hours: customer.monthly_hours,
+              fee: customer.monthly_fee,
+              isQualified: customer.is_qualified,
+              commission: customer.commission_amount
+            }))
           }
-        }).filter(commission => commission.rate > 0) // 只顯示有設定佣金率的介紹人
+        })
 
         return {
           year,
@@ -114,7 +127,16 @@ export default function CommissionsPage() {
           totalHours: monthServiceHours,
           totalFee: monthServiceFee,
           totalCommission: monthCommission,
-          commissions: introducerCommissions
+          commissions: introducerCommissions,
+          allCustomers: monthData.map(customer => ({
+            customerName: customer.customer_name,
+            customerId: customer.customer_id,
+            introducer: customer.introducer,
+            hours: customer.monthly_hours,
+            fee: customer.monthly_fee,
+            isQualified: customer.is_qualified,
+            commission: customer.commission_amount
+          }))
         }
       })
 
@@ -139,12 +161,31 @@ export default function CommissionsPage() {
               margin-bottom: 30px;
               border-bottom: 2px solid #428bca;
               padding-bottom: 15px;
+              position: relative;
             }
             
             .header h1 {
               color: #428bca;
               margin: 0;
               font-size: 24px;
+            }
+            
+            .save-pdf-btn {
+              position: absolute;
+              top: 10px;
+              right: 10px;
+              background-color: #428bca;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+            }
+            
+            .save-pdf-btn:hover {
+              background-color: #357abd;
             }
             
             .date-range {
@@ -227,6 +268,45 @@ export default function CommissionsPage() {
               background-color: #f9f9f9;
             }
             
+            .customer-details {
+              margin: 20px 0;
+            }
+            
+            .customer-details h4 {
+              color: #428bca;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 5px;
+              margin-bottom: 10px;
+            }
+            
+            .customer-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+              font-size: 11px;
+            }
+            
+            .customer-table th,
+            .customer-table td {
+              border: 1px solid #ddd;
+              padding: 6px;
+              text-align: left;
+            }
+            
+            .customer-table th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+              color: #333;
+            }
+            
+            .customer-table tr.qualified {
+              background-color: #e8f5e8;
+            }
+            
+            .customer-table tr.not-qualified {
+              background-color: #ffe8e8;
+            }
+            
             .number {
               text-align: right;
             }
@@ -272,11 +352,13 @@ export default function CommissionsPage() {
               body { margin: 15px; }
               .month-section { page-break-inside: avoid; }
               .overall-summary { page-break-inside: avoid; }
+              .save-pdf-btn { display: none; }
             }
           </style>
         </head>
         <body>
           <div class="header">
+            <button class="save-pdf-btn" onclick="window.print()">儲存為PDF</button>
             <h1>佣金計算報告</h1>
             <div class="date-range">
               生成日期: ${new Date().toLocaleDateString('zh-TW')}
@@ -311,29 +393,60 @@ export default function CommissionsPage() {
                 </div>
               </div>
               
-              ${monthData.commissions.length > 0 ? `
-                <table class="commissions-table">
+              <div class="customer-details">
+                <h4>客戶明細</h4>
+                <table class="customer-table">
                   <thead>
                     <tr>
+                      <th>客戶編號</th>
+                      <th>客戶姓名</th>
                       <th>介紹人</th>
-                      <th>佣金率</th>
-                      <th>達標客戶</th>
-                      <th>總服務金額</th>
+                      <th>服務時數</th>
+                      <th>服務費用</th>
+                      <th>達標狀態</th>
                       <th>佣金金額</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${monthData.commissions.map(commission => `
-                      <tr>
-                        <td>${commission.introducerName}</td>
-                        <td class="number">${(commission.rate * 100).toFixed(1)}%</td>
-                        <td class="number">${commission.qualifiedCustomers}</td>
-                        <td class="number">$${commission.totalFee.toLocaleString()}</td>
-                        <td class="number">$${commission.amount.toLocaleString()}</td>
+                    ${monthData.allCustomers.map(customer => `
+                      <tr class="${customer.isQualified ? 'qualified' : 'not-qualified'}">
+                        <td>${customer.customerId}</td>
+                        <td>${customer.customerName}</td>
+                        <td>${customer.introducer}</td>
+                        <td class="number">${customer.hours.toFixed(1)} 小時</td>
+                        <td class="number">$${customer.fee.toLocaleString()}</td>
+                        <td style="text-align: center;">${customer.isQualified ? '✓ 達標' : '✗ 不達標'}</td>
+                        <td class="number">${customer.isQualified ? '$' + customer.commission.toLocaleString() : '不達標'}</td>
                       </tr>
                     `).join('')}
                   </tbody>
                 </table>
+              </div>
+              
+              ${monthData.commissions.length > 0 ? `
+                <div class="customer-details">
+                  <h4>介紹人佣金匯總</h4>
+                  <table class="commissions-table">
+                    <thead>
+                      <tr>
+                        <th>介紹人</th>
+                        <th>達標客戶</th>
+                        <th>總服務金額</th>
+                        <th>佣金金額</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${monthData.commissions.map(commission => `
+                        <tr>
+                          <td>${commission.introducerName}</td>
+                          <td class="number">${commission.qualifiedCustomers}</td>
+                          <td class="number">$${commission.totalFee.toLocaleString()}</td>
+                          <td class="number">$${commission.amount.toLocaleString()}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
               ` : '<p style="text-align: center; color: #666; font-style: italic;">本月無佣金記錄</p>'}
             </div>
           `).join('')}
@@ -363,23 +476,14 @@ export default function CommissionsPage() {
         </html>
       `
       
-      // 創建並下載 HTML 文件
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      
-      const today = new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')
-      const fileName = `佣金報告_${today}.html`
-      
-      link.href = url
-      link.download = fileName
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      
-      alert('已下載HTML文件，請在瀏覽器中打開後列印或儲存為PDF')
+      // 在新視窗中顯示HTML內容
+      const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')
+      if (newWindow) {
+        newWindow.document.write(htmlContent)
+        newWindow.document.close()
+      } else {
+        alert('請允許彈出視窗以顯示報告')
+      }
       
     } catch (error) {
       console.error('PDF導出錯誤:', error)
