@@ -1860,7 +1860,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     updateDropdownPosition() // 更新位置
                     // 點擊輸入框時，如果有搜尋詞就重新搜尋，或顯示現有建議
                     if (customerSearchTerm.length >= 1) {
-                      if (customerSuggestions.length > 0) {
+                      if (customerSuggestions && customerSuggestions.length > 0) {
                         setShowCustomerSuggestions(true)
                       } else {
                         handleCustomerSearch(customerSearchTerm)
@@ -4524,13 +4524,18 @@ function ScheduleFormModal({
                                 重試
                               </button>
                             </div>
+                          ) : (customerSuggestions == null) ? (
+                            <div className="p-3 text-center text-text-secondary">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
+                              <span className="text-sm">初始化中...</span>
+                            </div>
                           ) : customerSuggestions.length === 0 ? (
                             <div className="p-3 text-center text-text-secondary">
                               <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
                               <span className="text-sm">搜尋中...</span>
                             </div>
                           ) : (
-                            customerSuggestions.map((customer, index) => (
+                            (customerSuggestions || []).map((customer, index) => (
                               <div
                                 key={customer.customer_id || index}
                                 onMouseDown={(e) => {
