@@ -2101,11 +2101,26 @@ export default function ServicesPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // 從 URL 參數設定預設 tab
+  // 從 URL 參數設定預設 tab 和日期
   useEffect(() => {
     const tab = searchParams.get('tab')
+    const date = searchParams.get('date')
+    
     if (tab === 'overview' || tab === 'schedule' || tab === 'reports') {
       setActiveTab(tab)
+    }
+    
+    if (date === 'today') {
+      const today = new Date()
+      const todayStr = formatDateSafely(today)
+      
+      setFilters(prev => ({
+        ...prev,
+        dateRange: {
+          start: todayStr,
+          end: todayStr
+        }
+      }))
     }
   }, [searchParams])
 

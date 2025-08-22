@@ -107,7 +107,7 @@ export default function Dashboard() {
     {
       title: '今日排程',
       description: '查看今日服務安排',
-      href: '/services?date=today',
+      href: '/services?tab=reports&date=today',
       iconType: 'calendar',
       bgColor: 'bg-emerald-50 hover:bg-emerald-100',
       iconColor: 'text-emerald-600'
