@@ -265,8 +265,8 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       const response = await fetchBillingSalaryRecords(filters, 1, 10000)
       
       if (response.success && response.data) {
-        const fetchedRecords = response.data.data
-        setTotalRecords(response.data.total) // 設置總記錄數
+        const fetchedRecords = response.data.data || []
+        setTotalRecords(response.data.total || 0) // 設置總記錄數
         setOriginalRecords(fetchedRecords)
         // 應用當前排序
         sortRecords(fetchedRecords, sortConfig)
@@ -283,6 +283,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   // 排序記錄
   const sortRecords = (recordsToSort: BillingSalaryRecord[], config: SortConfig) => {
+    if (!recordsToSort || !Array.isArray(recordsToSort)) {
+      console.warn('sortRecords: recordsToSort is null or not an array')
+      setRecords([])
+      return
+    }
+
     const sorted = [...recordsToSort].sort((a, b) => {
       let aValue: string | number
       let bValue: string | number
@@ -431,7 +437,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     )
   }
 
-  if (records.length === 0) {
+  if (!records || records.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -529,7 +535,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
         {/* 記錄數量顯示 */}
         <div className="text-sm text-text-secondary">
-          共 {records.length} 筆記錄
+          共 {records ? records.length : 0} 筆記錄
         </div>
       </div>
 
