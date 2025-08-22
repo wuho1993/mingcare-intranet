@@ -909,44 +909,57 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
   // 計算本地排程總數
   const getTotalLocalSchedules = () => {
-    return Object.values(localSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
+    if (!localSchedules) return 0
+    return Object.values(localSchedules).reduce((total, daySchedules) => {
+      return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
+    }, 0)
   }
 
   // 獲取本地排程中的所有客戶名稱
   const getLocalCustomerNames = () => {
     const customerNames = new Set<string>()
-    Object.values(localSchedules).forEach(daySchedules => {
-      daySchedules.forEach(schedule => {
-        if (schedule.customer_name) {
-          customerNames.add(schedule.customer_name)
+    if (localSchedules) {
+      Object.values(localSchedules).forEach(daySchedules => {
+        if (daySchedules && Array.isArray(daySchedules)) {
+          daySchedules.forEach(schedule => {
+            if (schedule && schedule.customer_name) {
+              customerNames.add(schedule.customer_name)
+            }
+          })
         }
       })
-    })
+    }
     return Array.from(customerNames).sort()
   }
 
   // 根據篩選條件獲取要顯示的本地排程
   const getFilteredLocalSchedules = () => {
     if (selectedCustomerFilter === 'all') {
-      return localSchedules
+      return localSchedules || {}
     }
     
     const filtered: Record<string, BillingSalaryFormData[]> = {}
-    Object.entries(localSchedules).forEach(([dateStr, daySchedules]) => {
-      const filteredSchedules = daySchedules.filter(schedule => 
-        schedule.customer_name === selectedCustomerFilter
-      )
-      if (filteredSchedules.length > 0) {
-        filtered[dateStr] = filteredSchedules
-      }
-    })
+    if (localSchedules) {
+      Object.entries(localSchedules).forEach(([dateStr, daySchedules]) => {
+        if (daySchedules && Array.isArray(daySchedules)) {
+          const filteredSchedules = daySchedules.filter(schedule => 
+            schedule && schedule.customer_name === selectedCustomerFilter
+          )
+          if (filteredSchedules.length > 0) {
+            filtered[dateStr] = filteredSchedules
+          }
+        }
+      })
+    }
     return filtered
   }
 
   // 確認儲存本地排程到Supabase（只儲存篩選後的）
   const handleSaveLocalSchedules = async () => {
     const filteredSchedules = getFilteredLocalSchedules()
-    const filteredTotal = Object.values(filteredSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
+    const filteredTotal = Object.values(filteredSchedules || {}).reduce((total, daySchedules) => {
+      return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
+    }, 0)
     
     if (filteredTotal === 0) {
       if (selectedCustomerFilter === 'all') {
@@ -1278,7 +1291,9 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                 <div className="text-sm text-orange-600 font-medium">
                   {selectedCustomerFilter === 'all' 
                     ? `待儲存 ${getTotalLocalSchedules()} 個排程` 
-                    : `${selectedCustomerFilter}: ${Object.values(getFilteredLocalSchedules()).reduce((total, daySchedules) => total + daySchedules.length, 0)} 個排程`
+                    : `${selectedCustomerFilter}: ${Object.values(getFilteredLocalSchedules() || {}).reduce((total, daySchedules) => {
+                        return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
+                      }, 0)} 個排程`
                   }
                 </div>
               )}
