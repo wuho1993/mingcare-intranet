@@ -1183,8 +1183,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
     schedule: BillingSalaryFormData | null
   } | null>(null)
 
-  // 添加新的狀態：統計視圖
-  const [showSummaryTab, setShowSummaryTab] = useState<'schedule' | 'voucher'>('schedule')
+  // 添加新的狀態：統計視圖（移除，不再需要）
 
   // 計算本地排程總數
   const getTotalLocalSchedules = () => {
@@ -1785,42 +1784,10 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
         </div>
       </div>
 
-      {/* 排班小結和統計 */}
+      {/* 排班小結 */}
       <div className="card-apple border border-border-light fade-in-apple">
         <div className="p-6">
-          {/* Tab 切換器 */}
-          <div className="flex mb-6 border-b border-border-light">
-            <button
-              onClick={() => setShowSummaryTab('schedule')}
-              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
-                showSummaryTab === 'schedule'
-                  ? 'border-mingcare-blue text-mingcare-blue'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              排班小結
-            </button>
-            <button
-              onClick={() => setShowSummaryTab('voucher')}
-              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
-                showSummaryTab === 'voucher'
-                  ? 'border-mingcare-blue text-mingcare-blue'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              社區券機數統計
-            </button>
-          </div>
-
-          {/* 排班小結內容 */}
-          {showSummaryTab === 'schedule' && (
-            <ScheduleSummaryView localSchedules={localSchedules} />
-          )}
-
-          {/* 社區券統計內容 */}
-          {showSummaryTab === 'voucher' && (
-            <VoucherSummaryView filters={filters} />
-          )}
+          <ScheduleSummaryView localSchedules={localSchedules} />
         </div>
       </div>
 
@@ -2366,7 +2333,18 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           {reportsViewMode === 'list' ? (
             <DetailedRecordsList filters={filters} />
           ) : (
-            <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
+            <>
+              <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
+              
+              {/* 社區券機數統計 */}
+              <div className="mt-8">
+                <div className="card-apple border border-border-light fade-in-apple">
+                  <div className="p-6">
+                    <VoucherSummaryView filters={filters} />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -3177,11 +3155,49 @@ export default function ServicesPage() {
         
         tableContent = customerTables
         
+        // 計算服務類型統計
+        const serviceTypeStats: Record<string, {
+          count: number
+          hours: number
+          amount: number
+        }> = {}
+        
+        records.forEach(record => {
+          const serviceType = record.service_type || '未知服務類型'
+          const hours = parseFloat(record.service_hours || '0')
+          const amount = parseFloat(record.service_fee || '0')
+          
+          if (!serviceTypeStats[serviceType]) {
+            serviceTypeStats[serviceType] = { count: 0, hours: 0, amount: 0 }
+          }
+          
+          serviceTypeStats[serviceType].count += 1
+          serviceTypeStats[serviceType].hours += hours
+          serviceTypeStats[serviceType].amount += amount
+        })
+        
+        // 生成服務類型統計表格
+        const serviceTypeTable = Object.keys(serviceTypeStats)
+          .sort()
+          .map(serviceType => {
+            const stats = serviceTypeStats[serviceType]
+            return `
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">${serviceType}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>
+              </tr>
+            `
+          }).join('')
+        
         // 大結內容
         summaryContent = `
           <div style="margin-top: 30px; padding: 20px; border: 2px solid #428bca; background-color: #f8f9fa; page-break-inside: avoid;">
             <h3 style="text-align: center; color: #428bca; margin-bottom: 15px;">總結報告</h3>
-            <div style="display: flex; justify-content: space-around; font-size: 14px;">
+            
+            <!-- 總覽統計 -->
+            <div style="display: flex; justify-content: space-around; font-size: 14px; margin-bottom: 20px;">
               <div style="text-align: center;">
                 <div style="font-weight: bold; color: #428bca;">客戶總數</div>
                 <div style="font-size: 18px; font-weight: bold;">${totalCustomers}</div>
@@ -3198,6 +3214,30 @@ export default function ServicesPage() {
                 <div style="font-weight: bold; color: #428bca;">總服務費用</div>
                 <div style="font-size: 18px; font-weight: bold;">$${totalFees.toFixed(2)}</div>
               </div>
+            </div>
+            
+            <!-- 服務類型細分統計 -->
+            <div style="margin-top: 20px;">
+              <h4 style="color: #428bca; margin-bottom: 10px; text-align: center;">服務類型統計明細</h4>
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background-color: #428bca; color: white;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">服務類型</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">次數</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">時數</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${serviceTypeTable}
+                  <tr style="background-color: #e7f3ff; font-weight: bold; border-top: 2px solid #428bca;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">總計</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalServices}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalFees.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         `
