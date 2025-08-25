@@ -32,7 +32,10 @@ import {
   exportToCSV,
   getAllCareStaff,
   searchCustomers,
-  CustomerSearchResult
+  CustomerSearchResult,
+  fetchVoucherRates,
+  calculateVoucherSummary,
+  VoucherRate
 } from '../../services/billing-salary-management'
 
 // 安全的日期格式化函數 - 避免時區問題
@@ -61,11 +64,13 @@ interface SortConfig {
 function ReportsCalendarView({ 
   filters, 
   onEdit, 
-  onDelete 
+  onDelete,
+  refreshTrigger 
 }: { 
   filters: BillingSalaryFilters; 
   onEdit: (record: BillingSalaryRecord) => void;
   onDelete: (recordId: string) => void;
+  refreshTrigger?: number;
 }) {
   const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecord[]>>({})
   const [loading, setLoading] = useState(true)
@@ -102,7 +107,7 @@ function ReportsCalendarView({
     }
 
     loadCalendarData()
-  }, [filters])
+  }, [filters, refreshTrigger])
 
   // 生成月曆日期
   const generateCalendarDays = () => {
@@ -751,6 +756,7 @@ interface ReportsTabProps {
   setReportsViewMode: (mode: 'list' | 'calendar') => void
   onEdit: (record: BillingSalaryRecord) => void
   onDelete: (recordId: string) => void
+  refreshTrigger: number
 }
 
 // 概覽頁面組件
@@ -974,6 +980,159 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
   )
 }
 
+// 排班小結組件
+function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string, BillingSalaryFormData[]> }) {
+  const calculateSummary = () => {
+    const allSchedules = Object.values(localSchedules).flat()
+    const totalHours = allSchedules.reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
+    const totalFee = allSchedules.reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
+    const totalCount = allSchedules.length
+
+    return {
+      totalCount,
+      totalHours,
+      totalFee
+    }
+  }
+
+  const summary = calculateSummary()
+
+  return (
+    <div>
+      <h3 className="text-apple-heading text-text-primary mb-4">排班小結</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-mingcare-blue">{summary.totalCount}</div>
+          <div className="text-sm text-text-secondary">總排班數</div>
+        </div>
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-green-600">{summary.totalHours.toFixed(1)}</div>
+          <div className="text-sm text-text-secondary">總時數</div>
+        </div>
+        <div className="bg-orange-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-orange-600">${summary.totalFee.toFixed(2)}</div>
+          <div className="text-sm text-text-secondary">總服務費用</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 社區券統計組件
+function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
+  const [voucherData, setVoucherData] = useState<{
+    serviceTypeSummary: {
+      service_type: string
+      count: number
+      total_hours: number
+      total_rate: number
+      total_amount: number
+    }[]
+    grandTotal: {
+      total_count: number
+      total_hours: number
+      total_amount: number
+    }
+  } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadVoucherSummary = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await calculateVoucherSummary(filters)
+        if (response.success && response.data) {
+          setVoucherData(response.data)
+        } else {
+          setError(response.error || '載入社區券統計失敗')
+        }
+      } catch (err) {
+        console.error('載入社區券統計失敗:', err)
+        setError('載入社區券統計失敗')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadVoucherSummary()
+  }, [filters])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+        <span className="ml-3 text-text-secondary">載入統計數據中...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">{error}</p>
+      </div>
+    )
+  }
+
+  if (!voucherData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-text-secondary">暫無數據</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計</h3>
+      
+      {/* 總計卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-mingcare-blue">{voucherData.grandTotal.total_count}</div>
+          <div className="text-sm text-text-secondary">總服務次數</div>
+        </div>
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-green-600">{voucherData.grandTotal.total_hours.toFixed(1)}</div>
+          <div className="text-sm text-text-secondary">總服務時數</div>
+        </div>
+        <div className="bg-orange-50 rounded-lg p-4">
+          <div className="text-2xl font-bold text-orange-600">${voucherData.grandTotal.total_amount.toFixed(2)}</div>
+          <div className="text-sm text-text-secondary">總社區券金額</div>
+        </div>
+      </div>
+
+      {/* 服務類型明細表格 */}
+      <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-bg-secondary">
+            <tr>
+              <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">次數</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">時數</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">單價</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">金額</th>
+            </tr>
+          </thead>
+          <tbody>
+            {voucherData.serviceTypeSummary.map((item, index) => (
+              <tr key={item.service_type} className={index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary'}>
+                <td className="py-3 px-4 text-sm text-text-primary">{item.service_type}</td>
+                <td className="py-3 px-4 text-sm text-text-primary">{item.count}</td>
+                <td className="py-3 px-4 text-sm text-text-primary">{item.total_hours.toFixed(1)}</td>
+                <td className="py-3 px-4 text-sm text-text-primary">${item.total_rate.toFixed(2)}</td>
+                <td className="py-3 px-4 text-sm text-text-primary font-medium">${item.total_amount.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // 排程頁面組件
 function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -1024,6 +1183,9 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
     schedule: BillingSalaryFormData | null
   } | null>(null)
 
+  // 添加新的狀態：統計視圖
+  const [showSummaryTab, setShowSummaryTab] = useState<'schedule' | 'voucher'>('schedule')
+
   // 計算本地排程總數
   const getTotalLocalSchedules = () => {
     return Object.values(localSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
@@ -1058,6 +1220,20 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
       }
     })
     return filtered
+  }
+
+  // 計算本地排程小結
+  const calculateLocalScheduleSummary = () => {
+    const allSchedules = Object.values(localSchedules).flat()
+    const totalHours = allSchedules.reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
+    const totalFee = allSchedules.reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
+    const totalCount = allSchedules.length
+
+    return {
+      totalCount,
+      totalHours,
+      totalFee
+    }
   }
 
   // 確認儲存本地排程到Supabase（只儲存篩選後的）
@@ -1609,6 +1785,45 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
         </div>
       </div>
 
+      {/* 排班小結和統計 */}
+      <div className="card-apple border border-border-light fade-in-apple">
+        <div className="p-6">
+          {/* Tab 切換器 */}
+          <div className="flex mb-6 border-b border-border-light">
+            <button
+              onClick={() => setShowSummaryTab('schedule')}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                showSummaryTab === 'schedule'
+                  ? 'border-mingcare-blue text-mingcare-blue'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              排班小結
+            </button>
+            <button
+              onClick={() => setShowSummaryTab('voucher')}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                showSummaryTab === 'voucher'
+                  ? 'border-mingcare-blue text-mingcare-blue'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              社區券機數統計
+            </button>
+          </div>
+
+          {/* 排班小結內容 */}
+          {showSummaryTab === 'schedule' && (
+            <ScheduleSummaryView localSchedules={localSchedules} />
+          )}
+
+          {/* 社區券統計內容 */}
+          {showSummaryTab === 'voucher' && (
+            <VoucherSummaryView filters={filters} />
+          )}
+        </div>
+      </div>
+
       {/* 排班表單 Modal */}
       {showAddModal && (
         <ScheduleFormModal
@@ -1668,7 +1883,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete }: ReportsTabProps) {
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
   
@@ -2151,7 +2366,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           {reportsViewMode === 'list' ? (
             <DetailedRecordsList filters={filters} />
           ) : (
-            <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} />
+            <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
           )}
         </div>
       </div>
@@ -2196,6 +2411,9 @@ export default function ServicesPage() {
   // 編輯相關狀態
   const [editingRecord, setEditingRecord] = useState<BillingSalaryRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  
+  // 刷新觸發器
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
@@ -3554,7 +3772,8 @@ export default function ServicesPage() {
         // 關閉任何打開的模態框
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 可能需要重新載入數據或通知其他組件更新
+        // 觸發數據重新載入
+        setRefreshTrigger(prev => prev + 1)
       } else {
         alert('刪除記錄失敗: ' + (response.error || '未知錯誤'))
       }
@@ -3821,6 +4040,7 @@ export default function ServicesPage() {
             setReportsViewMode={setReportsViewMode}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            refreshTrigger={refreshTrigger}
           />
         )}
       </main>

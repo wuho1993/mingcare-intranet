@@ -882,3 +882,127 @@ export async function searchCareStaff(searchTerm: string): Promise<ApiResponse<a
     }
   }
 }
+
+// =============================================================================
+// 社區券費率管理
+// =============================================================================
+
+export interface VoucherRate {
+  id: string
+  service_type: string
+  service_rate: number
+  created_at: string
+  updated_at: string
+}
+
+// 獲取所有社區券費率
+export async function fetchVoucherRates(): Promise<ApiResponse<VoucherRate[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('voucher_rate')
+      .select('*')
+      .order('service_type', { ascending: true })
+
+    if (error) throw error
+
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('獲取社區券費率失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '獲取社區券費率失敗'
+    }
+  }
+}
+
+// 根據服務類型統計總數和總費用
+export async function calculateVoucherSummary(
+  filters: BillingSalaryFilters
+): Promise<ApiResponse<{
+  serviceTypeSummary: {
+    service_type: string
+    count: number
+    total_hours: number
+    total_rate: number
+    total_amount: number
+  }[]
+  grandTotal: {
+    total_count: number
+    total_hours: number
+    total_amount: number
+  }
+}>> {
+  try {
+    // 獲取費率表
+    const voucherRatesResponse = await fetchVoucherRates()
+    if (!voucherRatesResponse.success || !voucherRatesResponse.data) {
+      throw new Error('無法獲取社區券費率')
+    }
+
+    const voucherRates = voucherRatesResponse.data
+    const rateMap = new Map(voucherRates.map(rate => [rate.service_type, rate.service_rate]))
+
+    // 獲取符合篩選條件的記錄
+    const recordsResponse = await fetchBillingSalaryRecords(filters, 1, 10000)
+    if (!recordsResponse.success || !recordsResponse.data) {
+      throw new Error('無法獲取服務記錄')
+    }
+
+    const records = recordsResponse.data.data
+
+    // 按服務類型分組統計
+    const serviceTypeMap = new Map<string, {
+      count: number
+      total_hours: number
+    }>()
+
+    records.forEach(record => {
+      const serviceType = record.service_type
+      const hours = record.service_hours || 0
+
+      if (!serviceTypeMap.has(serviceType)) {
+        serviceTypeMap.set(serviceType, {
+          count: 0,
+          total_hours: 0
+        })
+      }
+
+      const current = serviceTypeMap.get(serviceType)!
+      current.count += 1
+      current.total_hours += hours
+    })
+
+    // 計算費用
+    const serviceTypeSummary = Array.from(serviceTypeMap.entries()).map(([serviceType, stats]) => {
+      const rate = rateMap.get(serviceType) || 0
+      return {
+        service_type: serviceType,
+        count: stats.count,
+        total_hours: stats.total_hours,
+        total_rate: rate,
+        total_amount: stats.total_hours * rate
+      }
+    }).sort((a, b) => a.service_type.localeCompare(b.service_type))
+
+    // 計算總計
+    const grandTotal = {
+      total_count: serviceTypeSummary.reduce((sum, item) => sum + item.count, 0),
+      total_hours: serviceTypeSummary.reduce((sum, item) => sum + item.total_hours, 0),
+      total_amount: serviceTypeSummary.reduce((sum, item) => sum + item.total_amount, 0)
+    }
+
+    return {
+      success: true,
+      data: {
+        serviceTypeSummary,
+        grandTotal
+      }
+    }
+  } catch (error) {
+    console.error('計算社區券統計失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '計算社區券統計失敗'
+    }
+  }
+}
