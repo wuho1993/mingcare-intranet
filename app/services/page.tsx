@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import { searchCustomers, searchCareStaff } from '../../services/billing-salary-management'
+import { BackToHomeButton } from '../../components/BackToHomeButton'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -31,6 +31,7 @@ import {
   createMultipleDayRecords,
   exportToCSV,
   getAllCareStaff,
+  searchCustomers,
   CustomerSearchResult
 } from '../../services/billing-salary-management'
 
@@ -40,27 +41,6 @@ const formatDateSafely = (date: Date): string => {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
-}
-
-// 通用安全陣列助手，避免偶發 null 導致 .length / .map 錯誤
-function safeArray<T>(input: T[] | null | undefined): T[] {
-  return Array.isArray(input) ? input : []
-}
-
-// 包一層安全 map（除錯用）
-function safeMap<T, R>(input: T[] | null | undefined, mapper: (v: T, i: number) => R): R[] {
-  if (!Array.isArray(input)) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('safeMap: input 非陣列，已自動轉為空陣列', input)
-    }
-    return []
-  }
-  try {
-    return input.map(mapper)
-  } catch (e) {
-    console.error('safeMap 執行失敗:', e, input)
-    return []
-  }
 }
 
 // 詳細記錄列表組件
@@ -78,10 +58,20 @@ interface SortConfig {
 }
 
 // 報表月曆檢視組件
-function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilters; onEdit: (record: BillingSalaryRecord) => void }) {
+function ReportsCalendarView({ 
+  filters, 
+  onEdit, 
+  onDelete 
+}: { 
+  filters: BillingSalaryFilters; 
+  onEdit: (record: BillingSalaryRecord) => void;
+  onDelete: (recordId: string) => void;
+}) {
   const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecord[]>>({})
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedRecord, setSelectedRecord] = useState<BillingSalaryRecord | null>(null)
+  const [showRecordMenu, setShowRecordMenu] = useState(false)
 
   // 載入月曆數據
   useEffect(() => {
@@ -190,22 +180,16 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
 
       {/* 月曆網格 */}
       <div className="grid grid-cols-7 gap-1">
-        {safeMap(calendarDays, (date, index) => {
+        {calendarDays.map((date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
           const isToday = dateStr === formatDateSafely(new Date())
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
-          // 確保 dayRecords 一定是陣列
-          const raw = calendarData ? calendarData[dateStr] : []
-          const dayRecords = safeArray(raw)
-          if (!Array.isArray(raw) && raw != null) {
-            console.warn('dayRecords 非標準陣列，已轉換', dateStr, raw)
-          }
+          const dayRecords = calendarData[dateStr] || []
           
           // 根據記錄數量動態調整高度
-          const recordCount = dayRecords ? dayRecords.length : 0
-          const minHeight = recordCount > 0 
-            ? Math.max(120, 120 + (recordCount - 1) * 80) 
+          const minHeight = dayRecords.length > 0 
+            ? Math.max(120, 120 + (dayRecords.length - 1) * 80) 
             : 120
           
           return (
@@ -228,12 +212,15 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
               </div>
               
               {/* 服務記錄 */}
-        {isCurrentMonth && recordCount > 0 && (
+              {isCurrentMonth && dayRecords.length > 0 && (
                 <div className="space-y-1">
-          {safeArray(dayRecords).slice(0, 3).map((record, i) => (
+                  {dayRecords.slice(0, 3).map((record, i) => (
                     <div
                       key={`${record.id}-${i}`}
-                      onClick={() => onEdit(record)}
+                      onClick={() => {
+                        setSelectedRecord(record)
+                        setShowRecordMenu(true)
+                      }}
                       className="text-sm bg-white border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
                     >
                       <div className="font-medium text-gray-800 mb-1 leading-tight">
@@ -247,16 +234,77 @@ function ReportsCalendarView({ filters, onEdit }: { filters: BillingSalaryFilter
                       </div>
                     </div>
                   ))}
-          {recordCount > 3 && (
+                  {dayRecords.length > 3 && (
                     <div className="text-sm text-text-secondary text-center py-1">
-            還有 {recordCount - 3} 筆記錄...
+                      還有 {dayRecords.length - 3} 筆記錄...
                     </div>
                   )}
                 </div>
               )}
             </div>
-      )})}
+          )
+        })}
       </div>
+
+      {/* 記錄操作模態框 */}
+      {showRecordMenu && selectedRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
+            <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
+            
+            {/* 記錄詳情 */}
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <div className="text-sm text-text-secondary mb-1">
+                {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
+              </div>
+              <div className="font-medium text-text-primary">
+                {selectedRecord.customer_name}
+              </div>
+              <div className="text-sm text-text-secondary">
+                護理員：{selectedRecord.care_staff_name}
+              </div>
+              <div className="text-sm text-blue-600">
+                {selectedRecord.service_type}
+              </div>
+            </div>
+
+            {/* 操作按鈕 */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  onEdit(selectedRecord)
+                  setShowRecordMenu(false)
+                  setSelectedRecord(null)
+                }}
+                className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                編輯
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(selectedRecord.id)
+                  setShowRecordMenu(false)
+                  setSelectedRecord(null)
+                }}
+                className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+              >
+                刪除
+              </button>
+            </div>
+
+            {/* 取消按鈕 */}
+            <button
+              onClick={() => {
+                setShowRecordMenu(false)
+                setSelectedRecord(null)
+              }}
+              className="w-full mt-3 bg-gray-200 text-text-secondary py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -291,8 +339,8 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       const response = await fetchBillingSalaryRecords(filters, 1, 10000)
       
       if (response.success && response.data) {
-        const fetchedRecords = response.data.data || []
-        setTotalRecords(response.data.total || 0) // 設置總記錄數
+        const fetchedRecords = response.data.data
+        setTotalRecords(response.data.total) // 設置總記錄數
         setOriginalRecords(fetchedRecords)
         // 應用當前排序
         sortRecords(fetchedRecords, sortConfig)
@@ -309,12 +357,6 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   // 排序記錄
   const sortRecords = (recordsToSort: BillingSalaryRecord[], config: SortConfig) => {
-    if (!recordsToSort || !Array.isArray(recordsToSort)) {
-      console.warn('sortRecords: recordsToSort is null or not an array')
-      setRecords([])
-      return
-    }
-
     const sorted = [...recordsToSort].sort((a, b) => {
       let aValue: string | number
       let bValue: string | number
@@ -420,15 +462,8 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
   }
 
   // 截斷地址顯示
-  const truncateAddress = (address: string | null | undefined, maxLength: number = 30) => {
-    if (address == null) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('truncateAddress: 遇到 null/undefined service_address')
-      }
-      return ''
-    }
-    const value = String(address)
-    return value.length > maxLength ? value.substring(0, maxLength) + '...' : value
+  const truncateAddress = (address: string, maxLength: number = 30) => {
+    return address.length > maxLength ? address.substring(0, maxLength) + '...' : address
   }
 
   if (loading) {
@@ -470,7 +505,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     )
   }
 
-  if (!records || !Array.isArray(records) || records.length === 0) {
+  if (records.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -568,13 +603,13 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
         {/* 記錄數量顯示 */}
         <div className="text-sm text-text-secondary">
-          共 {Array.isArray(records) ? records.length : 0} 筆記錄
+          共 {records.length} 筆記錄
         </div>
       </div>
 
       {/* 記錄列表 */}
       <div className="space-y-3">
-  {Array.isArray(records) && records.length > 0 ? records.map((record) => (
+        {records.map((record) => (
           <div 
             key={record.id}
             className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
@@ -646,11 +681,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
               </span>
             </div>
           </div>
-        )) : (
-          <div className="text-center text-text-secondary py-8">
-            暫無記錄
-          </div>
-        )}
+        ))}
       </div>
       
       {/* 記錄統計信息 */}
@@ -691,6 +722,7 @@ interface ReportsTabProps {
   reportsViewMode: 'list' | 'calendar'
   setReportsViewMode: (mode: 'list' | 'calendar') => void
   onEdit: (record: BillingSalaryRecord) => void
+  onDelete: (recordId: string) => void
 }
 
 // 概覽頁面組件
@@ -873,7 +905,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
         <div className="p-6">
           <h3 className="text-apple-heading text-text-primary mb-6">項目分類統計</h3>
           
-          {categorySummary && categorySummary.length > 0 ? (
+          {categorySummary.length > 0 ? (
             <div className="space-y-4">
               {categorySummary.slice(0, 5).map((summary, index) => (
                 <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-light">
@@ -897,9 +929,9 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
                 </div>
               ))}
               
-              {categorySummary && categorySummary.length > 5 && (
+              {categorySummary.length > 5 && (
                 <div className="text-center text-sm text-text-secondary">
-                  還有 {categorySummary ? categorySummary.length - 5 : 0} 個項目，請到詳細報表查看
+                  還有 {categorySummary.length - 5} 個項目，請到詳細報表查看
                 </div>
               )}
             </div>
@@ -930,6 +962,20 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   // 月曆客戶篩選狀態
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>('all') // 'all' 或客戶名稱
 
+  // 載入月曆數據
+  useEffect(() => {
+    const loadCalendarData = async () => {
+      // 載入現有的排程數據
+      try {
+        // 這裡可以載入現有的排程數據
+        console.log('載入月曆數據')
+      } catch (error) {
+        console.error('載入月曆數據失敗:', error)
+      }
+    }
+    loadCalendarData()
+  }, [currentDate])
+
   // 本地排程編輯模態框狀態
   const [localScheduleEditModal, setLocalScheduleEditModal] = useState<{
     isOpen: boolean
@@ -952,57 +998,44 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
   // 計算本地排程總數
   const getTotalLocalSchedules = () => {
-    if (!localSchedules) return 0
-    return Object.values(localSchedules).reduce((total, daySchedules) => {
-      return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
-    }, 0)
+    return Object.values(localSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
   }
 
   // 獲取本地排程中的所有客戶名稱
   const getLocalCustomerNames = () => {
     const customerNames = new Set<string>()
-    if (localSchedules) {
-      Object.values(localSchedules).forEach(daySchedules => {
-        if (daySchedules && Array.isArray(daySchedules)) {
-          daySchedules.forEach(schedule => {
-            if (schedule && schedule.customer_name) {
-              customerNames.add(schedule.customer_name)
-            }
-          })
+    Object.values(localSchedules).forEach(daySchedules => {
+      daySchedules.forEach(schedule => {
+        if (schedule.customer_name) {
+          customerNames.add(schedule.customer_name)
         }
       })
-    }
+    })
     return Array.from(customerNames).sort()
   }
 
   // 根據篩選條件獲取要顯示的本地排程
   const getFilteredLocalSchedules = () => {
     if (selectedCustomerFilter === 'all') {
-      return localSchedules || {}
+      return localSchedules
     }
     
     const filtered: Record<string, BillingSalaryFormData[]> = {}
-    if (localSchedules) {
-      Object.entries(localSchedules).forEach(([dateStr, daySchedules]) => {
-        if (daySchedules && Array.isArray(daySchedules)) {
-          const filteredSchedules = daySchedules.filter(schedule => 
-            schedule && schedule.customer_name === selectedCustomerFilter
-          )
-          if (filteredSchedules.length > 0) {
-            filtered[dateStr] = filteredSchedules
-          }
-        }
-      })
-    }
+    Object.entries(localSchedules).forEach(([dateStr, daySchedules]) => {
+      const filteredSchedules = daySchedules.filter(schedule => 
+        schedule.customer_name === selectedCustomerFilter
+      )
+      if (filteredSchedules.length > 0) {
+        filtered[dateStr] = filteredSchedules
+      }
+    })
     return filtered
   }
 
   // 確認儲存本地排程到Supabase（只儲存篩選後的）
   const handleSaveLocalSchedules = async () => {
     const filteredSchedules = getFilteredLocalSchedules()
-    const filteredTotal = Object.values(filteredSchedules || {}).reduce((total, daySchedules) => {
-      return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
-    }, 0)
+    const filteredTotal = Object.values(filteredSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
     
     if (filteredTotal === 0) {
       if (selectedCustomerFilter === 'all') {
@@ -1019,71 +1052,38 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
     try {
       setFormSubmitting(true)
-
-      // 收集所有要儲存的排程，使用批次插入 (Supabase) 以避免多次往返
-      const recordsToInsert: any[] = []
-      for (const [, daySchedules] of Object.entries(filteredSchedules)) {
+      
+      // 將篩選後的本地排程轉換為API格式並儲存
+      for (const [dateStr, daySchedules] of Object.entries(filteredSchedules)) {
         for (const schedule of daySchedules) {
-          if (!schedule) continue
-          recordsToInsert.push({
-            service_date: schedule.service_date,
+          const apiData = {
+            customer_id: schedule.customer_id,
             care_staff_name: schedule.care_staff_name,
+            service_date: schedule.service_date,
             start_time: schedule.start_time,
             end_time: schedule.end_time,
+            service_type: schedule.service_type,
+            service_address: schedule.service_address,
+            hourly_rate: schedule.hourly_rate,
+            service_fee: schedule.service_fee,
             staff_salary: schedule.staff_salary,
             phone: schedule.phone,
             customer_name: schedule.customer_name,
             service_hours: schedule.service_hours,
-            hourly_salary: schedule.hourly_rate,
+            hourly_salary: schedule.hourly_salary,
             project_category: schedule.project_category,
-            project_manager: schedule.project_manager,
-            customer_id: schedule.customer_id,
-            service_type: schedule.service_type,
-            service_address: schedule.service_address,
-            service_fee: schedule.service_fee,
-            hourly_rate: schedule.hourly_rate
+            project_manager: schedule.project_manager
+          }
+
+          const response = await fetch('/api/billing-salary-management', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(apiData)
           })
-        }
-      }
 
-      if (recordsToInsert.length === 0) {
-        alert('沒有可儲存的有效排程')
-        return
-      }
-
-      // 先嘗試使用 API route (若在動態部署環境，例如 Vercel)
-      let apiRouteAvailable = true
-      try {
-        const testResp = await fetch('/api/billing-salary-management', { method: 'OPTIONS' })
-        // 若返回 405/404 則視為不可用 (靜態匯出環境，如 GitHub Pages)
-        if (testResp.status === 404 || testResp.status === 405) {
-          apiRouteAvailable = false
-        }
-      } catch (e) {
-        apiRouteAvailable = false
-      }
-
-      if (apiRouteAvailable) {
-        // 仍採用逐筆，以利用 route 內部欄位對應及驗證邏輯
-        for (const rec of recordsToInsert) {
-            const resp = await fetch('/api/billing-salary-management', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(rec)
-            })
-            if (!resp.ok) {
-              const text = await resp.text().catch(()=> '')
-              throw new Error(`API(POST) 失敗 status=${resp.status} ${resp.statusText} body=${text}`)
-            }
-        }
-      } else {
-        // 靜態匯出情境: 直接透過 Supabase client 批次插入
-        const { error: insertError } = await supabase
-          .from('billing_salary_data')
-          .insert(recordsToInsert)
-        if (insertError) {
-          console.error('Supabase 批次插入錯誤:', insertError)
-          throw new Error(`批次插入失敗: ${insertError.message}`)
+          if (!response.ok) {
+            throw new Error(`儲存排程失敗: ${response.statusText}`)
+          }
         }
       }
 
@@ -1113,8 +1113,8 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
       alert(`成功儲存 ${customerInfo} 的 ${filteredTotal} 個排程到資料庫！`)
       
     } catch (error) {
-      console.error('儲存本地排程失敗 (含詳細):', error)
-      alert(`儲存排程時發生錯誤: ${(error as any)?.message || ''}`)
+      console.error('儲存本地排程失敗:', error)
+      alert('儲存排程時發生錯誤，請稍後再試')
     } finally {
       setFormSubmitting(false)
     }
@@ -1352,7 +1352,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   </select>
                 </div>
               )}
-            </div
+            </div>
             
             {/* 多天排班控制 */}
             <div className="flex items-center gap-4">
@@ -1367,9 +1367,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                 <div className="text-sm text-orange-600 font-medium">
                   {selectedCustomerFilter === 'all' 
                     ? `待儲存 ${getTotalLocalSchedules()} 個排程` 
-                    : `${selectedCustomerFilter}: ${Object.values(getFilteredLocalSchedules() || {}).reduce((total, daySchedules) => {
-                        return total + (daySchedules && Array.isArray(daySchedules) ? daySchedules.length : 0)
-                      }, 0)} 個排程`
+                    : `${selectedCustomerFilter}: ${Object.values(getFilteredLocalSchedules()).reduce((total, daySchedules) => total + daySchedules.length, 0)} 個排程`
                   }
                 </div>
               )}
@@ -1455,14 +1453,14 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
           {/* 月曆格子 - 排班視圖 */}
           <div className="grid grid-cols-7 gap-1">
-            {calendarDays && calendarDays.map((date, index) => {
+            {calendarDays.map((date, index) => {
               const dateStr = formatDateSafely(date)
               const isCurrentMonth = date.getMonth() === currentMonth
               const isToday = dateStr === formatDateSafely(new Date())
               const isWeekend = date.getDay() === 0 || date.getDay() === 6
               const isSelected = selectedDates.includes(dateStr)
               // 合併本地排程和遠端排程
-              const remoteSchedules = (scheduleData && scheduleData[dateStr]) || []
+              const remoteSchedules = scheduleData[dateStr] || []
               const filteredLocalSchedules = getFilteredLocalSchedules()
               const localDaySchedules = filteredLocalSchedules[dateStr] || []
               const allSchedules = [...remoteSchedules, ...localDaySchedules]
@@ -1504,7 +1502,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   {isCurrentMonth && (
                     <div className="space-y-2">
                       {/* 遠端排程 - 不可刪除 */}
-                      {remoteSchedules && remoteSchedules.length > 0 && remoteSchedules.map((schedule, i) => (
+                      {remoteSchedules.map((schedule, i) => (
                         <div
                           key={`remote-${i}`}
                           className="text-base bg-white border border-gray-200 rounded p-3 shadow-sm"
@@ -1527,7 +1525,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                       ))}
                       
                       {/* 本地排程 - 可點擊編輯/刪除 */}
-                      {localDaySchedules && localDaySchedules.length > 0 && localDaySchedules.map((schedule, i) => (
+                      {localDaySchedules.map((schedule, i) => (
                         <div
                           key={`local-${i}`}
                           onClick={(e) => {
@@ -1641,151 +1639,125 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   )
 }
 
-// 社區券計數機分頁組件
-function VoucherCalculatorTab() {
-  return (
-    <div className="card-apple fade-in-apple">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-apple-heading text-text-primary">社區券計數機</h2>
-        <div className="flex space-x-3">
-          <button className="btn-apple-secondary text-sm">
-            <span className="mr-2">📄</span>
-            匯出計算結果
-          </button>
-          <button className="btn-apple-primary text-sm">
-            <span className="mr-2">🔍</span>
-            進階設定
-          </button>
-        </div>
-      </div>
+// 報表頁面組件
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete }: ReportsTabProps) {
+  const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
+  const [careStaffLoading, setCareStaffLoading] = useState(true)
+  
+  // 客戶搜尋相關狀態
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('')
+  const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false)
+  const [selectedCustomers, setSelectedCustomers] = useState<CustomerSearchResult[]>([])
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
 
-      {/* 計算器主體 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左側：輸入區域 */}
-        <div className="space-y-6">
-          <div className="bg-bg-secondary rounded-lg p-6">
-            <h3 className="text-apple-body text-text-primary mb-4 font-medium">基本資料</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">客戶姓名</label>
-                <input
-                  type="text"
-                  placeholder="請輸入客戶姓名"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">社區券號碼</label>
-                <input
-                  type="text"
-                  placeholder="請輸入社區券號碼"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">服務類型</label>
-                <select className="form-input-apple w-full">
-                  <option value="">請選擇服務類型</option>
-                  <option value="HC-家居服務">HC-家居服務</option>
-                  <option value="NC-護理服務(專業人員)">NC-護理服務(專業人員)</option>
-                  <option value="PC-到戶看顧(輔助人員)">PC-到戶看顧(輔助人員)</option>
-                  <option value="ES-護送服務(陪診)">ES-護送服務(陪診)</option>
-                  <option value="RA-復康運動(輔助人員)">RA-復康運動(輔助人員)</option>
-                  <option value="RT-復康運動(專業人員)">RT-復康運動(專業人員)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">服務時數</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  placeholder="請輸入服務時數"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">自付比例</label>
-                <select className="form-input-apple w-full">
-                  <option value="">請選擇自付比例</option>
-                  <option value="5">5%</option>
-                  <option value="8">8%</option>
-                  <option value="12">12%</option>
-                  <option value="16">16%</option>
-                  <option value="25">25%</option>
-                  <option value="40">40%</option>
-                </select>
-              </div>
-            </div>
-            
-            <button className="w-full mt-6 btn-apple-primary">
-              <span className="mr-2">🧮</span>
-              計算費用
-            </button>
-          </div>
-        </div>
+  // 計算下拉選單位置
+  const updateDropdownPosition = () => {
+    if (searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      })
+    }
+  }
 
-        {/* 右側：計算結果 */}
-        <div className="space-y-6">
-          <div className="bg-bg-secondary rounded-lg p-6">
-            <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算結果</h3>
-            
-            {/* 費用明細卡片 */}
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">服務總費用</span>
-                  <span className="text-lg font-semibold text-text-primary">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">按照標準收費計算</div>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">政府資助金額</span>
-                  <span className="text-lg font-semibold text-green-600">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">社區券資助部分</div>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">客戶自付金額</span>
-                  <span className="text-lg font-semibold text-blue-600">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">客戶需要支付的金額</div>
-              </div>
-              
-              <div className="bg-mingcare-blue rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-white">本次收費總額</span>
-                  <span className="text-xl font-bold text-white">$0.00</span>
-                </div>
-                <div className="text-xs text-blue-100">實際向客戶收取的費用</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 費用說明 */}
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-            <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 費用說明</h4>
-            <ul className="text-xs text-yellow-700 space-y-1">
-              <li>• 服務費用按照政府核定的收費標準計算</li>
-              <li>• 政府資助金額會根據客戶的自付比例自動計算</li>
-              <li>• 客戶只需支付自付部分的費用</li>
-              <li>• 計算結果僅供參考，實際費用以政府最新政策為準</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+  // 點擊外部關閉下拉選單
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.customer-search-container')) {
+        setShowCustomerSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 載入護理人員列表
+  useEffect(() => {
+    loadCareStaffList()
+  }, [])
+
+  const loadCareStaffList = async () => {
+    try {
+      setCareStaffLoading(true)
+      const response = await getAllCareStaff()
+      if (response.success && response.data) {
+        setCareStaffList(response.data)
+      }
+    } catch (error) {
+      console.error('載入護理人員列表失敗:', error)
+    } finally {
+      setCareStaffLoading(false)
+    }
+  }
+
+  // 客戶搜尋函數
+  const handleCustomerSearch = async (searchTerm: string) => {
+    console.log('客戶搜尋開始:', searchTerm) // 除錯輸出
+    
+    if (searchTerm.length < 1) {
+      setCustomerSuggestions([])
+      setShowCustomerSuggestions(false)
+      return
+    }
+
+    try {
+      setCustomerSearchLoading(true)
+      const response = await searchCustomers(searchTerm)
+      
+      console.log('搜尋結果:', response) // 除錯輸出
+      
+      if (response.success && response.data) {
+        setCustomerSuggestions(response.data)
+        setShowCustomerSuggestions(true)
+        console.log('設定建議列表:', response.data.length, '筆資料') // 除錯輸出
+      } else {
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(false)
+      }
+    } catch (error) {
+      console.error('客戶搜尋失敗:', error)
+      setCustomerSuggestions([])
+      setShowCustomerSuggestions(false)
+    } finally {
+      setCustomerSearchLoading(false)
+    }
+  }
+
+  // 選擇客戶 (單選)
+  const selectCustomer = (customer: CustomerSearchResult) => {
+    setCustomerSearchTerm(customer.display_text)
+    setFilters(prev => ({
+      ...prev,
+      searchTerm: customer.customer_name
+    }))
+    setShowCustomerSuggestions(false)
+  }
+
+  // 切換客戶選擇狀態 (多選)
+  const toggleCustomerSelection = (customer: CustomerSearchResult) => {
+    console.log('切換客戶選擇:', customer.customer_name) // 除錯輸出
+    setSelectedCustomers(prev => {
+      const isSelected = prev.some(c => c.customer_id === customer.customer_id)
+      let newSelection
+      
+      if (isSelected) {
+        newSelection = prev.filter(c => c.customer_id !== customer.customer_id)
+        console.log('移除客戶:', customer.customer_name) // 除錯輸出
+      } else {
+        newSelection = [...prev, customer]
+        console.log('新增客戶:', customer.customer_name) // 除錯輸出
+      }
+      
+      return newSelection
+    })
+    
     // 選擇客戶後不要立即隱藏下拉選單，讓用戶可以繼續選擇
     // setCustomerSearchTerm('')
     // setShowCustomerSuggestions(false)
@@ -1793,7 +1765,7 @@ function VoucherCalculatorTab() {
 
   // 當選中客戶變化時，更新篩選條件
   useEffect(() => {
-    if (selectedCustomers && selectedCustomers.length > 0) {
+    if (selectedCustomers.length > 0) {
       // 使用選中客戶的 ID 陣列進行精確搜尋
       const customerIds = selectedCustomers.map(c => c.customer_id)
       setFilters(prevFilters => ({
@@ -1823,27 +1795,17 @@ function VoucherCalculatorTab() {
     setCustomerSearchTerm(value)
     
     // 只在沒有選中客戶時才直接更新篩選條件
-    if (!selectedCustomers || selectedCustomers.length === 0) {
+    if (selectedCustomers.length === 0) {
       setFilters(prev => ({
         ...prev,
         searchTerm: value
       }))
     }
     
-    // 清除之前的timeout
-    if (customerSearchTimeoutRef.current) {
-      clearTimeout(customerSearchTimeoutRef.current)
-    }
-    
     // 觸發搜尋建議（降低門檻，輸入1個字符就開始搜尋）
     if (value.length >= 1) {
-      setShowCustomerSuggestions(true)
       updateDropdownPosition() // 更新位置
-      
-      // 使用debounce，250ms後才執行搜尋
-      customerSearchTimeoutRef.current = setTimeout(() => {
-        handleCustomerSearch(value)
-      }, 250)
+      handleCustomerSearch(value)
     } else {
       // 清空建議並隱藏下拉選單
       setCustomerSuggestions([])
@@ -1852,16 +1814,16 @@ function VoucherCalculatorTab() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-8">
       {/* 詳細篩選 */}
       <div className="card-apple border border-border-light fade-in-apple" style={{ overflow: 'visible' }}>
-        <div className="p-4 sm:p-6" style={{ overflow: 'visible' }}>
-          <h2 className="text-base sm:text-lg font-bold text-text-primary mb-4 sm:mb-6">篩選條件</h2>
+        <div className="p-6" style={{ overflow: 'visible' }}>
+          <h2 className="text-apple-heading text-text-primary mb-6">篩選條件</h2>
           
           {/* 第一行：日期區間 + 快捷按鈕 */}
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6">
-            <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-3 sm:px-4 py-2">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-4 py-2">
+              <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <input
@@ -1871,9 +1833,9 @@ function VoucherCalculatorTab() {
                   ...prev,
                   dateRange: { ...prev.dateRange, start: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-xs sm:text-sm min-w-0 flex-1"
+                className="border-none outline-none bg-transparent text-sm"
               />
-              <span className="text-text-secondary text-xs sm:text-sm">-</span>
+              <span className="text-text-secondary">-</span>
               <input
                 type="date"
                 value={filters.dateRange.end}
@@ -1881,44 +1843,42 @@ function VoucherCalculatorTab() {
                   ...prev,
                   dateRange: { ...prev.dateRange, end: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-xs sm:text-sm min-w-0 flex-1"
+                className="border-none outline-none bg-transparent text-sm"
               />
             </div>
             
-            <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  const today = formatDateSafely(new Date())
-                  setFilters(prev => ({
-                    ...prev,
-                    dateRange: { start: today, end: today }
-                  }))
-                }}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200 whitespace-nowrap"
-              >
-                今日
-              </button>
-              
-              <button
-                onClick={() => updateDateRange('thisMonth')}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap"
-              >
-                本月
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                const today = formatDateSafely(new Date())
+                setFilters(prev => ({
+                  ...prev,
+                  dateRange: { start: today, end: today }
+                }))
+              }}
+              className="px-4 py-2 text-sm border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200 whitespace-nowrap"
+            >
+              今日記錄
+            </button>
+            
+            <button
+              onClick={() => updateDateRange('thisMonth')}
+              className="px-4 py-2 text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap"
+            >
+              本月記錄
+            </button>
           </div>
 
           {/* 第二行：客戶搜尋 + 下拉篩選 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 relative">
-            <div className="relative z-20 overflow-visible sm:col-span-2 lg:col-span-1">
+          <div className="grid grid-cols-4 gap-4 mb-6 relative">
+            <div className="relative z-20 overflow-visible">
               <div className="relative customer-search-container overflow-visible">
-                <svg className="absolute left-3 top-3 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 top-3 w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="搜尋客戶"
+                  placeholder="搜尋客戶（姓名/編號/電話）"
                   value={customerSearchTerm}
                   onChange={(e) => handleCustomerSearchChange(e.target.value)}
                   onFocus={() => {
@@ -1926,7 +1886,7 @@ function VoucherCalculatorTab() {
                     updateDropdownPosition() // 更新位置
                     // 點擊輸入框時，如果有搜尋詞就重新搜尋，或顯示現有建議
                     if (customerSearchTerm.length >= 1) {
-                      if (customerSuggestions && customerSuggestions.length > 0) {
+                      if (customerSuggestions.length > 0) {
                         setShowCustomerSuggestions(true)
                       } else {
                         handleCustomerSearch(customerSearchTerm)
@@ -1940,7 +1900,7 @@ function VoucherCalculatorTab() {
                       setShowCustomerSuggestions(false)
                     }, 150)
                   }}
-                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent text-xs sm:text-sm"
+                  className="w-full pl-10 pr-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
                 />
                 
                 {/* 客戶搜尋建議下拉選單 - 使用 Portal */}
@@ -1961,20 +1921,9 @@ function VoucherCalculatorTab() {
                   >
                     {customerSearchLoading ? (
                       <div className="p-3 text-center text-text-secondary">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
-                        <span className="text-sm">搜尋中...</span>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto"></div>
                       </div>
-                    ) : customerSearchError ? (
-                      <div className="p-3 text-center text-danger">
-                        <div className="text-sm">{customerSearchError}</div>
-                        <button 
-                          className="mt-2 text-xs underline hover:no-underline"
-                          onClick={() => handleCustomerSearch(customerSearchTerm)}
-                        >
-                          重試
-                        </button>
-                      </div>
-                    ) : customerSuggestions && customerSuggestions.length > 0 ? (
+                    ) : customerSuggestions.length > 0 ? (
                       customerSuggestions.map((customer, index) => (
                         <div
                           key={`${customer.customer_id}-${index}`}
@@ -1988,7 +1937,7 @@ function VoucherCalculatorTab() {
                         >
                           <input
                             type="checkbox"
-                            checked={selectedCustomers ? selectedCustomers.some(c => c.customer_id === customer.customer_id) : false}
+                            checked={selectedCustomers.some(c => c.customer_id === customer.customer_id)}
                             className="mr-3 rounded border-border-light focus:ring-mingcare-blue pointer-events-none"
                             readOnly
                           />
@@ -2011,7 +1960,7 @@ function VoucherCalculatorTab() {
               </div>
               
               {/* 選中客戶的 chips 顯示 */}
-              {selectedCustomers && selectedCustomers.length > 0 && (
+              {selectedCustomers.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedCustomers.map((customer) => (
                     <div
@@ -2035,7 +1984,7 @@ function VoucherCalculatorTab() {
               )}
             </div>
 
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div>
               <div className="relative">
                 <select
                   value={filters.projectCategory || ''}
@@ -2043,7 +1992,7 @@ function VoucherCalculatorTab() {
                     ...prev,
                     projectCategory: e.target.value as ProjectCategory | undefined
                   }))}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
                 >
                   <option value="">選擇所屬項目</option>
                   {PROJECT_CATEGORY_OPTIONS.map(option => (
@@ -2052,13 +2001,13 @@ function VoucherCalculatorTab() {
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
 
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div>
               <div className="relative">
                 <select
                   value={filters.serviceType || ''}
@@ -2066,7 +2015,7 @@ function VoucherCalculatorTab() {
                     ...prev,
                     serviceType: e.target.value as ServiceType | undefined
                   }))}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
                 >
                   <option value="">選擇服務類型</option>
                   {SERVICE_TYPE_OPTIONS.map(option => (
@@ -2075,13 +2024,13 @@ function VoucherCalculatorTab() {
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
 
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div>
               <div className="relative">
                 <select
                   value={filters.careStaffName || ''}
@@ -2089,7 +2038,7 @@ function VoucherCalculatorTab() {
                     ...prev,
                     careStaffName: e.target.value
                   }))}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
                   disabled={careStaffLoading}
                 >
                   <option value="">
@@ -2101,7 +2050,7 @@ function VoucherCalculatorTab() {
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -2116,31 +2065,31 @@ function VoucherCalculatorTab() {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center space-x-4">
               {/* 檢視模式切換 */}
               <div className="flex items-center border border-border-light rounded-lg p-1">
                 <button
                   onClick={() => setReportsViewMode('list')}
-                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     reportsViewMode === 'list'
                       ? 'bg-mingcare-blue text-white'
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                   }`}
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
                   <span>列表</span>
                 </button>
                 <button
                   onClick={() => setReportsViewMode('calendar')}
-                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     reportsViewMode === 'calendar'
                       ? 'bg-mingcare-blue text-white'
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                   }`}
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>月曆</span>
@@ -2151,16 +2100,16 @@ function VoucherCalculatorTab() {
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 text-xs sm:text-sm"
+                className="px-6 py-3 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {exportLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>導出中...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>導出報表</span>
@@ -2174,7 +2123,7 @@ function VoucherCalculatorTab() {
           {reportsViewMode === 'list' ? (
             <DetailedRecordsList filters={filters} />
           ) : (
-            <ReportsCalendarView filters={filters} onEdit={onEdit} />
+            <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} />
           )}
         </div>
       </div>
@@ -2187,55 +2136,31 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const [kpiLoading, setKpiLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports' | 'voucher-calculator'>('reports')
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
   const [reportsViewMode, setReportsViewMode] = useState<'list' | 'calendar'>('list') // 報表檢視模式
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  // 從 URL 參數設定預設 tab 和日期
-  useEffect(() => {
-    const tab = searchParams.get('tab')
-    const date = searchParams.get('date')
-    
-    if (tab === 'overview' || tab === 'schedule' || tab === 'reports' || tab === 'voucher-calculator') {
-      setActiveTab(tab)
-    }
-    
-    if (date === 'today') {
-      const today = new Date()
-      const todayStr = formatDateSafely(today)
-      
-      setFilters(prev => ({
-        ...prev,
-        dateRange: {
-          start: todayStr,
-          end: todayStr
-        }
-      }))
-    }
-  }, [searchParams])
 
   // 狀態管理
   const [filters, setFilters] = useState<BillingSalaryFilters>(() => {
-    // 預設為當月 (業務概覽/詳細報表月曆需求)
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    
+    // 使用本地日期格式，避免時區轉換問題
+    const formatLocalDate = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+    
     return {
       dateRange: {
-        start: formatDateSafely(startOfMonth),
-        end: formatDateSafely(endOfMonth)
+        start: formatLocalDate(startOfMonth),
+        end: formatLocalDate(endOfMonth)
       }
     }
   })
-
-  // 快速切換為全部日期
-  const setAllDateRange = () => {
-    setFilters(prev => ({
-      ...prev,
-      dateRange: { start: '2000-01-01', end: '2099-12-31' }
-    }))
-  }
 
   const [kpiData, setKpiData] = useState<BusinessKPI | null>(null)
   const [categorySummary, setCategorySummary] = useState<ProjectCategorySummary[]>([])
@@ -3591,19 +3516,23 @@ export default function ServicesPage() {
   }
 
   const handleDelete = async (recordId: string) => {
+    if (!confirm('確定要刪除這筆記錄嗎？此操作無法撤銷。')) return
+
     try {
-      // 這裡可以調用刪除 API
-      // const response = await deleteBillingSalaryRecord(recordId)
+      const response = await deleteBillingSalaryRecord(recordId)
       
-      // 暫時關閉模態框
-      setIsEditModalOpen(false)
-      setEditingRecord(null)
-      
-      // 可能需要重新載入數據
-      alert('記錄已刪除')
+      if (response.success) {
+        alert('記錄刪除成功')
+        // 關閉任何打開的模態框
+        setIsEditModalOpen(false)
+        setEditingRecord(null)
+        // 可能需要重新載入數據或通知其他組件更新
+      } else {
+        alert('刪除記錄失敗: ' + (response.error || '未知錯誤'))
+      }
     } catch (error) {
       console.error('刪除記錄失敗:', error)
-      throw error // 讓按鈕處理錯誤顯示
+      alert('刪除記錄失敗，請重試')
     }
   }
 
@@ -3766,39 +3695,34 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="card-apple border-b border-border-light fade-in-apple sticky top-0 z-10">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-6 lg:py-8">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary mb-1 truncate">護理服務管理</h1>
-              <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">安排護理服務、管理服務排程及記錄</p>
+      <header className="card-apple border-b border-border-light fade-in-apple">
+        <div className="px-6 lg:px-8">
+          <div className="flex justify-between items-center py-8">
+            <div>
+              <h1 className="text-apple-title text-text-primary mb-2">護理服務管理</h1>
+              <p className="text-apple-body text-text-secondary">安排護理服務、管理服務排程及記錄</p>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="btn-apple-secondary text-xs px-3 py-2 ml-3 flex-shrink-0"
-            >
-              返回
-            </button>
+            <BackToHomeButton />
           </div>
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="px-6 lg:px-8 py-8">
         {/* Tab 導航 */}
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="border-b border-border-light">
-            <nav className="-mb-px flex overflow-x-auto scrollbar-hide">
+            <nav className="-mb-px flex space-x-8">
               {/* 1. 詳細報表 */}
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'reports'
                     ? 'border-mingcare-blue text-mingcare-blue'
                     : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
                 }`}
               >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <span>詳細報表</span>
@@ -3808,14 +3732,14 @@ export default function ServicesPage() {
               {/* 2. 排程管理 */}
               <button
                 onClick={() => setActiveTab('schedule')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'schedule'
                     ? 'border-mingcare-blue text-mingcare-blue'
                     : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
                 }`}
               >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>排程管理</span>
@@ -3825,34 +3749,17 @@ export default function ServicesPage() {
               {/* 3. 業務概覽 */}
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'overview'
                     ? 'border-mingcare-blue text-mingcare-blue'
                     : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
                 }`}
               >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                   <span>業務概覽</span>
-                </div>
-              </button>
-
-              {/* 4. 社區券計數機 */}
-              <button
-                onClick={() => setActiveTab('voucher-calculator')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                  activeTab === 'voucher-calculator'
-                    ? 'border-mingcare-blue text-mingcare-blue'
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
-                }`}
-              >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  <span>社區券計數機</span>
                 </div>
               </button>
             </nav>
@@ -3885,11 +3792,8 @@ export default function ServicesPage() {
             reportsViewMode={reportsViewMode}
             setReportsViewMode={setReportsViewMode}
             onEdit={handleEdit}
+            onDelete={handleDelete}
           />
-        )}
-
-        {activeTab === 'voucher-calculator' && (
-          <VoucherCalculatorTab />
         )}
       </main>
 
@@ -4158,30 +4062,14 @@ function ScheduleFormModal({
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   
-  // 清理搜尋timeout
-  useEffect(() => {
-    return () => {
-      if (customerSearchTimeoutRef2.current) {
-        clearTimeout(customerSearchTimeoutRef2.current)
-      }
-      if (staffSearchTimeoutRef.current) {
-        clearTimeout(staffSearchTimeoutRef.current)
-      }
-    }
-  }, [])
-  
   // 搜尋功能狀態
   const [customerSearchTerm, setCustomerSearchTerm] = useState(existingRecord ? existingRecord.customer_name : '')
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
-  const [customerSearchError, setCustomerSearchError] = useState('')
-  const customerSearchTimeoutRef2 = useRef<NodeJS.Timeout | null>(null)
   
   const [staffSearchTerm, setStaffSearchTerm] = useState(existingRecord ? existingRecord.care_staff_name : '')
   const [staffSuggestions, setStaffSuggestions] = useState<any[]>([])
   const [showStaffSuggestions, setShowStaffSuggestions] = useState(false)
-  const [staffSearchError, setStaffSearchError] = useState('')
-  const staffSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // 檢查是否為多日期排班（使用參數中的isMultiDay或根據selectedDates計算）
   const isMultipleDays = isMultiDay || selectedDates.length > 1
@@ -4194,8 +4082,7 @@ function ScheduleFormModal({
     if (!data.phone.trim()) errors.phone = '聯絡電話不能為空'
     if (!data.service_address.trim()) errors.service_address = '服務地址不能為空'
     if (!data.care_staff_name.trim()) errors.care_staff_name = '護理人員不能為空'
-  // 允許服務費用為 0（免費 / 促銷等情境）
-  if (data.service_fee < 0) errors.service_fee = '服務費用不能為負數'
+    if (data.service_fee <= 0) errors.service_fee = '服務費用必須大於 0'
     if (data.staff_salary < 0) errors.staff_salary = '員工薪資不能為負數'
     if (data.service_hours <= 0) errors.service_hours = '服務時數必須大於 0'
     if (!data.service_type) errors.service_type = '請選擇服務類型'
@@ -4299,73 +4186,35 @@ function ScheduleFormModal({
     // 同步更新搜索項
     if (field === 'customer_name') {
       setCustomerSearchTerm(value)
-      
-      // 清除之前的timeout
-      if (customerSearchTimeoutRef2.current) {
-        clearTimeout(customerSearchTimeoutRef2.current)
-      }
-      
-      // 觸發客戶搜尋建議（debounce）
-      if (value.length >= 1) {
-        setShowCustomerSuggestions(true)
-        // 使用debounce，250ms後才執行搜尋
-        customerSearchTimeoutRef2.current = setTimeout(() => {
-          handleModalCustomerSearch(value)
-        }, 250)
-      } else {
-        setCustomerSuggestions([])
-        setShowCustomerSuggestions(false)
-      }
-      
     } else if (field === 'care_staff_name') {
       setStaffSearchTerm(value)
     }
   }
 
-  // 客戶搜尋功能（模態框專用）
-  const handleModalCustomerSearch = async (searchTerm: string) => {
+  // 客戶搜尋功能
+  const handleCustomerSearch = async (searchTerm: string) => {
+    setCustomerSearchTerm(searchTerm)
+    
     if (searchTerm.trim().length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
-      setCustomerSearchError('')
       return
     }
 
     try {
-      // 立即顯示載入狀態
-      setShowCustomerSuggestions(true)
-      setCustomerSearchError('')
-      
-      // 設定10秒超時並直接使用本地函數（適用於靜態和開發環境）
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
+      const response = await fetch('/api/search-customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm })
       })
       
-      const searchPromise = searchCustomers(searchTerm)
-      const data = await Promise.race([searchPromise, timeoutPromise]) as any
-      
-      if (data.success) {
+      if (response.ok) {
+        const data = await response.json()
         setCustomerSuggestions(data.data || [])
-        setShowCustomerSuggestions(data.data && data.data.length > 0)
-      } else {
-        console.error('客戶搜尋錯誤:', data.error)
-        setCustomerSuggestions([])
         setShowCustomerSuggestions(true)
-        setCustomerSearchError('搜尋失敗')
       }
     } catch (error) {
-      let errorMessage = '搜尋失敗'
-      if (error instanceof Error) {
-        if (error.message === '搜尋逾時') {
-          console.warn('客戶搜尋請求逾時')
-          errorMessage = '搜尋逾時，請重試'
-        } else {
-          console.error('客戶搜尋失敗:', error)
-        }
-      }
-      setCustomerSuggestions([])
-      setShowCustomerSuggestions(true)
-      setCustomerSearchError(errorMessage)
+      console.error('客戶搜尋失敗:', error)
     }
   }
 
@@ -4379,67 +4228,31 @@ function ScheduleFormModal({
     setShowCustomerSuggestions(false)
   }
 
-  // 護理人員搜尋功能（模態框專用）
-  const handleModalStaffSearch = async (searchTerm: string) => {
+  // 護理人員搜尋功能
+  const handleStaffSearch = async (searchTerm: string) => {
+    setStaffSearchTerm(searchTerm)
+    
     if (searchTerm.trim().length < 1) {
       setStaffSuggestions([])
       setShowStaffSuggestions(false)
-      setStaffSearchError('')
       return
     }
 
     try {
-      // 立即顯示載入狀態
-      setShowStaffSuggestions(true)
-      setStaffSearchError('')
-      
-      // 設定10秒超時並直接使用本地函數（適用於靜態和開發環境）
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('搜尋逾時')), 10000)
+      const response = await fetch('/api/search-care-staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm })
       })
       
-      const searchPromise = searchCareStaff(searchTerm)
-      const data = await Promise.race([searchPromise, timeoutPromise]) as any
-      
-      if (data.success) {
+      if (response.ok) {
+        const data = await response.json()
         setStaffSuggestions(data.data || [])
-        setShowStaffSuggestions(data.data && data.data.length > 0)
-      } else {
-        console.error('護理人員搜尋錯誤:', data.error)
-        setStaffSuggestions([])
         setShowStaffSuggestions(true)
-        setStaffSearchError('搜尋失敗')
       }
     } catch (error) {
-      let errorMessage = '搜尋失敗'
-      if (error instanceof Error) {
-        if (error.message === '搜尋逾時') {
-          console.warn('護理人員搜尋請求逾時')
-          errorMessage = '搜尋逾時，請重試'
-        } else {
-          console.error('護理人員搜尋失敗:', error)
-        }
-      }
-      setStaffSuggestions([])
-      setShowStaffSuggestions(true)
-      setStaffSearchError(errorMessage)
+      console.error('護理人員搜尋失敗:', error)
     }
-  }
-
-  // 選擇客戶（模態框專用）
-  const selectModalCustomer = (customer: CustomerSearchResult) => {
-    // 直接更新表單資料，不觸發搜尋
-    setFormData(prev => ({
-      ...prev,
-      customer_name: customer.customer_name,
-      customer_id: customer.customer_id,
-      phone: customer.phone || prev.phone,
-      service_address: customer.service_address || prev.service_address
-    }))
-    
-    // 設定搜尋框只顯示純姓名
-    setCustomerSearchTerm(customer.customer_name)
-    setShowCustomerSuggestions(false)
   }
 
   // 選擇護理人員
@@ -4592,14 +4405,10 @@ function ScheduleFormModal({
                           setCustomerSearchTerm(value)
                           updateField('customer_name', value) // 同步更新表單數據
                           if (value.length >= 1) {
-                            handleModalCustomerSearch(value)
+                            handleCustomerSearch(value)
                           } else {
                             setShowCustomerSuggestions(false)
                           }
-                        }}
-                        onBlur={() => {
-                          // 延遲隱藏，讓點擊建議項目有時間執行
-                          setTimeout(() => setShowCustomerSuggestions(false), 200)
                         }}
                         className={`form-input-apple w-full ${errors.customer_name ? 'border-danger' : ''}`}
                         placeholder="請輸入客戶姓名或編號（≥1字元）"
@@ -4608,53 +4417,28 @@ function ScheduleFormModal({
                       />
                       
                       {/* 客戶搜尋建議 */}
-                      {showCustomerSuggestions && (
+                      {showCustomerSuggestions && customerSuggestions.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {customerSearchError ? (
-                            <div className="p-3 text-center text-danger">
-                              <div className="text-sm">{customerSearchError}</div>
-                              <button 
-                                className="mt-2 text-xs underline hover:no-underline"
-                                onClick={() => handleModalCustomerSearch(customerSearchTerm)}
-                              >
-                                重試
-                              </button>
-                            </div>
-                          ) : (customerSuggestions == null) ? (
-                            <div className="p-3 text-center text-text-secondary">
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
-                              <span className="text-sm">初始化中...</span>
-                            </div>
-                          ) : customerSuggestions.length === 0 ? (
-                            <div className="p-3 text-center text-text-secondary">
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
-                              <span className="text-sm">搜尋中...</span>
-                            </div>
-                          ) : (
-                            (customerSuggestions || []).map((customer, index) => (
-                              <div
-                                key={customer.customer_id || index}
-                                onMouseDown={(e) => {
-                                  e.preventDefault() // 防止失去焦點
-                                  selectModalCustomer(customer)
-                                }}
-                                className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
-                              >
-                                <div className="font-medium text-text-primary">
-                                  {customer.customer_name}
-                                  {customer.customer_id && (
-                                    <span className="text-text-secondary ml-1">（{customer.customer_id}）</span>
-                                  )}
-                                </div>
-                                {customer.phone && (
-                                  <div className="text-sm text-text-secondary">{customer.phone}</div>
-                                )}
-                                {customer.service_address && (
-                                  <div className="text-sm text-text-secondary truncate">{customer.service_address}</div>
+                          {customerSuggestions.map((customer, index) => (
+                            <div
+                              key={customer.customer_id || index}
+                              onClick={() => selectCustomer(customer)}
+                              className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
+                            >
+                              <div className="font-medium text-text-primary">
+                                {customer.customer_name}
+                                {customer.customer_id && (
+                                  <span className="text-text-secondary ml-1">（{customer.customer_id}）</span>
                                 )}
                               </div>
-                            ))
-                          )}
+                              {customer.phone && (
+                                <div className="text-sm text-text-secondary">{customer.phone}</div>
+                              )}
+                              {customer.service_address && (
+                                <div className="text-sm text-text-secondary truncate">{customer.service_address}</div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
                       {errors.customer_name && (
@@ -4732,25 +4516,11 @@ function ScheduleFormModal({
                         const value = e.target.value
                         setStaffSearchTerm(value)
                         updateField('care_staff_name', value) // 同步更新表單數據
-                        
-                        // 清除之前的timeout
-                        if (staffSearchTimeoutRef.current) {
-                          clearTimeout(staffSearchTimeoutRef.current)
-                        }
-                        
                         if (value.length >= 1) {
-                          setShowStaffSuggestions(true)
-                          // 使用debounce，250ms後才執行搜尋
-                          staffSearchTimeoutRef.current = setTimeout(() => {
-                            handleModalStaffSearch(value)
-                          }, 250)
+                          handleStaffSearch(value)
                         } else {
                           setShowStaffSuggestions(false)
                         }
-                      }}
-                      onBlur={() => {
-                        // 延遲隱藏，讓點擊建議項目有時間執行
-                        setTimeout(() => setShowStaffSuggestions(false), 200)
                       }}
                       className={`form-input-apple w-full ${errors.care_staff_name ? 'border-danger' : ''}`}
                       placeholder="輸入護理人員中文姓名或編號（≥1字元）"
@@ -4758,42 +4528,22 @@ function ScheduleFormModal({
                     />
                     
                     {/* 護理人員搜尋建議 */}
-                    {showStaffSuggestions && (
+                    {showStaffSuggestions && staffSuggestions.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {staffSearchError ? (
-                          <div className="p-3 text-center text-danger">
-                            <div className="text-sm">{staffSearchError}</div>
-                            <button 
-                              className="mt-2 text-xs underline hover:no-underline"
-                              onClick={() => handleModalStaffSearch(staffSearchTerm)}
-                            >
-                              重試
-                            </button>
-                          </div>
-                        ) : staffSuggestions.length === 0 ? (
-                          <div className="p-3 text-center text-text-secondary">
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto mb-2"></div>
-                            <span className="text-sm">搜尋中...</span>
-                          </div>
-                        ) : (
-                          staffSuggestions.map((staff, index) => (
-                            <div
-                              key={staff.staff_id || index}
-                              onMouseDown={(e) => {
-                                e.preventDefault() // 防止失去焦點
-                                selectStaff(staff)
-                              }}
-                              className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
-                            >
-                              <div className="font-medium text-text-primary">
-                                {staff.name_chinese}
-                                {staff.staff_id && (
-                                  <span className="text-text-secondary ml-1">（{staff.staff_id}）</span>
-                                )}
-                              </div>
+                        {staffSuggestions.map((staff, index) => (
+                          <div
+                            key={staff.staff_id || index}
+                            onClick={() => selectStaff(staff)}
+                            className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
+                          >
+                            <div className="font-medium text-text-primary">
+                              {staff.name_chinese}
+                              {staff.staff_id && (
+                                <span className="text-text-secondary ml-1">（{staff.staff_id}）</span>
+                              )}
                             </div>
-                          ))
-                        )}
+                          </div>
+                        ))}
                       </div>
                     )}
                     {errors.care_staff_name && (
@@ -5146,183 +4896,6 @@ function LocalScheduleEditModal({
           >
             取消
           </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// 社區券計數機分頁組件
-function VoucherCalculatorTab() {
-  return (
-    <div className="card-apple fade-in-apple">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-apple-heading text-text-primary">社區券計數機</h2>
-        <div className="flex space-x-3">
-          <button className="btn-apple-secondary text-sm">
-            <span className="mr-2">📄</span>
-            匯出計算結果
-          </button>
-          <button className="btn-apple-primary text-sm">
-            <span className="mr-2">🔍</span>
-            進階設定
-          </button>
-        </div>
-      </div>
-
-      {/* 計算器主體 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左側：輸入區域 */}
-        <div className="space-y-6">
-          <div className="bg-bg-secondary rounded-lg p-6">
-            <h3 className="text-apple-body text-text-primary mb-4 font-medium">基本資料</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">客戶姓名</label>
-                <input
-                  type="text"
-                  placeholder="請輸入客戶姓名"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">社區券號碼</label>
-                <input
-                  type="text"
-                  placeholder="請輸入社區券號碼"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">服務類型</label>
-                <select className="form-input-apple w-full">
-                  <option value="">請選擇服務類型</option>
-                  <option value="HC-家居服務">HC-家居服務</option>
-                  <option value="NC-護理服務(專業人員)">NC-護理服務(專業人員)</option>
-                  <option value="PC-到戶看顧(輔助人員)">PC-到戶看顧(輔助人員)</option>
-                  <option value="ES-護送服務(陪診)">ES-護送服務(陪診)</option>
-                  <option value="RA-復康運動(輔助人員)">RA-復康運動(輔助人員)</option>
-                  <option value="RT-復康運動(專業人員)">RT-復康運動(專業人員)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">服務時數</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  placeholder="請輸入服務時數"
-                  className="form-input-apple w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">自付比例</label>
-                <select className="form-input-apple w-full">
-                  <option value="">請選擇自付比例</option>
-                  <option value="5">5%</option>
-                  <option value="8">8%</option>
-                  <option value="12">12%</option>
-                  <option value="16">16%</option>
-                  <option value="25">25%</option>
-                  <option value="40">40%</option>
-                </select>
-              </div>
-            </div>
-            
-            <button className="w-full mt-6 btn-apple-primary">
-              <span className="mr-2">🧮</span>
-              計算費用
-            </button>
-          </div>
-        </div>
-
-        {/* 右側：計算結果 */}
-        <div className="space-y-6">
-          <div className="bg-bg-secondary rounded-lg p-6">
-            <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算結果</h3>
-            
-            {/* 費用明細卡片 */}
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">服務總費用</span>
-                  <span className="text-lg font-semibold text-text-primary">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">按照標準收費計算</div>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">政府資助金額</span>
-                  <span className="text-lg font-semibold text-green-600">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">社區券資助部分</div>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-border-light">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-text-secondary">客戶自付金額</span>
-                  <span className="text-lg font-semibold text-blue-600">$0.00</span>
-                </div>
-                <div className="text-xs text-text-secondary">客戶需要支付的金額</div>
-              </div>
-              
-              <div className="bg-mingcare-blue rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-white">本次收費總額</span>
-                  <span className="text-xl font-bold text-white">$0.00</span>
-                </div>
-                <div className="text-xs text-blue-100">實際向客戶收取的費用</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 費用說明 */}
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-            <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 費用說明</h4>
-            <ul className="text-xs text-yellow-700 space-y-1">
-              <li>• 服務費用按照政府核定的收費標準計算</li>
-              <li>• 政府資助金額會根據客戶的自付比例自動計算</li>
-              <li>• 客戶只需支付自付部分的費用</li>
-              <li>• 計算結果僅供參考，實際費用以政府最新政策為準</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* 歷史記錄區域 */}
-      <div className="mt-8">
-        <h3 className="text-apple-body text-text-primary mb-4 font-medium">計算記錄</h3>
-        <div className="bg-white border border-border-light rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-bg-secondary">
-              <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">計算時間</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">客戶姓名</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務時數</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">自付比例</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">收費金額</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan={7} className="py-12 text-center text-text-secondary">
-                  <div className="flex flex-col items-center">
-                    <span className="text-4xl mb-2">🧮</span>
-                    <p>暫無計算記錄</p>
-                    <p className="text-sm">使用計算器進行費用計算後會顯示記錄</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
