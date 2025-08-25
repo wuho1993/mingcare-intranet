@@ -997,6 +997,8 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
 
   const calculateVoucherSummary = () => {
     const allSchedules = Object.values(localSchedules).flat()
+    console.log('計算社區券統計 - 本地排程:', localSchedules) // 調試日誌
+    console.log('所有排程:', allSchedules) // 調試日誌
     
     // 按服務類型分組統計
     const serviceTypeStats: Record<string, {
@@ -1020,12 +1022,15 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
       serviceTypeStats[serviceType].total_amount += schedule.service_fee || 0
     })
 
-    return Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
+    const result = Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
       service_type: serviceType,
       count: stats.count,
       total_hours: stats.total_hours,
       total_amount: stats.total_amount
     }))
+    
+    console.log('社區券統計結果:', result) // 調試日誌
+    return result
   }
 
   const summary = calculateSummary()
@@ -1053,7 +1058,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
       </div>
 
       {/* 社區券機數統計 */}
-      {voucherSummary.length > 0 && (
+      {voucherSummary.length > 0 ? (
         <div>
           <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
           
@@ -1095,6 +1100,19 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
+          <div className="bg-gray-50 rounded-lg p-6 text-center">
+            <div className="text-text-secondary">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-lg font-medium text-text-primary mb-2">尚無排班資料</p>
+              <p className="text-sm text-text-secondary">請先添加排班記錄以查看社區券統計</p>
+            </div>
           </div>
         </div>
       )}
@@ -4509,7 +4527,9 @@ function ScheduleFormModal({
 
   // 清理定時器
   useEffect(() => {
+    console.log('ScheduleFormModal組件已掛載') // 調試日誌
     return () => {
+      console.log('ScheduleFormModal組件將卸載') // 調試日誌
       if (customerSearchTimeout) {
         clearTimeout(customerSearchTimeout)
       }
@@ -4518,6 +4538,22 @@ function ScheduleFormModal({
       }
     }
   }, [customerSearchTimeout, staffSearchTimeout])
+
+  // 點擊外部關閉搜尋建議
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.customer-search-container')) {
+        setShowCustomerSuggestions(false)
+      }
+      if (!target.closest('.staff-search-container')) {
+        setShowStaffSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // 點擊外部關閉搜尋建議
   useEffect(() => {
@@ -4888,6 +4924,7 @@ function ScheduleFormModal({
                         value={customerSearchTerm}
                         onChange={(e) => {
                           const value = e.target.value
+                          console.log('客戶搜尋輸入變化:', value) // 調試日誌
                           setCustomerSearchTerm(value)
                           updateField('customer_name', value) // 同步更新表單數據
                           
@@ -4897,8 +4934,10 @@ function ScheduleFormModal({
                           }
                           
                           if (value.length >= 1) {
+                            console.log('設置客戶搜尋定時器') // 調試日誌
                             // 設置新的搜尋定時器（300ms 防抖）
                             const timeout = setTimeout(() => {
+                              console.log('執行客戶搜尋') // 調試日誌
                               handleCustomerSearch(value)
                             }, 300)
                             setCustomerSearchTimeout(timeout)
@@ -4907,6 +4946,7 @@ function ScheduleFormModal({
                           }
                         }}
                         onFocus={() => {
+                          console.log('客戶輸入框獲得焦點') // 調試日誌
                           // 聚焦時如果有搜尋詞且有結果，顯示建議
                           if (customerSearchTerm.length >= 1 && customerSuggestions.length > 0) {
                             setShowCustomerSuggestions(true)
@@ -5016,6 +5056,7 @@ function ScheduleFormModal({
                       value={staffSearchTerm}
                       onChange={(e) => {
                         const value = e.target.value
+                        console.log('護理人員搜尋輸入變化:', value) // 調試日誌
                         setStaffSearchTerm(value)
                         updateField('care_staff_name', value) // 同步更新表單數據
                         
@@ -5025,8 +5066,10 @@ function ScheduleFormModal({
                         }
                         
                         if (value.length >= 1) {
+                          console.log('設置護理人員搜尋定時器') // 調試日誌
                           // 設置新的搜尋定時器（300ms 防抖）
                           const timeout = setTimeout(() => {
+                            console.log('執行護理人員搜尋') // 調試日誌
                             handleStaffSearch(value)
                           }, 300)
                           setStaffSearchTimeout(timeout)
@@ -5035,6 +5078,7 @@ function ScheduleFormModal({
                         }
                       }}
                       onFocus={() => {
+                        console.log('護理人員輸入框獲得焦點') // 調試日誌
                         // 聚焦時如果有搜尋詞且有結果，顯示建議
                         if (staffSearchTerm.length >= 1 && staffSuggestions.length > 0) {
                           setShowStaffSuggestions(true)
