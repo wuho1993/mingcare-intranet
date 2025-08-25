@@ -42,8 +42,8 @@ export async function fetchBillingSalaryRecords(
       query = query.eq('service_type', filters.serviceType)
     }
 
-    if (filters.projectCategory) {
-      query = query.eq('project_category', filters.projectCategory)
+    if (filters.projectCategory && filters.projectCategory.length > 0) {
+      query = query.in('project_category', filters.projectCategory)
     }
 
     if (filters.projectManager) {

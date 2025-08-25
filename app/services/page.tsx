@@ -995,25 +995,109 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
     }
   }
 
+  const calculateVoucherSummary = () => {
+    const allSchedules = Object.values(localSchedules).flat()
+    
+    // 按服務類型分組統計
+    const serviceTypeStats: Record<string, {
+      count: number
+      total_hours: number
+      total_amount: number
+    }> = {}
+
+    allSchedules.forEach(schedule => {
+      const serviceType = schedule.service_type || '未分類'
+      if (!serviceTypeStats[serviceType]) {
+        serviceTypeStats[serviceType] = {
+          count: 0,
+          total_hours: 0,
+          total_amount: 0
+        }
+      }
+      
+      serviceTypeStats[serviceType].count += 1
+      serviceTypeStats[serviceType].total_hours += schedule.service_hours || 0
+      serviceTypeStats[serviceType].total_amount += schedule.service_fee || 0
+    })
+
+    return Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
+      service_type: serviceType,
+      count: stats.count,
+      total_hours: stats.total_hours,
+      total_amount: stats.total_amount
+    }))
+  }
+
   const summary = calculateSummary()
+  const voucherSummary = calculateVoucherSummary()
+  const totalVoucherAmount = voucherSummary.reduce((sum, item) => sum + item.total_amount, 0)
 
   return (
-    <div>
-      <h3 className="text-apple-heading text-text-primary mb-4">排班小結</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-mingcare-blue">{summary.totalCount}</div>
-          <div className="text-sm text-text-secondary">總排班數</div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-green-600">{summary.totalHours.toFixed(1)}</div>
-          <div className="text-sm text-text-secondary">總時數</div>
-        </div>
-        <div className="bg-orange-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-orange-600">${summary.totalFee.toFixed(2)}</div>
-          <div className="text-sm text-text-secondary">總服務費用</div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-apple-heading text-text-primary mb-4">排班小結</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-mingcare-blue">{summary.totalCount}</div>
+            <div className="text-sm text-text-secondary">總排班數</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-600">{summary.totalHours.toFixed(1)}</div>
+            <div className="text-sm text-text-secondary">總時數</div>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-orange-600">${summary.totalFee.toFixed(2)}</div>
+            <div className="text-sm text-text-secondary">總服務費用</div>
+          </div>
         </div>
       </div>
+
+      {/* 社區券機數統計 */}
+      {voucherSummary.length > 0 && (
+        <div>
+          <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
+          
+          {/* 總計卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-purple-50 rounded-lg p-4">
+              <div className="text-2xl font-bold text-purple-600">{summary.totalCount}</div>
+              <div className="text-sm text-text-secondary">總服務次數</div>
+            </div>
+            <div className="bg-indigo-50 rounded-lg p-4">
+              <div className="text-2xl font-bold text-indigo-600">{summary.totalHours.toFixed(1)}</div>
+              <div className="text-sm text-text-secondary">總服務時數</div>
+            </div>
+            <div className="bg-pink-50 rounded-lg p-4">
+              <div className="text-2xl font-bold text-pink-600">${totalVoucherAmount.toFixed(2)}</div>
+              <div className="text-sm text-text-secondary">總社區券金額</div>
+            </div>
+          </div>
+
+          {/* 服務類型明細表格 */}
+          <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-bg-secondary">
+                <tr>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">次數</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">時數</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                {voucherSummary.map((item, index) => (
+                  <tr key={item.service_type} className={index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary'}>
+                    <td className="py-3 px-4 text-sm text-text-primary">{item.service_type}</td>
+                    <td className="py-3 px-4 text-sm text-text-primary">{item.count}</td>
+                    <td className="py-3 px-4 text-sm text-text-primary">{item.total_hours.toFixed(1)}</td>
+                    <td className="py-3 px-4 text-sm text-text-primary font-medium">${item.total_amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1863,6 +1947,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
 
+  // 項目分類下拉選單狀態
+  const [isProjectCategoryDropdownOpen, setIsProjectCategoryDropdownOpen] = useState(false)
+
   // 計算下拉選單位置
   const updateDropdownPosition = () => {
     if (searchInputRef.current) {
@@ -1881,6 +1968,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       const target = event.target as HTMLElement
       if (!target.closest('.customer-search-container')) {
         setShowCustomerSuggestions(false)
+      }
+      if (!target.closest('.project-category-dropdown')) {
+        setIsProjectCategoryDropdownOpen(false)
       }
     }
 
@@ -2195,25 +2285,79 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             </div>
 
             <div>
-              <div className="relative">
-                <select
-                  value={filters.projectCategory || ''}
-                  onChange={(e) => setFilters(prev => ({
-                    ...prev,
-                    projectCategory: e.target.value as ProjectCategory | undefined
-                  }))}
-                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
+              <div className="relative project-category-dropdown">
+                <div
+                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white min-h-[48px] cursor-pointer"
+                  onClick={() => setIsProjectCategoryDropdownOpen(!isProjectCategoryDropdownOpen)}
                 >
-                  <option value="">選擇所屬項目</option>
-                  {PROJECT_CATEGORY_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  <div className="flex flex-wrap gap-1">
+                    {filters.projectCategory && filters.projectCategory.length > 0 ? (
+                      filters.projectCategory.map(category => {
+                        const option = PROJECT_CATEGORY_OPTIONS.find(opt => opt.value === category)
+                        return (
+                          <span
+                            key={category}
+                            className="inline-flex items-center px-2 py-1 bg-mingcare-blue/10 text-mingcare-blue text-sm rounded-md"
+                          >
+                            {option?.label}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setFilters(prev => ({
+                                  ...prev,
+                                  projectCategory: prev.projectCategory?.filter(c => c !== category) || []
+                                }))
+                              }}
+                              className="ml-1 text-mingcare-blue hover:text-red-600"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        )
+                      })
+                    ) : (
+                      <span className="text-text-secondary">選擇所屬項目（可多選）</span>
+                    )}
+                  </div>
+                </div>
                 <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
+                
+                {isProjectCategoryDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {PROJECT_CATEGORY_OPTIONS.map(option => {
+                      const isSelected = filters.projectCategory?.includes(option.value) || false
+                      return (
+                        <div
+                          key={option.value}
+                          className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between ${
+                            isSelected ? 'bg-mingcare-blue/5 text-mingcare-blue' : 'text-text-primary'
+                          }`}
+                          onClick={() => {
+                            const currentCategories = filters.projectCategory || []
+                            const newCategories = isSelected
+                              ? currentCategories.filter(c => c !== option.value)
+                              : [...currentCategories, option.value]
+                            
+                            setFilters(prev => ({
+                              ...prev,
+                              projectCategory: newCategories
+                            }))
+                          }}
+                        >
+                          <span>{option.label}</span>
+                          {isSelected && (
+                            <svg className="w-4 h-4 text-mingcare-blue" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -4359,6 +4503,38 @@ function ScheduleFormModal({
   const [staffSuggestions, setStaffSuggestions] = useState<any[]>([])
   const [showStaffSuggestions, setShowStaffSuggestions] = useState(false)
   
+  // 搜尋防抖定時器
+  const [customerSearchTimeout, setCustomerSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [staffSearchTimeout, setStaffSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+
+  // 清理定時器
+  useEffect(() => {
+    return () => {
+      if (customerSearchTimeout) {
+        clearTimeout(customerSearchTimeout)
+      }
+      if (staffSearchTimeout) {
+        clearTimeout(staffSearchTimeout)
+      }
+    }
+  }, [customerSearchTimeout, staffSearchTimeout])
+
+  // 點擊外部關閉搜尋建議
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.customer-search-container')) {
+        setShowCustomerSuggestions(false)
+      }
+      if (!target.closest('.staff-search-container')) {
+        setShowStaffSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+  
   // 檢查是否為多日期排班（使用參數中的isMultiDay或根據selectedDates計算）
   const isMultipleDays = isMultiDay || selectedDates.length > 1
 
@@ -4481,6 +4657,7 @@ function ScheduleFormModal({
 
   // 客戶搜尋功能
   const handleCustomerSearch = async (searchTerm: string) => {
+    console.log('客戶搜尋開始:', searchTerm) // 調試日誌
     setCustomerSearchTerm(searchTerm)
     
     if (searchTerm.trim().length < 1) {
@@ -4490,19 +4667,29 @@ function ScheduleFormModal({
     }
 
     try {
+      console.log('發送客戶搜尋請求') // 調試日誌
       const response = await fetch('/api/search-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm })
+        body: JSON.stringify({ searchTerm: searchTerm.trim() })
       })
+      
+      console.log('客戶搜尋響應狀態:', response.status) // 調試日誌
       
       if (response.ok) {
         const data = await response.json()
+        console.log('客戶搜尋結果:', data) // 調試日誌
         setCustomerSuggestions(data.data || [])
         setShowCustomerSuggestions(true)
+      } else {
+        console.error('客戶搜尋請求失敗:', response.status, response.statusText)
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(false)
       }
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
+      setCustomerSuggestions([])
+      setShowCustomerSuggestions(false)
     }
   }
 
@@ -4518,6 +4705,7 @@ function ScheduleFormModal({
 
   // 護理人員搜尋功能
   const handleStaffSearch = async (searchTerm: string) => {
+    console.log('護理人員搜尋開始:', searchTerm) // 調試日誌
     setStaffSearchTerm(searchTerm)
     
     if (searchTerm.trim().length < 1) {
@@ -4527,19 +4715,29 @@ function ScheduleFormModal({
     }
 
     try {
+      console.log('發送護理人員搜尋請求') // 調試日誌
       const response = await fetch('/api/search-care-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm })
+        body: JSON.stringify({ searchTerm: searchTerm.trim() })
       })
+      
+      console.log('護理人員搜尋響應狀態:', response.status) // 調試日誌
       
       if (response.ok) {
         const data = await response.json()
+        console.log('護理人員搜尋結果:', data) // 調試日誌
         setStaffSuggestions(data.data || [])
         setShowStaffSuggestions(true)
+      } else {
+        console.error('護理人員搜尋請求失敗:', response.status, response.statusText)
+        setStaffSuggestions([])
+        setShowStaffSuggestions(false)
       }
     } catch (error) {
       console.error('護理人員搜尋失敗:', error)
+      setStaffSuggestions([])
+      setShowStaffSuggestions(false)
     }
   }
 
@@ -4681,7 +4879,7 @@ function ScheduleFormModal({
                   {/* 第三行：客戶姓名（含搜尋） + 客戶編號 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* 客戶姓名（含搜尋功能） */}
-                    <div className="relative">
+                    <div className="relative customer-search-container">
                       <label className="block text-apple-caption font-medium text-text-primary mb-2">
                         客戶姓名 <span className="text-danger">*</span>
                       </label>
@@ -4692,10 +4890,26 @@ function ScheduleFormModal({
                           const value = e.target.value
                           setCustomerSearchTerm(value)
                           updateField('customer_name', value) // 同步更新表單數據
+                          
+                          // 清除之前的搜尋定時器
+                          if (customerSearchTimeout) {
+                            clearTimeout(customerSearchTimeout)
+                          }
+                          
                           if (value.length >= 1) {
-                            handleCustomerSearch(value)
+                            // 設置新的搜尋定時器（300ms 防抖）
+                            const timeout = setTimeout(() => {
+                              handleCustomerSearch(value)
+                            }, 300)
+                            setCustomerSearchTimeout(timeout)
                           } else {
                             setShowCustomerSuggestions(false)
+                          }
+                        }}
+                        onFocus={() => {
+                          // 聚焦時如果有搜尋詞且有結果，顯示建議
+                          if (customerSearchTerm.length >= 1 && customerSuggestions.length > 0) {
+                            setShowCustomerSuggestions(true)
                           }
                         }}
                         className={`form-input-apple w-full ${errors.customer_name ? 'border-danger' : ''}`}
@@ -4793,7 +5007,7 @@ function ScheduleFormModal({
                 
                 <div className="space-y-4">
                   {/* 第一行：護理人員搜尋（獨立一行） */}
-                  <div className="relative">
+                  <div className="relative staff-search-container">
                     <label className="block text-apple-caption font-medium text-text-primary mb-2">
                       護理人員
                     </label>
@@ -4804,10 +5018,26 @@ function ScheduleFormModal({
                         const value = e.target.value
                         setStaffSearchTerm(value)
                         updateField('care_staff_name', value) // 同步更新表單數據
+                        
+                        // 清除之前的搜尋定時器
+                        if (staffSearchTimeout) {
+                          clearTimeout(staffSearchTimeout)
+                        }
+                        
                         if (value.length >= 1) {
-                          handleStaffSearch(value)
+                          // 設置新的搜尋定時器（300ms 防抖）
+                          const timeout = setTimeout(() => {
+                            handleStaffSearch(value)
+                          }, 300)
+                          setStaffSearchTimeout(timeout)
                         } else {
                           setShowStaffSuggestions(false)
+                        }
+                      }}
+                      onFocus={() => {
+                        // 聚焦時如果有搜尋詞且有結果，顯示建議
+                        if (staffSearchTerm.length >= 1 && staffSuggestions.length > 0) {
+                          setShowStaffSuggestions(true)
                         }
                       }}
                       className={`form-input-apple w-full ${errors.care_staff_name ? 'border-danger' : ''}`}
