@@ -72,6 +72,7 @@ function ReportsCalendarView({
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedRecord, setSelectedRecord] = useState<BillingSalaryRecord | null>(null)
   const [showRecordMenu, setShowRecordMenu] = useState(false)
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
 
   // 載入月曆數據
   useEffect(() => {
@@ -214,30 +215,57 @@ function ReportsCalendarView({
               {/* 服務記錄 */}
               {isCurrentMonth && dayRecords.length > 0 && (
                 <div className="space-y-1">
-                  {dayRecords.slice(0, 3).map((record, i) => (
-                    <div
-                      key={`${record.id}-${i}`}
-                      onClick={() => {
-                        setSelectedRecord(record)
-                        setShowRecordMenu(true)
-                      }}
-                      className="text-sm bg-white border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
-                    >
-                      <div className="font-medium text-gray-800 mb-1 leading-tight">
-                        {record.customer_name}/{record.care_staff_name}
+                  {/* 決定要顯示多少筆記錄 */}
+                  {(() => {
+                    const dateKey = formatDateSafely(date)
+                    const isExpanded = expandedDates.has(dateKey)
+                    const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, 3)
+                    
+                    return recordsToShow.map((record, i) => (
+                      <div
+                        key={`${record.id}-${i}`}
+                        onClick={() => {
+                          setSelectedRecord(record)
+                          setShowRecordMenu(true)
+                        }}
+                        className="text-sm bg-white border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
+                      >
+                        <div className="font-medium text-gray-800 mb-1 leading-tight">
+                          {record.customer_name}/{record.care_staff_name}
+                        </div>
+                        <div className="text-blue-600 mb-1 leading-tight">
+                          {record.service_type}
+                        </div>
+                        <div className="text-gray-600 text-sm">
+                          {record.start_time}-{record.end_time}
+                        </div>
                       </div>
-                      <div className="text-blue-600 mb-1 leading-tight">
-                        {record.service_type}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        {record.start_time}-{record.end_time}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  })()}
+                  
+                  {/* 展開/收合按鈕 */}
                   {dayRecords.length > 3 && (
-                    <div className="text-sm text-text-secondary text-center py-1">
-                      還有 {dayRecords.length - 3} 筆記錄...
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const dateKey = formatDateSafely(date)
+                        const newExpandedDates = new Set(expandedDates)
+                        
+                        if (expandedDates.has(dateKey)) {
+                          newExpandedDates.delete(dateKey)
+                        } else {
+                          newExpandedDates.add(dateKey)
+                        }
+                        
+                        setExpandedDates(newExpandedDates)
+                      }}
+                      className="w-full text-sm text-mingcare-blue hover:text-blue-700 text-center py-1 rounded hover:bg-blue-50 transition-colors"
+                    >
+                      {expandedDates.has(formatDateSafely(date)) 
+                        ? '收合記錄' 
+                        : `還有 ${dayRecords.length - 3} 筆記錄...`
+                      }
+                    </button>
                   )}
                 </div>
               )}
