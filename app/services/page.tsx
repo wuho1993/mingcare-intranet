@@ -996,47 +996,84 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
     }
   }
 
-  const calculateVoucherSummary = () => {
+  // 社區券統計 state
+  const [voucherSummary, setVoucherSummary] = useState<{
+    service_type: string
+    count: number
+    total_hours: number
+    total_rate: number
+    total_amount: number
+  }[]>([])
+
+  const calculateVoucherSummary = async () => {
     const allSchedules = Object.values(localSchedules).flat()
     console.log('計算社區券統計 - 本地排程:', localSchedules) // 調試日誌
     console.log('所有排程:', allSchedules) // 調試日誌
     
-    // 按服務類型分組統計
-    const serviceTypeStats: Record<string, {
-      count: number
-      total_hours: number
-      total_amount: number
-    }> = {}
-
-    allSchedules.forEach(schedule => {
-      const serviceType = schedule.service_type || '未分類'
-      if (!serviceTypeStats[serviceType]) {
-        serviceTypeStats[serviceType] = {
-          count: 0,
-          total_hours: 0,
-          total_amount: 0
-        }
+    try {
+      // 獲取 voucher_rate 費率表
+      const voucherRatesResponse = await fetchVoucherRates()
+      if (!voucherRatesResponse.success || !voucherRatesResponse.data) {
+        console.error('無法獲取社區券費率')
+        return []
       }
-      
-      serviceTypeStats[serviceType].count += 1
-      serviceTypeStats[serviceType].total_hours += schedule.service_hours || 0
-      serviceTypeStats[serviceType].total_amount += schedule.service_fee || 0
-    })
 
-    const result = Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
-      service_type: serviceType,
-      count: stats.count,
-      total_hours: stats.total_hours,
-      total_amount: stats.total_amount
-    }))
-    
-    console.log('社區券統計結果:', result) // 調試日誌
-    return result
+      const voucherRates = voucherRatesResponse.data
+      const rateMap = new Map(voucherRates.map(rate => [rate.service_type, rate.service_rate]))
+      console.log('社區券費率表:', rateMap) // 調試日誌
+      
+      // 按服務類型分組統計
+      const serviceTypeStats: Record<string, {
+        count: number
+        total_hours: number
+        rate: number
+        total_amount: number
+      }> = {}
+
+      allSchedules.forEach(schedule => {
+        const serviceType = schedule.service_type || '未分類'
+        const rate = rateMap.get(serviceType) || 0
+        const hours = schedule.service_hours || 0
+        
+        if (!serviceTypeStats[serviceType]) {
+          serviceTypeStats[serviceType] = {
+            count: 0,
+            total_hours: 0,
+            rate: rate,
+            total_amount: 0
+          }
+        }
+        
+        serviceTypeStats[serviceType].count += 1
+        serviceTypeStats[serviceType].total_hours += hours
+        serviceTypeStats[serviceType].total_amount += hours * rate
+      })
+
+      const result = Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
+        service_type: serviceType,
+        count: stats.count,
+        total_hours: stats.total_hours,
+        total_rate: stats.rate,
+        total_amount: stats.total_amount
+      }))
+      
+      console.log('社區券統計結果:', result) // 調試日誌
+      setVoucherSummary(result)
+      return result
+    } catch (error) {
+      console.error('計算社區券統計失敗:', error)
+      setVoucherSummary([])
+      return []
+    }
   }
 
+  // 當本地排程改變時重新計算社區券統計
+  useEffect(() => {
+    calculateVoucherSummary()
+  }, [localSchedules])
+
   const summary = calculateSummary()
-  const voucherSummary = calculateVoucherSummary()
-  const totalVoucherAmount = voucherSummary.reduce((sum, item) => sum + item.total_amount, 0)
+  const totalVoucherAmount = voucherSummary.reduce((sum: number, item) => sum + item.total_amount, 0)
 
   return (
     <div className="space-y-6">
@@ -1087,6 +1124,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
                   <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">服務類型</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">次數</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">時數</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">費率/小時</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-text-primary">金額</th>
                 </tr>
               </thead>
@@ -1096,6 +1134,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
                     <td className="py-3 px-4 text-sm text-text-primary">{item.service_type}</td>
                     <td className="py-3 px-4 text-sm text-text-primary">{item.count}</td>
                     <td className="py-3 px-4 text-sm text-text-primary">{item.total_hours.toFixed(1)}</td>
+                    <td className="py-3 px-4 text-sm text-text-secondary">${item.total_rate.toFixed(2)}</td>
                     <td className="py-3 px-4 text-sm text-text-primary font-medium">${item.total_amount.toFixed(2)}</td>
                   </tr>
                 ))}
