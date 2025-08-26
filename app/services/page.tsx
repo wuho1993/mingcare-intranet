@@ -4528,26 +4528,6 @@ function ScheduleFormModal({
   // 清理定時器
   useEffect(() => {
     console.log('ScheduleFormModal組件已掛載') // 調試日誌
-    
-    // 測試API是否可用
-    const testAPI = async () => {
-      try {
-        console.log('測試客戶搜尋API...')
-        const response = await fetch('/api/search-customers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ searchTerm: 'test' })
-        })
-        console.log('API測試響應狀態:', response.status)
-        const data = await response.json()
-        console.log('API測試結果:', data)
-      } catch (error) {
-        console.error('API測試失敗:', error)
-      }
-    }
-    
-    testAPI()
-    
     return () => {
       console.log('ScheduleFormModal組件將卸載') // 調試日誌
       if (customerSearchTimeout) {
@@ -4711,59 +4691,6 @@ function ScheduleFormModal({
     }
   }
 
-  // 測試API連接
-  const testCustomerAPI = async () => {
-    console.log('開始測試客戶API') // 調試日誌
-    try {
-      const response = await fetch('/api/search-customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm: '測試' })
-      })
-      
-      console.log('API響應狀態:', response.status) // 調試日誌
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('API返回數據:', data) // 調試日誌
-        alert('客戶API測試成功！檢查控制台查看結果。')
-      } else {
-        const errorText = await response.text()
-        console.error('API錯誤響應:', errorText) // 調試日誌
-        alert('客戶API測試失敗：' + response.status)
-      }
-    } catch (error) {
-      console.error('API請求異常:', error) // 調試日誌
-      alert('客戶API請求失敗：' + (error instanceof Error ? error.message : String(error)))
-    }
-  }
-
-  const testStaffAPI = async () => {
-    console.log('開始測試護理人員API') // 調試日誌
-    try {
-      const response = await fetch('/api/search-care-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm: '測試' })
-      })
-      
-      console.log('API響應狀態:', response.status) // 調試日誌
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('API返回數據:', data) // 調試日誌
-        alert('護理人員API測試成功！檢查控制台查看結果。')
-      } else {
-        const errorText = await response.text()
-        console.error('API錯誤響應:', errorText) // 調試日誌
-        alert('護理人員API測試失敗：' + response.status)
-      }
-    } catch (error) {
-      console.error('API請求異常:', error) // 調試日誌
-      alert('護理人員API請求失敗：' + (error instanceof Error ? error.message : String(error)))
-    }
-  }
-
   // 客戶搜尋功能
   const handleCustomerSearch = async (searchTerm: string) => {
     console.log('客戶搜尋開始:', searchTerm) // 調試日誌
@@ -4852,10 +4779,10 @@ function ScheduleFormModal({
 
   // 選擇護理人員
   const selectStaff = (staff: any) => {
-    updateField('care_staff_name', staff.name_chinese);
-    setStaffSearchTerm(staff.name_chinese);
-    setShowStaffSuggestions(false);
-  };
+    updateField('care_staff_name', staff.name_chinese)
+    setStaffSearchTerm(staff.name_chinese)
+    setShowStaffSuggestions(false)
+  }
 
   if (!isOpen) return null
 
@@ -4992,64 +4919,44 @@ function ScheduleFormModal({
                       <label className="block text-apple-caption font-medium text-text-primary mb-2">
                         客戶姓名 <span className="text-danger">*</span>
                       </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={customerSearchTerm}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            console.log('客戶搜尋輸入變化:', value) // 調試日誌
-                            setCustomerSearchTerm(value)
-                            updateField('customer_name', value) // 同步更新表單數據
-                            
-                            // 清除之前的搜尋定時器
-                            if (customerSearchTimeout) {
-                              clearTimeout(customerSearchTimeout)
-                            }
-                            
-                            if (value.length >= 1) {
-                              console.log('設置客戶搜尋定時器') // 調試日誌
-                              // 設置新的搜尋定時器（300ms 防抖）
-                              const timeout = setTimeout(() => {
-                                console.log('執行客戶搜尋') // 調試日誌
-                                handleCustomerSearch(value)
-                              }, 300)
-                              setCustomerSearchTimeout(timeout)
-                            } else {
-                              setShowCustomerSuggestions(false)
-                            }
-                          }}
-                          onFocus={() => {
-                            console.log('客戶輸入框獲得焦點') // 調試日誌
-                            // 聚焦時如果有搜尋詞且有結果，顯示建議
-                            if (customerSearchTerm.length >= 1 && customerSuggestions.length > 0) {
-                              setShowCustomerSuggestions(true)
-                            }
-                          }}
-                          className={`form-input-apple flex-1 ${errors.customer_name ? 'border-danger' : ''}`}
-                          placeholder="請輸入客戶姓名或編號（≥1字元）"
-                          autoComplete="off"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={testCustomerAPI}
-                          className="px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-                        >
-                          測試API
-                        </button>
-                      </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            console.log('手動觸發客戶搜尋:', customerSearchTerm)
-                            handleCustomerSearch(customerSearchTerm)
-                          }}
-                          className="px-3 py-2 bg-mingcare-blue text-white rounded text-sm"
-                        >
-                          搜尋
-                        </button>
-                      </div>
+                      <input
+                        type="text"
+                        value={customerSearchTerm}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          console.log('客戶搜尋輸入變化:', value) // 調試日誌
+                          setCustomerSearchTerm(value)
+                          updateField('customer_name', value) // 同步更新表單數據
+                          
+                          // 清除之前的搜尋定時器
+                          if (customerSearchTimeout) {
+                            clearTimeout(customerSearchTimeout)
+                          }
+                          
+                          if (value.length >= 1) {
+                            console.log('設置客戶搜尋定時器') // 調試日誌
+                            // 設置新的搜尋定時器（300ms 防抖）
+                            const timeout = setTimeout(() => {
+                              console.log('執行客戶搜尋') // 調試日誌
+                              handleCustomerSearch(value)
+                            }, 300)
+                            setCustomerSearchTimeout(timeout)
+                          } else {
+                            setShowCustomerSuggestions(false)
+                          }
+                        }}
+                        onFocus={() => {
+                          console.log('客戶輸入框獲得焦點') // 調試日誌
+                          // 聚焦時如果有搜尋詞且有結果，顯示建議
+                          if (customerSearchTerm.length >= 1 && customerSuggestions.length > 0) {
+                            setShowCustomerSuggestions(true)
+                          }
+                        }}
+                        className={`form-input-apple w-full ${errors.customer_name ? 'border-danger' : ''}`}
+                        placeholder="請輸入客戶姓名或編號（≥1字元）"
+                        autoComplete="off"
+                        required
+                      />
                       
                       {/* 客戶搜尋建議 */}
                       {showCustomerSuggestions && customerSuggestions.length > 0 && (
@@ -5144,55 +5051,43 @@ function ScheduleFormModal({
                     <label className="block text-apple-caption font-medium text-text-primary mb-2">
                       護理人員
                     </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={staffSearchTerm}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          console.log('護理人員搜尋輸入變化:', value) // 調試日誌
-                          setStaffSearchTerm(value)
-                          updateField('care_staff_name', value) // 同步更新表單數據
-                          
-                          // 清除之前的搜尋定時器
-                          if (staffSearchTimeout) {
-                            clearTimeout(staffSearchTimeout)
-                          }
-                          
-                          if (value.length >= 1) {
-                            console.log('設置護理人員搜尋定時器') // 調試日誌
-                            // 設置新的搜尋定時器（300ms 防抖）
-                            const timeout = setTimeout(() => {
-                              console.log('執行護理人員搜尋') // 調試日誌
-                              handleStaffSearch(value)
-                            }, 300)
-                            setStaffSearchTimeout(timeout)
-                          } else {
-                            setShowStaffSuggestions(false)
-                          }
-                        }}
-                        onFocus={() => {
-                          console.log('護理人員輸入框獲得焦點') // 調試日誌
-                          // 聚焦時如果有搜尋詞且有結果，顯示建議
-                          if (staffSearchTerm.length >= 1 && staffSuggestions.length > 0) {
-                            setShowStaffSuggestions(true)
-                          }
-                        }}
-                        className={`form-input-apple flex-1 ${errors.care_staff_name ? 'border-danger' : ''}`}
-                        placeholder="輸入護理人員中文姓名或編號（≥1字元）"
-                        autoComplete="off"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          console.log('手動觸發護理人員搜尋:', staffSearchTerm)
-                          handleStaffSearch(staffSearchTerm)
-                        }}
-                        className="px-3 py-2 bg-mingcare-blue text-white rounded text-sm"
-                      >
-                        搜尋
-                      </button>
-                    </div>
+                    <input
+                      type="text"
+                      value={staffSearchTerm}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        console.log('護理人員搜尋輸入變化:', value) // 調試日誌
+                        setStaffSearchTerm(value)
+                        updateField('care_staff_name', value) // 同步更新表單數據
+                        
+                        // 清除之前的搜尋定時器
+                        if (staffSearchTimeout) {
+                          clearTimeout(staffSearchTimeout)
+                        }
+                        
+                        if (value.length >= 1) {
+                          console.log('設置護理人員搜尋定時器') // 調試日誌
+                          // 設置新的搜尋定時器（300ms 防抖）
+                          const timeout = setTimeout(() => {
+                            console.log('執行護理人員搜尋') // 調試日誌
+                            handleStaffSearch(value)
+                          }, 300)
+                          setStaffSearchTimeout(timeout)
+                        } else {
+                          setShowStaffSuggestions(false)
+                        }
+                      }}
+                      onFocus={() => {
+                        console.log('護理人員輸入框獲得焦點') // 調試日誌
+                        // 聚焦時如果有搜尋詞且有結果，顯示建議
+                        if (staffSearchTerm.length >= 1 && staffSuggestions.length > 0) {
+                          setShowStaffSuggestions(true)
+                        }
+                      }}
+                      className={`form-input-apple w-full ${errors.care_staff_name ? 'border-danger' : ''}`}
+                      placeholder="輸入護理人員中文姓名或編號（≥1字元）"
+                      autoComplete="off"
+                    />
                     
                     {/* 護理人員搜尋建議 */}
                     {showStaffSuggestions && staffSuggestions.length > 0 && (
