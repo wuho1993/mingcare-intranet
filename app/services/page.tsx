@@ -4568,7 +4568,7 @@ function ScheduleFormModal({
   
   // 搜尋功能狀態
   const [customerSearchTerm, setCustomerSearchTerm] = useState(existingRecord ? existingRecord.customer_name : '')
-  const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([])
+  const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
   
   const [staffSearchTerm, setStaffSearchTerm] = useState(existingRecord ? existingRecord.care_staff_name : '')
@@ -4745,9 +4745,9 @@ function ScheduleFormModal({
     }
   }
 
-  // 客戶搜尋功能
-  const handleCustomerSearch = async (searchTerm: string) => {
-    console.log('客戶搜尋開始:', searchTerm) // 調試日誌
+  // 內部客戶搜尋功能
+  const handleFormCustomerSearch = async (searchTerm: string) => {
+    console.log('表單客戶搜尋開始:', searchTerm) // 調試日誌
     setCustomerSearchTerm(searchTerm)
     
     if (searchTerm.trim().length < 1) {
@@ -4757,7 +4757,6 @@ function ScheduleFormModal({
     }
 
     try {
-      console.log('使用 API 進行客戶搜尋') // 調試日誌
       const response = await fetch('/api/search-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4775,10 +4774,19 @@ function ScheduleFormModal({
       }
       
       if (responseData.data && Array.isArray(responseData.data)) {
-        setCustomerSuggestions(responseData.data)
+        // 轉換為 CustomerSearchResult 格式
+        const suggestions: CustomerSearchResult[] = responseData.data.map((item: any) => ({
+          customer_id: item.customer_id || '',
+          customer_name: item.customer_name || '',
+          phone: item.phone || '',
+          service_address: item.service_address || '',
+          display_text: item.customer_name || '',
+          type: 'customer' as const
+        }))
+        
+        setCustomerSuggestions(suggestions)
         setShowCustomerSuggestions(true)
       } else {
-        console.error('客戶搜尋無結果或失敗:', responseData)
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
       }
@@ -4790,12 +4798,12 @@ function ScheduleFormModal({
   }
 
   // 選擇客戶
-  const selectCustomer = (customer: any) => {
-    updateField('customer_name', customer.customer_name)
+  const selectCustomer = (customer: CustomerSearchResult) => {
+    updateField('customer_name', customer.customer_name || customer.display_text)
     updateField('customer_id', customer.customer_id || '')
     updateField('phone', customer.phone || '')
     updateField('service_address', customer.service_address || '')
-    setCustomerSearchTerm(customer.customer_name)
+    setCustomerSearchTerm(customer.customer_name || customer.display_text)
     setShowCustomerSuggestions(false)
   }
 
@@ -5004,7 +5012,7 @@ function ScheduleFormModal({
                             // 設置新的搜尋定時器（300ms 防抖）
                             const timeout = setTimeout(() => {
                               console.log('執行客戶搜尋') // 調試日誌
-                              handleCustomerSearch(value)
+                              handleFormCustomerSearch(value)
                             }, 300)
                             setCustomerSearchTimeout(timeout)
                           } else {
@@ -5027,14 +5035,14 @@ function ScheduleFormModal({
                       {/* 客戶搜尋建議 */}
                       {showCustomerSuggestions && customerSuggestions.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {customerSuggestions.map((customer, index) => (
+                          {customerSuggestions.map((customer: CustomerSearchResult, index: number) => (
                             <div
                               key={customer.customer_id || index}
                               onClick={() => selectCustomer(customer)}
                               className="px-4 py-2 hover:bg-bg-secondary cursor-pointer border-b border-border-light last:border-b-0"
                             >
                               <div className="font-medium text-text-primary">
-                                {customer.customer_name}
+                                {customer.customer_name || customer.display_text}
                                 {customer.customer_id && (
                                   <span className="text-text-secondary ml-1">（{customer.customer_id}）</span>
                                 )}
