@@ -1418,9 +1418,9 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             project_manager: schedule.project_manager
           }
 
-          // 直接使用 Supabase 客戶端儲存資料
+          // 直接使用 Supabase 客戶端儲存資料（正確的表名）
           const { data, error } = await supabase
-            .from('billing_salary_management')
+            .from('billing_salary_data')
             .insert([supabaseData])
 
           if (error) {
@@ -2069,11 +2069,11 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       setCustomerSearchLoading(true)
       console.log('使用 Supabase 直接進行客戶搜尋') // 調試日誌
       
-      // 直接使用 Supabase 客戶端查詢
+      // 直接使用 Supabase 客戶端查詢（正確的表名和欄位名）
       const { data, error } = await supabase
-        .from('customer_profiles')
-        .select('customer_id, name_chinese, name_english, phone, address')
-        .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,address.ilike.%${searchTerm.trim()}%`)
+        .from('customer_personal_data')
+        .select('customer_id, customer_name, phone, service_address')
+        .or(`customer_name.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,service_address.ilike.%${searchTerm.trim()}%`)
         .limit(10)
 
       if (error) {
@@ -2085,10 +2085,10 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
       const results = (data || []).map(item => ({
         customer_id: item.customer_id || '',
-        customer_name: item.name_chinese || '',
+        customer_name: item.customer_name || '',
         phone: item.phone || '',
-        service_address: item.address || '',
-        display_text: item.name_chinese || '',
+        service_address: item.service_address || '',
+        display_text: item.customer_name || '',
         type: 'customer' as const
       }))
       
@@ -4763,11 +4763,11 @@ function ScheduleFormModal({
     try {
       console.log('使用 Supabase 直接進行表單客戶搜尋') // 調試日誌
       
-      // 直接使用 Supabase 客戶端查詢
+      // 直接使用 Supabase 客戶端查詢（正確的表名和欄位名）
       const { data, error } = await supabase
-        .from('customer_profiles')
-        .select('customer_id, name_chinese, name_english, phone, address')
-        .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,address.ilike.%${searchTerm.trim()}%`)
+        .from('customer_personal_data')
+        .select('customer_id, customer_name, phone, service_address')
+        .or(`customer_name.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,service_address.ilike.%${searchTerm.trim()}%`)
         .limit(10)
 
       if (error) {
@@ -4780,10 +4780,10 @@ function ScheduleFormModal({
       // 轉換為 CustomerSearchResult 格式
       const suggestions: CustomerSearchResult[] = (data || []).map((item: any) => ({
         customer_id: item.customer_id || '',
-        customer_name: item.name_chinese || '',
+        customer_name: item.customer_name || '',
         phone: item.phone || '',
-        service_address: item.address || '',
-        display_text: item.name_chinese || '',
+        service_address: item.service_address || '',
+        display_text: item.customer_name || '',
         type: 'customer' as const
       }))
       
