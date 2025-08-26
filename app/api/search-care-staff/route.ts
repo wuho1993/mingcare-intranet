@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '../../../lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+// 創建服務端 Supabase 客戶端
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,9 +25,9 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // 直接查詢 care_staff_data 資料表
+    // 直接查詢 care_staff_profiles 資料表
     const { data, error } = await supabase
-      .from('care_staff_data')
+      .from('care_staff_profiles')
       .select('name_chinese, name_english, staff_id, phone')
       .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,staff_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%`)
       .limit(10)
