@@ -59,6 +59,11 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!finalData.service_date || !finalData.care_staff_name || !finalData.customer_name) {
+      const missingFields = []
+      if (!finalData.service_date) missingFields.push('服務日期')
+      if (!finalData.care_staff_name) missingFields.push('護理人員姓名')
+      if (!finalData.customer_name) missingFields.push('客戶姓名')
+      
       console.log('Missing required fields:', { 
         service_date: finalData.service_date, 
         care_staff_name: finalData.care_staff_name, 
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
         customer_name 
       })
       return NextResponse.json(
-        { success: false, error: '缺少必要欄位' },
+        { success: false, error: `缺少必要欄位: ${missingFields.join(', ')}` },
         { status: 400 }
       )
     }

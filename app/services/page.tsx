@@ -31,8 +31,6 @@ import {
   createMultipleDayRecords,
   exportToCSV,
   getAllCareStaff,
-  searchCustomers,
-  searchCareStaff,
   CustomerSearchResult,
   fetchVoucherRates,
   calculateVoucherSummary,
@@ -1426,8 +1424,12 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             body: JSON.stringify(apiData)
           })
 
-          if (!response.ok) {
-            throw new Error(`儲存排程失敗: ${response.statusText}`)
+          const responseData = await response.json()
+          
+          if (!response.ok || !responseData.success) {
+            const errorMsg = responseData.error || response.statusText || '未知錯誤'
+            console.error('API 回應錯誤:', responseData)
+            throw new Error(`儲存排程失敗: ${errorMsg}`)
           }
         }
       }
@@ -2067,14 +2069,26 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
     try {
       setCustomerSearchLoading(true)
-      const response = await searchCustomers(searchTerm)
+      const response = await fetch('/api/search-customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm })
+      })
       
-      console.log('搜尋結果:', response) // 除錯輸出
+      const responseData = await response.json()
+      console.log('搜尋結果:', responseData) // 除錯輸出
       
-      if (response.success && response.data) {
-        setCustomerSuggestions(response.data)
+      if (!response.ok || !responseData.success) {
+        console.error('搜尋客戶失敗:', responseData)
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(false)
+        return
+      }
+      
+      if (responseData.data && Array.isArray(responseData.data)) {
+        setCustomerSuggestions(responseData.data)
         setShowCustomerSuggestions(true)
-        console.log('設定建議列表:', response.data.length, '筆資料') // 除錯輸出
+        console.log('設定建議列表:', responseData.data.length, '筆資料') // 除錯輸出
       } else {
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
@@ -4743,16 +4757,28 @@ function ScheduleFormModal({
     }
 
     try {
-      console.log('使用直接函數進行客戶搜尋') // 調試日誌
-      const response = await searchCustomers(searchTerm.trim())
+      console.log('使用 API 進行客戶搜尋') // 調試日誌
+      const response = await fetch('/api/search-customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm: searchTerm.trim() })
+      })
       
-      console.log('客戶搜尋結果:', response) // 調試日誌
+      const responseData = await response.json()
+      console.log('客戶搜尋結果:', responseData) // 調試日誌
       
-      if (response.success && response.data) {
-        setCustomerSuggestions(response.data)
+      if (!response.ok || !responseData.success) {
+        console.error('搜尋客戶失敗:', responseData)
+        setCustomerSuggestions([])
+        setShowCustomerSuggestions(false)
+        return
+      }
+      
+      if (responseData.data && Array.isArray(responseData.data)) {
+        setCustomerSuggestions(responseData.data)
         setShowCustomerSuggestions(true)
       } else {
-        console.error('客戶搜尋無結果或失敗:', response)
+        console.error('客戶搜尋無結果或失敗:', responseData)
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
       }
@@ -4785,13 +4811,25 @@ function ScheduleFormModal({
     }
 
     try {
-      console.log('使用直接函數進行護理人員搜尋') // 調試日誌
-      const response = await searchCareStaff(searchTerm.trim())
+      console.log('使用 API 進行護理人員搜尋') // 調試日誌
+      const response = await fetch('/api/search-care-staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm: searchTerm.trim() })
+      })
       
-      console.log('護理人員搜尋結果:', response) // 調試日誌
+      const responseData = await response.json()
+      console.log('護理人員搜尋結果:', responseData) // 調試日誌
       
-      if (response.success && response.data) {
-        setStaffSuggestions(response.data)
+      if (!response.ok || !responseData.success) {
+        console.error('搜尋護理人員失敗:', responseData)
+        setStaffSuggestions([])
+        setShowStaffSuggestions(false)
+        return
+      }
+      
+      if (responseData.data && Array.isArray(responseData.data)) {
+        setStaffSuggestions(responseData.data)
         setShowStaffSuggestions(true)
       } else {
         console.error('護理人員搜尋無結果或失敗:', response)
