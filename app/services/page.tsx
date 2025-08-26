@@ -1396,10 +1396,10 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
     try {
       setFormSubmitting(true)
       
-      // 將篩選後的本地排程轉換為API格式並儲存
+      // 將篩選後的本地排程直接儲存到 Supabase
       for (const [dateStr, daySchedules] of Object.entries(filteredSchedules)) {
         for (const schedule of daySchedules) {
-          const apiData = {
+          const supabaseData = {
             customer_id: schedule.customer_id,
             care_staff_name: schedule.care_staff_name,
             service_date: schedule.service_date,
@@ -1407,30 +1407,28 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             end_time: schedule.end_time,
             service_type: schedule.service_type,
             service_address: schedule.service_address,
-            hourly_rate: schedule.hourly_rate,
+            hourly_rate: schedule.hourly_rate || (schedule.service_hours > 0 ? (schedule.service_fee || 0) / schedule.service_hours : 0),
             service_fee: schedule.service_fee,
             staff_salary: schedule.staff_salary,
             phone: schedule.phone,
             customer_name: schedule.customer_name,
             service_hours: schedule.service_hours,
-            hourly_salary: schedule.hourly_salary,
+            hourly_salary: schedule.hourly_salary || (schedule.service_hours > 0 ? (schedule.staff_salary || 0) / schedule.service_hours : 0),
             project_category: schedule.project_category,
             project_manager: schedule.project_manager
           }
 
-          const response = await fetch('/api/billing-salary-management', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(apiData)
-          })
+          // 直接使用 Supabase 客戶端儲存資料
+          const { data, error } = await supabase
+            .from('billing_salary_management')
+            .insert([supabaseData])
 
-          const responseData = await response.json()
-          
-          if (!response.ok || !responseData.success) {
-            const errorMsg = responseData.error || response.statusText || '未知錯誤'
-            console.error('API 回應錯誤:', responseData)
-            throw new Error(`儲存排程失敗: ${errorMsg}`)
+          if (error) {
+            console.error('Supabase 儲存錯誤:', error)
+            throw new Error(`儲存排程失敗: ${error.message}`)
           }
+          
+          console.log('成功儲存排程到 Supabase:', data)
         }
       }
 
@@ -2069,30 +2067,36 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
     try {
       setCustomerSearchLoading(true)
-      const response = await fetch('/api/search-customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm })
-      })
+      console.log('使用 Supabase 直接進行客戶搜尋') // 調試日誌
       
-      const responseData = await response.json()
-      console.log('搜尋結果:', responseData) // 除錯輸出
-      
-      if (!response.ok || !responseData.success) {
-        console.error('搜尋客戶失敗:', responseData)
+      // 直接使用 Supabase 客戶端查詢
+      const { data, error } = await supabase
+        .from('customer_profiles')
+        .select('customer_id, name_chinese, name_english, phone, address')
+        .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,address.ilike.%${searchTerm.trim()}%`)
+        .limit(10)
+
+      if (error) {
+        console.error('Supabase 客戶搜尋錯誤:', error)
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
         return
       }
+
+      const results = (data || []).map(item => ({
+        customer_id: item.customer_id || '',
+        customer_name: item.name_chinese || '',
+        phone: item.phone || '',
+        service_address: item.address || '',
+        display_text: item.name_chinese || '',
+        type: 'customer' as const
+      }))
       
-      if (responseData.data && Array.isArray(responseData.data)) {
-        setCustomerSuggestions(responseData.data)
-        setShowCustomerSuggestions(true)
-        console.log('設定建議列表:', responseData.data.length, '筆資料') // 除錯輸出
-      } else {
-        setCustomerSuggestions([])
-        setShowCustomerSuggestions(false)
-      }
+      console.log('客戶搜尋結果:', results) // 調試日誌
+      setCustomerSuggestions(results)
+      setShowCustomerSuggestions(true)
+      console.log('設定建議列表:', results.length, '筆資料') // 除錯輸出
+      
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
       setCustomerSuggestions([])
@@ -4757,39 +4761,36 @@ function ScheduleFormModal({
     }
 
     try {
-      const response = await fetch('/api/search-customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm: searchTerm.trim() })
-      })
+      console.log('使用 Supabase 直接進行表單客戶搜尋') // 調試日誌
       
-      const responseData = await response.json()
-      console.log('客戶搜尋結果:', responseData) // 調試日誌
-      
-      if (!response.ok || !responseData.success) {
-        console.error('搜尋客戶失敗:', responseData)
+      // 直接使用 Supabase 客戶端查詢
+      const { data, error } = await supabase
+        .from('customer_profiles')
+        .select('customer_id, name_chinese, name_english, phone, address')
+        .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,address.ilike.%${searchTerm.trim()}%`)
+        .limit(10)
+
+      if (error) {
+        console.error('Supabase 表單客戶搜尋錯誤:', error)
         setCustomerSuggestions([])
         setShowCustomerSuggestions(false)
         return
       }
+
+      // 轉換為 CustomerSearchResult 格式
+      const suggestions: CustomerSearchResult[] = (data || []).map((item: any) => ({
+        customer_id: item.customer_id || '',
+        customer_name: item.name_chinese || '',
+        phone: item.phone || '',
+        service_address: item.address || '',
+        display_text: item.name_chinese || '',
+        type: 'customer' as const
+      }))
       
-      if (responseData.data && Array.isArray(responseData.data)) {
-        // 轉換為 CustomerSearchResult 格式
-        const suggestions: CustomerSearchResult[] = responseData.data.map((item: any) => ({
-          customer_id: item.customer_id || '',
-          customer_name: item.customer_name || '',
-          phone: item.phone || '',
-          service_address: item.service_address || '',
-          display_text: item.customer_name || '',
-          type: 'customer' as const
-        }))
-        
-        setCustomerSuggestions(suggestions)
-        setShowCustomerSuggestions(true)
-      } else {
-        setCustomerSuggestions([])
-        setShowCustomerSuggestions(false)
-      }
+      console.log('表單客戶搜尋結果:', suggestions) // 調試日誌
+      setCustomerSuggestions(suggestions)
+      setShowCustomerSuggestions(true)
+      
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
       setCustomerSuggestions([])
@@ -4819,31 +4820,33 @@ function ScheduleFormModal({
     }
 
     try {
-      console.log('使用 API 進行護理人員搜尋') // 調試日誌
-      const response = await fetch('/api/search-care-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm: searchTerm.trim() })
-      })
+      console.log('使用 Supabase 直接進行護理人員搜尋') // 調試日誌
       
-      const responseData = await response.json()
-      console.log('護理人員搜尋結果:', responseData) // 調試日誌
-      
-      if (!response.ok || !responseData.success) {
-        console.error('搜尋護理人員失敗:', responseData)
+      // 直接使用 Supabase 客戶端查詢
+      const { data, error } = await supabase
+        .from('care_staff_profiles')
+        .select('name_chinese, name_english, staff_id, phone')
+        .or(`name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,staff_id.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%`)
+        .limit(10)
+
+      if (error) {
+        console.error('Supabase 護理人員搜尋錯誤:', error)
         setStaffSuggestions([])
         setShowStaffSuggestions(false)
         return
       }
+
+      const results = (data || []).map(item => ({
+        name_chinese: item.name_chinese || '',
+        name_english: item.name_english || '',
+        staff_id: item.staff_id || '',
+        phone: item.phone || ''
+      }))
       
-      if (responseData.data && Array.isArray(responseData.data)) {
-        setStaffSuggestions(responseData.data)
-        setShowStaffSuggestions(true)
-      } else {
-        console.error('護理人員搜尋無結果或失敗:', response)
-        setStaffSuggestions([])
-        setShowStaffSuggestions(false)
-      }
+      console.log('護理人員搜尋結果:', results) // 調試日誌
+      setStaffSuggestions(results)
+      setShowStaffSuggestions(true)
+      
     } catch (error) {
       console.error('護理人員搜尋失敗:', error)
       setStaffSuggestions([])

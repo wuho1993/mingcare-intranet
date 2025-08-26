@@ -7,6 +7,15 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// 添加 GET 方法用於調試
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: '護理人員搜尋 API 運行正常',
+    methods: ['POST']
+  })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { searchTerm } = await req.json()

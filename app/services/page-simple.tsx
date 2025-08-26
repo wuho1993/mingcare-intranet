@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import BackToHomeButton from '../../components/BackToHomeButton'
+import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -24,8 +24,7 @@ import {
 import {
   getBusinessKPI,
   getProjectCategorySummary,
-  submitBillingSalaryRecord,
-  validateBillingSalaryRecord,
+  createBillingSalaryRecord,
   exportToCSV,
   searchCustomers,
   searchCareStaff
