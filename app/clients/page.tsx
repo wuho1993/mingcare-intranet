@@ -50,17 +50,27 @@ export default function ClientsPage() {
 
   // 客戶去重函數
   const deduplicateCustomers = (customers: CustomerListItem[]): CustomerListItem[] => {
-    return customers.reduce((acc: CustomerListItem[], current: CustomerListItem) => {
+    const duplicateIds: string[] = []
+    const result = customers.reduce((acc: CustomerListItem[], current: CustomerListItem) => {
       const existingIndex = acc.findIndex(customer => customer.id === current.id)
       if (existingIndex === -1) {
         acc.push(current)
+      } else {
+        duplicateIds.push(current.id)
       }
       return acc
     }, [])
+    
+    if (duplicateIds.length > 0) {
+      console.warn('⚠️  發現重複的客戶 ID:', duplicateIds.slice(0, 3))
+    }
+    
+    return result
   }
 
   // 載入客戶列表
   const loadCustomers = async () => {
+    console.log('🔄 loadCustomers 被調用，當前篩選條件:', filters, '頁面:', currentPage)
     try {
       const response = await CustomerManagementService.getCustomers(
         filters,
@@ -68,8 +78,17 @@ export default function ClientsPage() {
         pageSize
       )
       
+      console.log('📊 API 返回資料:', {
+        count: response.data.length,
+        totalCount: response.count,
+        page: response.page,
+        first5Customers: response.data.slice(0, 5).map(c => ({ id: c.id.slice(-8), name: c.customer_name }))
+      })
+      
       // 基於 id 去重，確保沒有重複的客戶記錄
       const uniqueCustomers = deduplicateCustomers(response.data)
+      
+      console.log('✅ 去重後客戶數量:', uniqueCustomers.length, '原始數量:', response.data.length)
       
       setCustomers(uniqueCustomers)
       setTotalCount(response.count)
@@ -170,9 +189,18 @@ export default function ClientsPage() {
   // 載入時觸發搜尋
   useEffect(() => {
     if (user) {
+      console.log('🎯 useEffect 觸發 loadCustomers, filters:', filters, 'currentPage:', currentPage)
       loadCustomers()
     }
-  }, [user, filters, currentPage])
+  }, [filters, currentPage]) // 移除 user，避免重複觸發
+  
+  // 當用戶載入完成時，觸發首次資料載入
+  useEffect(() => {
+    if (user) {
+      console.log('👤 用戶載入完成，觸發首次資料載入')
+      loadCustomers()
+    }
+  }, [user]) // 只在 user 變更時觸發一次
 
   // 分頁處理
   const handlePageChange = (page: number) => {
