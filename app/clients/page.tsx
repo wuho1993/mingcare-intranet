@@ -38,7 +38,7 @@ export default function ClientsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser(user)
-        await loadCustomers()
+        // 初始載入將由下面的 useEffect 處理，避免重複調用
       } else {
         router.push('/')
       }
@@ -48,6 +48,17 @@ export default function ClientsPage() {
     getUser()
   }, [router])
 
+  // 客戶去重函數
+  const deduplicateCustomers = (customers: CustomerListItem[]): CustomerListItem[] => {
+    return customers.reduce((acc: CustomerListItem[], current: CustomerListItem) => {
+      const existingIndex = acc.findIndex(customer => customer.id === current.id)
+      if (existingIndex === -1) {
+        acc.push(current)
+      }
+      return acc
+    }, [])
+  }
+
   // 載入客戶列表
   const loadCustomers = async () => {
     try {
@@ -56,7 +67,11 @@ export default function ClientsPage() {
         currentPage,
         pageSize
       )
-      setCustomers(response.data)
+      
+      // 基於 id 去重，確保沒有重複的客戶記錄
+      const uniqueCustomers = deduplicateCustomers(response.data)
+      
+      setCustomers(uniqueCustomers)
       setTotalCount(response.count)
     } catch (error) {
       console.error('載入客戶列表失敗:', error)
@@ -119,7 +134,11 @@ export default function ClientsPage() {
           1,
           pageSize
         )
-        setCustomers(response.data)
+        
+        // 基於 id 去重，確保沒有重複的客戶記錄
+        const uniqueCustomers = deduplicateCustomers(response.data)
+        
+        setCustomers(uniqueCustomers)
         setTotalCount(response.count)
       } catch (error) {
         console.error('搜尋失敗:', error)
@@ -153,7 +172,7 @@ export default function ClientsPage() {
     if (user) {
       loadCustomers()
     }
-  }, [filters, currentPage])
+  }, [user, filters, currentPage])
 
   // 分頁處理
   const handlePageChange = (page: number) => {
@@ -422,7 +441,11 @@ export default function ClientsPage() {
                         1,  // 第一頁
                         pageSize
                       )
-                      setCustomers(data)
+                      
+                      // 基於 id 去重，確保沒有重複的客戶記錄
+                      const uniqueCustomers = deduplicateCustomers(data)
+                      
+                      setCustomers(uniqueCustomers)
                       setTotalCount(count)
                     } catch (error) {
                       console.error('重新載入客戶列表失敗:', error)
