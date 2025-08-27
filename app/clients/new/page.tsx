@@ -31,6 +31,21 @@ export default function NewCustomerPage() {
   // 兩階段表單狀態
   const [formStage, setFormStage] = useState<'initial' | 'expanded'>('initial')
   
+  // 動態選項狀態
+  const [enumOptions, setEnumOptions] = useState<{
+    introducers: string[]
+    districts: string[]
+    staffOwners: string[]
+    healthStatuses: string[]
+    loading: boolean
+  }>({
+    introducers: [],
+    districts: [],
+    staffOwners: [],
+    healthStatuses: [],
+    loading: true
+  })
+  
   const [formData, setFormData] = useState<CustomerFormData>({
     customer_type: '社區券客戶',
     customer_name: '',
@@ -53,6 +68,39 @@ export default function NewCustomerPage() {
 
     getUser()
   }, [router])
+
+  // 獲取 enum 選項
+  useEffect(() => {
+    const fetchEnumOptions = async () => {
+      try {
+        // 從 information_schema 獲取 enum 值
+        const { data: introducerData } = await supabase.rpc('get_enum_values', { enum_name: 'introducer_enum' })
+        const { data: districtData } = await supabase.rpc('get_enum_values', { enum_name: 'district_enum' })
+        const { data: staffOwnerData } = await supabase.rpc('get_enum_values', { enum_name: 'staff_owner_enum' })
+        const { data: healthStatusData } = await supabase.rpc('get_enum_values', { enum_name: 'health_status_enum' })
+
+        setEnumOptions({
+          introducers: introducerData || ['Kanas Leung', 'Joe Cheung', 'Candy Ho', 'Steven Kwok', 'Dr.Lee', 'Annie', 'Janet', '陸sir', '吳翹政', '余翠英', '陳小姐MC01', '曾先生', '梁曉峰'],
+          districts: districtData || ['中西區', '九龍城區', '元朗區', '北區', '南區', '大埔區', '屯門區', '東區', '沙田區', '油尖旺區', '深水埗區', '灣仔區', '荃灣區', '葵青區', '西貢區', '觀塘區', '離島區', '黃大仙區', '未分類（醫院,院舍)'],
+          staffOwners: staffOwnerData || ['Kanas Leung', 'Joe Cheung', 'Candy Ho'],
+          healthStatuses: healthStatusData || ['良好', '中風', '需協助', '長期病患', '認知障礙'],
+          loading: false
+        })
+      } catch (error) {
+        console.error('獲取 enum 選項失敗，使用預設值:', error)
+        // 使用預設值，包含更新的選項
+        setEnumOptions({
+          introducers: ['Kanas Leung', 'Joe Cheung', 'Candy Ho', 'Steven Kwok', 'Dr.Lee', 'Annie', 'Janet', '陸sir', '吳翹政', '余翠英', '陳小姐MC01', '曾先生', '梁曉峰'],
+          districts: ['中西區', '九龍城區', '元朗區', '北區', '南區', '大埔區', '屯門區', '東區', '沙田區', '油尖旺區', '深水埗區', '灣仔區', '荃灣區', '葵青區', '西貢區', '觀塘區', '離島區', '黃大仙區', '未分類（醫院,院舍)'],
+          staffOwners: ['Kanas Leung', 'Joe Cheung', 'Candy Ho'],
+          healthStatuses: ['良好', '中風', '需協助', '長期病患', '認知障礙'],
+          loading: false
+        })
+      }
+    }
+
+    fetchEnumOptions()
+  }, [])
 
   // 生成客戶編號 - 使用 Supabase RPC（並發安全）
   const generateCustomerId = async () => {
@@ -411,18 +459,9 @@ export default function NewCustomerPage() {
                     required
                   >
                     <option value="">請選擇介紹人</option>
-                    <option value="Kanas Leung">Kanas Leung</option>
-                    <option value="Joe Cheung">Joe Cheung</option>
-                    <option value="Candy Ho">Candy Ho</option>
-                    <option value="Steven Kwok">Steven Kwok</option>
-                    <option value="Dr.Lee">Dr.Lee</option>
-                    <option value="Annie">Annie</option>
-                    <option value="Janet">Janet</option>
-                    <option value="陸sir">陸sir</option>
-                    <option value="吳翹政">吳翹政</option>
-                    <option value="余翠英">余翠英</option>
-                    <option value="陳小姐MC01">陳小姐MC01</option>
-                    <option value="曾先生">曾先生</option>
+                    {enumOptions.introducers.map((introducer) => (
+                      <option key={introducer} value={introducer}>{introducer}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -750,25 +789,9 @@ export default function NewCustomerPage() {
                         className="form-input-apple"
                       >
                         <option value="">請選擇地區</option>
-                        <option value="中西區">中西區</option>
-                        <option value="九龍城區">九龍城區</option>
-                        <option value="元朗區">元朗區</option>
-                        <option value="北區">北區</option>
-                        <option value="南區">南區</option>
-                        <option value="大埔區">大埔區</option>
-                        <option value="屯門區">屯門區</option>
-                        <option value="東區">東區</option>
-                        <option value="沙田區">沙田區</option>
-                        <option value="油尖旺區">油尖旺區</option>
-                        <option value="深水埗區">深水埗區</option>
-                        <option value="灣仔區">灣仔區</option>
-                        <option value="荃灣區">荃灣區</option>
-                        <option value="葵青區">葵青區</option>
-                        <option value="西貢區">西貢區</option>
-                        <option value="觀塘區">觀塘區</option>
-                        <option value="離島區">離島區</option>
-                        <option value="黃大仙區">黃大仙區</option>
-                        <option value="未分類（醫院,院舍)">未分類（醫院,院舍)</option>
+                        {enumOptions.districts.map((district) => (
+                          <option key={district} value={district}>{district}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -783,9 +806,9 @@ export default function NewCustomerPage() {
                         className="form-input-apple"
                       >
                         <option value="">請選擇項目經理</option>
-                        <option value="Kanas Leung">Kanas Leung</option>
-                        <option value="Joe Cheung">Joe Cheung</option>
-                        <option value="Candy Ho">Candy Ho</option>
+                        {enumOptions.staffOwners.map((staffOwner) => (
+                          <option key={staffOwner} value={staffOwner}>{staffOwner}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -800,11 +823,9 @@ export default function NewCustomerPage() {
                         className="form-input-apple"
                       >
                         <option value="">請選擇身體狀況</option>
-                        <option value="良好">良好</option>
-                        <option value="中風">中風</option>
-                        <option value="需協助">需協助</option>
-                        <option value="長期病患">長期病患</option>
-                        <option value="認知障礙">認知障礙</option>
+                        {enumOptions.healthStatuses.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

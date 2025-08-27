@@ -2625,6 +2625,13 @@ export default function ServicesPage() {
   const [staffList, setStaffList] = useState<string[]>([])
   const [loadingStaff, setLoadingStaff] = useState(true)
   
+  // 動態 enum 選項狀態
+  const [enumOptions, setEnumOptions] = useState({
+    serviceType: [] as { value: string; label: string }[],
+    projectCategory: [] as { value: string; label: string }[],
+    projectManager: [] as { value: string; label: string }[]
+  })
+  
   // 默認選中的欄位：1.服務日期 2.客戶姓名 3.服務地址 4.服務類型 5.開始時間-結束時間 6.時數 7.護理員姓名
   const [exportColumns, setExportColumns] = useState({
     service_date: true,      // 1. 服務日期 (默認)
