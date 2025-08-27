@@ -33,6 +33,22 @@ export default function ClientsPage() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
+  // 🔧 強制清除任何可能的狀態污染
+  useEffect(() => {
+    console.log('🧹 強制清除狀態污染')
+    setFilters({}) // 確保篩選條件為空
+    setCurrentPage(1) // 確保頁面為第一頁
+    setSearchQuery('') // 確保搜尋查詢為空
+  }, []) // 只在組件掛載時執行一次
+
+  // 🔍 監聽篩選條件變化
+  useEffect(() => {
+    console.log('🔍 篩選條件變化:', JSON.stringify(filters, null, 2))
+    if (Object.keys(filters).length > 0) {
+      console.log('⚠️  檢測到非空篩選條件！')
+    }
+  }, [filters])
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -70,7 +86,11 @@ export default function ClientsPage() {
 
   // 載入客戶列表
   const loadCustomers = async () => {
-    console.log('🔄 loadCustomers 被調用，當前篩選條件:', filters, '頁面:', currentPage)
+    console.log('🔄 loadCustomers 被調用')
+    console.log('  📋 當前篩選條件:', JSON.stringify(filters, null, 2))
+    console.log('  📄 當前頁面:', currentPage)
+    console.log('  🔍 搜尋查詢:', searchQuery)
+    
     try {
       const response = await CustomerManagementService.getCustomers(
         filters,
@@ -82,7 +102,11 @@ export default function ClientsPage() {
         count: response.data.length,
         totalCount: response.count,
         page: response.page,
-        first5Customers: response.data.slice(0, 5).map(c => ({ id: c.id.slice(-8), name: c.customer_name }))
+        first5Customers: response.data.slice(0, 5).map(c => ({ 
+          id: c.id.slice(-8), 
+          name: c.customer_name,
+          type: c.customer_type 
+        }))
       })
       
       // 基於 id 去重，確保沒有重複的客戶記錄
@@ -93,7 +117,7 @@ export default function ClientsPage() {
       setCustomers(uniqueCustomers)
       setTotalCount(response.count)
     } catch (error) {
-      console.error('載入客戶列表失敗:', error)
+      console.error('❌ 載入客戶列表失敗:', error)
     }
   }
 
