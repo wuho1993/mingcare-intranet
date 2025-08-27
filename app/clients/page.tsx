@@ -28,7 +28,7 @@ export default function ClientsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize] = useState(200) // 🔧 增加到200個客戶，取消分頁
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -88,14 +88,14 @@ export default function ClientsPage() {
   const loadCustomers = async () => {
     console.log('🔄 loadCustomers 被調用')
     console.log('  📋 當前篩選條件:', JSON.stringify(filters, null, 2))
-    console.log('  📄 當前頁面:', currentPage)
-    console.log('  🔍 搜尋查詢:', searchQuery)
+    console.log('  � 搜尋查詢:', searchQuery)
+    console.log('  � 載入所有客戶 (上限200個)')
     
     try {
       const response = await CustomerManagementService.getCustomers(
         filters,
-        currentPage,
-        pageSize
+        1, // 🔧 始終從第一頁載入
+        pageSize // 200個客戶上限
       )
       
       console.log('📊 API 返回資料:', {
@@ -113,6 +113,7 @@ export default function ClientsPage() {
       const uniqueCustomers = deduplicateCustomers(response.data)
       
       console.log('✅ 去重後客戶數量:', uniqueCustomers.length, '原始數量:', response.data.length)
+      console.log('📊 總客戶數量:', response.count)
       
       setCustomers(uniqueCustomers)
       setTotalCount(response.count)
@@ -174,8 +175,8 @@ export default function ClientsPage() {
       try {
         const response = await CustomerManagementService.getCustomers(
           newFilters,
-          1,
-          pageSize
+          1, // 🔧 始終從第一頁載入
+          pageSize // 200個客戶上限
         )
         
         // 基於 id 去重，確保沒有重複的客戶記錄
@@ -213,10 +214,10 @@ export default function ClientsPage() {
   // 載入時觸發搜尋
   useEffect(() => {
     if (user) {
-      console.log('🎯 useEffect 觸發 loadCustomers, filters:', filters, 'currentPage:', currentPage)
+      console.log('🎯 useEffect 觸發 loadCustomers, filters:', filters)
       loadCustomers()
     }
-  }, [filters, currentPage]) // 移除 user，避免重複觸發
+  }, [filters]) // 🔧 移除 currentPage 依賴，因為不再使用分頁
   
   // 當用戶載入完成時，觸發首次資料載入
   useEffect(() => {
@@ -226,15 +227,15 @@ export default function ClientsPage() {
     }
   }, [user]) // 只在 user 變更時觸發一次
 
-  // 分頁處理
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
+  // 分頁處理 (已停用，顯示所有客戶)
+  // const handlePageChange = (page: number) => {
+  //   setCurrentPage(page)
+  // }
 
-  // 計算分頁信息
-  const totalPages = Math.ceil(totalCount / pageSize)
-  const startItem = (currentPage - 1) * pageSize + 1
-  const endItem = Math.min(currentPage * pageSize, totalCount)
+  // 計算顯示資訊 (已簡化，不再需要分頁計算)
+  // const totalPages = Math.ceil(totalCount / pageSize)
+  // const startItem = (currentPage - 1) * pageSize + 1
+  // const endItem = Math.min(currentPage * pageSize, totalCount)
 
   if (loading) {
     return (
@@ -491,7 +492,7 @@ export default function ClientsPage() {
                       const { data, count } = await CustomerManagementService.getCustomers(
                         {}, // 空篩選條件
                         1,  // 第一頁
-                        pageSize
+                        pageSize // 200個客戶上限
                       )
                       
                       // 基於 id 去重，確保沒有重複的客戶記錄
@@ -883,63 +884,17 @@ export default function ClientsPage() {
           </div>
         </div>
 
-          {/* Enhanced Pagination Section */}
+          {/* 顯示客戶總數資訊 */}
           {customers.length > 0 && (
             <div className="card-apple fade-in-apple" style={{ animationDelay: '0.4s' }}>
-              <div className="card-apple-content flex flex-col sm:flex-row justify-between items-center py-6">
-                <div className="text-apple-caption text-text-secondary mb-4 sm:mb-0">
-                  顯示第 <span className="font-medium">{startItem}</span> 到 <span className="font-medium">{endItem}</span> 項，
-                  共 <span className="font-medium">{totalCount}</span> 項結果
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button 
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage <= 1}
-                    className="btn-apple-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  
-                  {/* Page Numbers */}
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum
-                      if (totalPages <= 5) {
-                        pageNum = i + 1
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i
-                      } else {
-                        pageNum = currentPage - 2 + i
-                      }
-                      
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={pageNum === currentPage
-                            ? 'btn-apple-primary px-3 py-2 text-sm'
-                            : 'btn-apple-secondary px-3 py-2 text-sm'
-                          }
-                        >
-                          {pageNum}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  
-                  <button 
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage >= totalPages}
-                    className="btn-apple-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+              <div className="card-apple-content flex justify-center items-center py-4">
+                <div className="text-apple-caption text-text-secondary">
+                  共顯示 <span className="font-medium text-text-primary">{customers.length}</span> 位客戶
+                  {totalCount > customers.length && (
+                    <span className="text-amber-600 ml-2">
+                      (總共 {totalCount} 位，已達到顯示上限 {pageSize})
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
