@@ -4010,15 +4010,22 @@ export default function ServicesPage() {
     if (!editingRecord) return
 
     try {
-      // 這裡可以調用 updateBillingSalaryRecord API
-      // 暫時關閉模態框
-      setIsEditModalOpen(false)
-      setEditingRecord(null)
+      console.log('🔄 更新服務記錄...')
+      const result = await updateBillingSalaryRecord(editingRecord.id, formData)
       
-      // 可能需要重新載入數據
-      alert('記錄已更新')
+      if (result.success) {
+        console.log('✅ 記錄更新成功')
+        setIsEditModalOpen(false)
+        setEditingRecord(null)
+        // 觸發刷新
+        setRefreshTrigger(prev => prev + 1)
+        alert('記錄已更新')
+      } else {
+        console.error('❌ 更新失敗:', result.error)
+        alert('更新失敗: ' + result.error)
+      }
     } catch (error) {
-      console.error('更新記錄失敗:', error)
+      console.error('❌ 更新記錄失敗:', error)
       alert('更新失敗')
     }
   }
@@ -4026,6 +4033,35 @@ export default function ServicesPage() {
   const handleEditCancel = () => {
     setIsEditModalOpen(false)
     setEditingRecord(null)
+  }
+  
+  // 🔧 月曆檢視編輯功能
+  const onEdit = (record: BillingSalaryRecord) => {
+    console.log('📝 月曆檢視編輯記錄:', record.id)
+    setEditingRecord(record)
+    setIsEditModalOpen(true)
+  }
+  
+  // 🔧 月曆檢視刪除功能
+  const onDelete = async (recordId: string) => {
+    console.log('🗑️ 月曆檢視刪除記錄:', recordId)
+    if (confirm('確定要刪除這筆記錄嗎？')) {
+      try {
+        const result = await deleteBillingSalaryRecord(recordId)
+        if (result.success) {
+          console.log('✅ 記錄刪除成功')
+          // 觸發刷新
+          setRefreshTrigger(prev => prev + 1)
+          alert('記錄已刪除')
+        } else {
+          console.error('❌ 刪除失敗:', result.error)
+          alert('刪除失敗: ' + result.error)
+        }
+      } catch (error) {
+        console.error('❌ 刪除記錄失敗:', error)
+        alert('刪除失敗')
+      }
+    }
   }
 
   const handleDelete = async (recordId: string) => {
