@@ -1961,8 +1961,8 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             care_staff_name: editingLocalSchedule.schedule.care_staff_name,
             service_fee: editingLocalSchedule.schedule.service_fee,
             staff_salary: editingLocalSchedule.schedule.staff_salary,
-            hourly_rate: editingLocalSchedule.schedule.hourly_rate,
-            hourly_salary: editingLocalSchedule.schedule.hourly_salary,
+            hourly_rate: editingLocalSchedule.schedule.hourly_rate || (editingLocalSchedule.schedule.service_hours > 0 ? (editingLocalSchedule.schedule.service_fee || 0) / editingLocalSchedule.schedule.service_hours : 0),
+            hourly_salary: editingLocalSchedule.schedule.hourly_salary || (editingLocalSchedule.schedule.service_hours > 0 ? (editingLocalSchedule.schedule.staff_salary || 0) / editingLocalSchedule.schedule.service_hours : 0),
             service_type: editingLocalSchedule.schedule.service_type as any,
             project_category: editingLocalSchedule.schedule.project_category as any,
             project_manager: editingLocalSchedule.schedule.project_manager as any
