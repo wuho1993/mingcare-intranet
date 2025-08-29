@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
+import SearchableSelect from '../../components/SearchableSelect'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -2055,6 +2056,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     }
   }
 
+  // 格式化護理人員選項
+  const careStaffOptions = careStaffList.map(staff => ({
+    value: staff.name_chinese,
+    label: staff.name_chinese
+  }))
+
   // 客戶搜尋函數
   const handleCustomerSearch = async (searchTerm: string) => {
     console.log('客戶搜尋開始:', searchTerm) // 除錯輸出
@@ -2461,29 +2468,18 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             </div>
 
             <div>
-              <div className="relative">
-                <select
-                  value={filters.careStaffName || ''}
-                  onChange={(e) => setFilters(prev => ({
-                    ...prev,
-                    careStaffName: e.target.value
-                  }))}
-                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
-                  disabled={careStaffLoading}
-                >
-                  <option value="">
-                    {careStaffLoading ? '載入中...' : '選擇護理人員'}
-                  </option>
-                  {careStaffList.map((staff, index) => (
-                    <option key={index} value={staff.name_chinese}>
-                      {staff.name_chinese}
-                    </option>
-                  ))}
-                </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              <SearchableSelect
+                options={careStaffOptions}
+                value={filters.careStaffName || ''}
+                onChange={(value) => setFilters(prev => ({
+                  ...prev,
+                  careStaffName: value
+                }))}
+                placeholder={careStaffLoading ? '載入中...' : '選擇護理人員'}
+                loading={careStaffLoading}
+                disabled={careStaffLoading}
+                className="w-full"
+              />
             </div>
           </div>
         </div>
