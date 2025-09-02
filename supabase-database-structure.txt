@@ -174,7 +174,7 @@ service_type_enum = {
   RA-復康運動(輔助⼈員),
   RT-復康運動(OTA輔助⼈員),
   RT-復康運動(專業⼈員),
-  上門評估服務, 傷口護理, 免費服務體驗
+  上門評估服務, 傷口護理, 免費服務體驗, 社區活動
 }
 voucher_application_status_enum = { 已經持有, 申請中 }
 staff_owner_enum = { Kanas Leung, Joe Cheung, Candy Ho }
