@@ -47,6 +47,7 @@ export type ServiceType =
   | '上門評估服務'
   | '傷口護理'
   | '免費服務體驗'
+  | '社區活動'
 
 export type ProjectCategory = 
   | 'MC社區券(醫點）'
@@ -204,7 +205,8 @@ export const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: 'RT-復康運動(專業⼈員)', label: 'RT-復康運動(專業⼈員)' },
   { value: '上門評估服務', label: '上門評估服務' },
   { value: '傷口護理', label: '傷口護理' },
-  { value: '免費服務體驗', label: '免費服務體驗' }
+  { value: '免費服務體驗', label: '免費服務體驗' },
+  { value: '社區活動', label: '社區活動' }
 ]
 
 export const PROJECT_CATEGORY_OPTIONS: { value: ProjectCategory; label: string }[] = [
