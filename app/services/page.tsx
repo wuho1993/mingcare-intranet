@@ -2142,9 +2142,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
   // 當選中客戶變化時，更新篩選條件
   useEffect(() => {
-    if (selectedCustomers.length > 0) {
+    if (selectedCustomers && selectedCustomers.length > 0) {
       // 使用選中客戶的 ID 陣列進行精確搜尋
-      const customerIds = selectedCustomers.map(c => c.customer_id)
+      const customerIds = selectedCustomers.map(c => c?.customer_id).filter(id => id)
       setFilters(prevFilters => ({
         ...prevFilters,
         selectedCustomerIds: customerIds,
@@ -2172,7 +2172,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     setCustomerSearchTerm(value)
     
     // 只在沒有選中客戶時才直接更新篩選條件
-    if (selectedCustomers.length === 0) {
+    if (!selectedCustomers || selectedCustomers.length === 0) {
       setFilters(prev => ({
         ...prev,
         searchTerm: value
@@ -2300,7 +2300,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                       <div className="p-3 text-center text-text-secondary">
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto"></div>
                       </div>
-                    ) : customerSuggestions.length > 0 ? (
+                    ) : customerSuggestions && customerSuggestions.length > 0 ? (
                       customerSuggestions.map((customer, index) => (
                         <div
                           key={`${customer.customer_id}-${index}`}
@@ -2337,9 +2337,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </div>
               
               {/* 選中客戶的 chips 顯示 */}
-              {selectedCustomers.length > 0 && (
+              {selectedCustomers && selectedCustomers.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {selectedCustomers.map((customer) => (
+                  {selectedCustomers && selectedCustomers.map((customer) => (
                     <div
                       key={customer.customer_id}
                       className="inline-flex items-center bg-mingcare-blue text-white text-sm px-3 py-1 rounded-full"
@@ -2587,7 +2587,8 @@ export default function ServicesPage() {
       dateRange: {
         start: formatLocalDate(startOfMonth),
         end: formatLocalDate(endOfMonth)
-      }
+      },
+      projectCategory: [] // 初始化為空陣列
     }
   })
 
