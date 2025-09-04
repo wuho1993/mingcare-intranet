@@ -89,7 +89,7 @@ function ReportsCalendarView({
         if (response.success && response.data) {
           // 將記錄按日期分組
           const groupedByDate: Record<string, BillingSalaryRecord[]> = {}
-          response.data.data.forEach((record: BillingSalaryRecord) => {
+          ;(response.data.data || []).forEach((record: BillingSalaryRecord) => {
             const dateKey = record.service_date
             if (!groupedByDate[dateKey]) {
               groupedByDate[dateKey] = []
@@ -538,7 +538,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     )
   }
 
-  if (records.length === 0) {
+  if (!records || records.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -636,13 +636,13 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
         {/* 記錄數量顯示 */}
         <div className="text-sm text-text-secondary">
-          共 {records.length} 筆記錄
+          共 {records?.length || 0} 筆記錄
         </div>
       </div>
 
       {/* 記錄列表 */}
       <div className="space-y-3">
-        {records.map((record) => (
+        {records && records.map((record) => (
           <div 
             key={record.id}
             className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
@@ -939,7 +939,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
         <div className="p-6">
           <h3 className="text-apple-heading text-text-primary mb-6">項目分類統計</h3>
           
-          {categorySummary.length > 0 ? (
+          {categorySummary && categorySummary.length > 0 ? (
             <div className="space-y-4">
               {categorySummary.slice(0, 5).map((summary, index) => (
                 <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-light">
@@ -963,7 +963,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
                 </div>
               ))}
               
-              {categorySummary.length > 5 && (
+              {categorySummary && categorySummary.length > 5 && (
                 <div className="text-center text-sm text-text-secondary">
                   還有 {categorySummary.length - 5} 個項目，請到詳細報表查看
                 </div>
@@ -983,10 +983,10 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
 // 排班小結組件
 function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string, BillingSalaryFormData[]> }) {
   const calculateSummary = () => {
-    const allSchedules = Object.values(localSchedules).flat()
-    const totalHours = allSchedules.reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
-    const totalFee = allSchedules.reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
-    const totalCount = allSchedules.length
+    const allSchedules = Object.values(localSchedules || {}).flat()
+    const totalHours = (allSchedules || []).reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
+    const totalFee = (allSchedules || []).reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
+    const totalCount = allSchedules?.length || 0
 
     return {
       totalCount,
@@ -1005,7 +1005,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
   }[]>([])
 
   const calculateVoucherSummary = async () => {
-    const allSchedules = Object.values(localSchedules).flat()
+    const allSchedules = Object.values(localSchedules || {}).flat()
     console.log('計算社區券統計 - 本地排程:', localSchedules) // 調試日誌
     console.log('所有排程:', allSchedules) // 調試日誌
     
@@ -1328,14 +1328,14 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
   // 計算本地排程總數
   const getTotalLocalSchedules = () => {
-    return Object.values(localSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
+    return Object.values(localSchedules || {}).reduce((total, daySchedules) => total + (daySchedules?.length || 0), 0)
   }
 
   // 獲取本地排程中的所有客戶名稱
   const getLocalCustomerNames = () => {
     const customerNames = new Set<string>()
-    Object.values(localSchedules).forEach(daySchedules => {
-      daySchedules.forEach(schedule => {
+    Object.values(localSchedules || {}).forEach(daySchedules => {
+      ;(daySchedules || []).forEach(schedule => {
         if (schedule.customer_name) {
           customerNames.add(schedule.customer_name)
         }
@@ -1364,10 +1364,10 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
   // 計算本地排程小結
   const calculateLocalScheduleSummary = () => {
-    const allSchedules = Object.values(localSchedules).flat()
-    const totalHours = allSchedules.reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
-    const totalFee = allSchedules.reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
-    const totalCount = allSchedules.length
+    const allSchedules = Object.values(localSchedules || {}).flat()
+    const totalHours = (allSchedules || []).reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
+    const totalFee = (allSchedules || []).reduce((sum, schedule) => sum + (schedule.service_fee || 0), 0)
+    const totalCount = allSchedules?.length || 0
 
     return {
       totalCount,
@@ -1379,7 +1379,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   // 確認儲存本地排程到Supabase（只儲存篩選後的）
   const handleSaveLocalSchedules = async () => {
     const filteredSchedules = getFilteredLocalSchedules()
-    const filteredTotal = Object.values(filteredSchedules).reduce((total, daySchedules) => total + daySchedules.length, 0)
+    const filteredTotal = Object.values(filteredSchedules || {}).reduce((total, daySchedules) => total + (daySchedules?.length || 0), 0)
     
     if (filteredTotal === 0) {
       if (selectedCustomerFilter === 'all') {
@@ -2125,10 +2125,10 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       let newSelection
       
       if (isSelected) {
-        newSelection = prev.filter(c => c.customer_id !== customer.customer_id)
+        newSelection = (prev || []).filter(c => c.customer_id !== customer.customer_id)
         console.log('移除客戶:', customer.customer_name) // 除錯輸出
       } else {
-        newSelection = [...prev, customer]
+        newSelection = [...(prev || []), customer]
         console.log('新增客戶:', customer.customer_name) // 除錯輸出
       }
       
@@ -2144,7 +2144,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   useEffect(() => {
     if (selectedCustomers && selectedCustomers.length > 0) {
       // 使用選中客戶的 ID 陣列進行精確搜尋
-      const customerIds = selectedCustomers.map(c => c?.customer_id).filter(id => id)
+      const customerIds = (selectedCustomers || []).map(c => c?.customer_id).filter(id => id)
       setFilters(prevFilters => ({
         ...prevFilters,
         selectedCustomerIds: customerIds,
@@ -2882,7 +2882,7 @@ export default function ServicesPage() {
   const downloadSingleStaffPDF = async (staffName: string, records: any[], columns: string[]) => {
     try {
       // 篩選該護理員的記錄
-      const staffRecords = records.filter(record => 
+      const staffRecords = (records || []).filter(record => 
         (record.care_staff_name || '未知護理人員') === staffName
       )
       
@@ -3510,7 +3510,7 @@ export default function ServicesPage() {
       if (isAccountingMode) {
         // 對數模式：按客戶分組並為每個客戶創建獨立表格
         const customerGroups: Record<string, any[]> = {}
-        records.forEach(record => {
+        ;(records || []).forEach(record => {
           const customerName = record.customer_name || '未知客戶'
           if (!customerGroups[customerName]) {
             customerGroups[customerName] = []
@@ -4445,7 +4445,7 @@ export default function ServicesPage() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-text-primary">護理員工資明細</h3>
                 {/* 一次過全部下載按鈕 */}
-                {!loadingStaff && staffList.length > 0 && (
+                {!loadingStaff && staffList && staffList.length > 0 && (
                   <button
                     onClick={downloadAllStaffPDFs}
                     disabled={Object.values(staffDownloadStatus).some(status => status === 'downloading')}
@@ -4472,13 +4472,13 @@ export default function ServicesPage() {
                 <div className="text-center py-12">
                   <p className="text-text-secondary">載入中...</p>
                 </div>
-              ) : staffList.length === 0 ? (
+              ) : !staffList || staffList.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-text-secondary">沒有找到護理員資料</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-none">
-                  {staffList.map((staffName: string) => {
+                  {staffList && staffList.map((staffName: string) => {
                     const isDownloaded = staffDownloadStatus[staffName] === 'downloaded'
                     const isDownloading = staffDownloadStatus[staffName] === 'downloading'
                     
