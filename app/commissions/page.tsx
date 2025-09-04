@@ -480,7 +480,7 @@ export default function CommissionsPage() {
                         <td class="number">${customer.hours.toFixed(1)} 小時</td>
                         <td class="number">$${customer.fee.toLocaleString()}</td>
                         <td style="text-align: center;">${customer.isQualified ? '✓ 達標' : '✗ 不達標'}</td>
-                        <td class="number">${customer.isQualified ? '$' + customer.commission.toLocaleString() : '不達標'}</td>
+                        <td class="number">${customer.commission > 0 ? '$' + customer.commission.toLocaleString() : '$0'}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -709,18 +709,25 @@ export default function CommissionsPage() {
           let commissionAmount = 0
           let monthSequence = 0
 
-          if (isQualified) {
-            const customerKey = monthData.customer_id
-            const currentSequence = (customerMonthSequence.get(customerKey) || 0) + 1
-            customerMonthSequence.set(customerKey, currentSequence)
-            monthSequence = currentSequence
+          const customerKey = monthData.customer_id
+          const currentSequence = (customerMonthSequence.get(customerKey) || 0) + 1
+          customerMonthSequence.set(customerKey, currentSequence)
+          monthSequence = currentSequence
 
-            const commissionRate = commissionRates?.find(rate => rate.introducer === monthData.introducer)
+          const commissionRate = commissionRates?.find(rate => rate.introducer === monthData.introducer)
 
-            if (commissionRate) {
-              commissionAmount = currentSequence === 1 
-                ? commissionRate.first_month_commission 
-                : commissionRate.subsequent_month_commission
+          if (commissionRate) {
+            const baseCommission = currentSequence === 1 
+              ? commissionRate.first_month_commission 
+              : commissionRate.subsequent_month_commission
+            
+            // 特殊處理：只有 Steven Kwok 在不達標時佣金除以2，其他人不達標沒有佣金
+            if (isQualified) {
+              commissionAmount = baseCommission
+            } else if (monthData.introducer === 'Steven Kwok') {
+              commissionAmount = baseCommission / 2
+            } else {
+              commissionAmount = 0
             }
           }
 
@@ -736,7 +743,7 @@ export default function CommissionsPage() {
       // 儲存所有數據用於篩選
       setAllCommissionData(allResults)
 
-      // 按介紹人分組（只計算達標的佣金）
+      // 按介紹人分組（計算所有佣金：達標全額，Steven Kwok不達標減半，其他人不達標為0）
       const groupedByIntroducer = new Map<string, IntroducerSummary>()
 
       allResults.forEach(result => {
@@ -753,19 +760,12 @@ export default function CommissionsPage() {
         const summary = groupedByIntroducer.get(result.introducer)!
         summary.customers.push(result)
         
-        // 只計算達標的佣金
-        if (result.is_qualified) {
-          summary.total_commission += result.commission_amount
-          if (result.month_sequence === 1) {
-            summary.first_month_count++
-          } else {
-            summary.subsequent_month_count++
-          }
-        }
-
+        // 計算所有佣金（達標全額，Steven Kwok不達標減半，其他人不達標為0）
+        summary.total_commission += result.commission_amount
+        
         if (result.month_sequence === 1) {
           summary.first_month_count++
-        } else {
+        } else if (result.month_sequence > 1) {
           summary.subsequent_month_count++
         }
       })
@@ -1086,13 +1086,14 @@ export default function CommissionsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
-                          {customer.is_qualified ? (
-                            <span className="text-mingcare-green">
+                          {customer.commission_amount > 0 ? (
+                            <span className={customer.is_qualified ? "text-mingcare-green" : "text-orange-600"}>
                               {formatCurrency(customer.commission_amount)}
+                              {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
                             </span>
                           ) : (
-                            <span className="text-red-600">
-                              不達標
+                            <span className="text-gray-500">
+                              $0
                             </span>
                           )}
                         </td>

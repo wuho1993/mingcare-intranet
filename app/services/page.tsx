@@ -788,10 +788,10 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
             {/* 年月選擇器 */}
             <div className="flex items-center gap-2">
               <select
-                value={new Date(filters.dateRange.start).getFullYear()}
+                value={filters.dateRange?.start ? new Date(filters.dateRange.start).getFullYear() : new Date().getFullYear()}
                 onChange={(e) => {
                   const year = parseInt(e.target.value)
-                  const month = new Date(filters.dateRange.start).getMonth()
+                  const month = filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
                   
@@ -820,9 +820,9 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
               </select>
               
               <select
-                value={new Date(filters.dateRange.start).getMonth()}
+                value={filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()}
                 onChange={(e) => {
-                  const year = new Date(filters.dateRange.start).getFullYear()
+                  const year = filters.dateRange?.start ? new Date(filters.dateRange.start).getFullYear() : new Date().getFullYear()
                   const month = parseInt(e.target.value)
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
@@ -855,7 +855,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
             <label className="text-sm text-text-secondary">時間段：</label>
             <input
               type="date"
-              value={filters.dateRange.start}
+              value={filters.dateRange?.start || ''}
               onChange={(e) => setFilters(prev => ({
                 ...prev,
                 dateRange: { ...prev.dateRange, start: e.target.value }
@@ -865,7 +865,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
             <span className="text-text-secondary">至</span>
             <input
               type="date"
-              value={filters.dateRange.end}
+              value={filters.dateRange?.end || ''}
               onChange={(e) => setFilters(prev => ({
                 ...prev,
                 dateRange: { ...prev.dateRange, end: e.target.value }
@@ -875,7 +875,7 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
           </div>
           
           <div className="mt-4 text-sm text-text-secondary">
-            當前範圍：{filters.dateRange.start} ~ {filters.dateRange.end}
+            當前範圍：{filters.dateRange?.start || '未設定'} ~ {filters.dateRange?.end || '未設定'}
           </div>
         </div>
       </div>
@@ -2205,7 +2205,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </svg>
               <input
                 type="date"
-                value={filters.dateRange.start}
+                value={filters.dateRange?.start || ''}
                 onChange={(e) => setFilters(prev => ({
                   ...prev,
                   dateRange: { ...prev.dateRange, start: e.target.value }
@@ -2215,7 +2215,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               <span className="text-text-secondary">-</span>
               <input
                 type="date"
-                value={filters.dateRange.end}
+                value={filters.dateRange?.end || ''}
                 onChange={(e) => setFilters(prev => ({
                   ...prev,
                   dateRange: { ...prev.dateRange, end: e.target.value }
@@ -2626,6 +2626,7 @@ export default function ServicesPage() {
     care_staff_name: true,   // 7. 護理員姓名 (默認)
     service_fee: false,
     staff_salary: false,
+    service_profit: false,   // 新增：服務利潤
     hourly_rate: false,
     hourly_salary: false,
     service_type: true,      // 4. 服務類型 (默認)
@@ -2648,6 +2649,7 @@ export default function ServicesPage() {
         care_staff_name: true,
         service_type: true,
         service_fee: true,      // 對數模式自動包含
+        service_profit: true,   // 對數模式自動包含：服務利潤
         hourly_rate: true,      // 對數模式自動包含
         customer_id: false,
         phone: false,
@@ -2670,6 +2672,7 @@ export default function ServicesPage() {
         care_staff_name: false,  // 工資模式不預設勾選，因為大標題會顯示
         service_type: true,
         staff_salary: true,     // 工資模式自動包含
+        service_profit: false,  // 工資模式不包含服務利潤
         hourly_salary: true,    // 工資模式自動包含
         customer_id: false,
         phone: false,
@@ -2707,8 +2710,8 @@ export default function ServicesPage() {
     try {
       // 載入 KPI 數據
       const kpiResult = await getBusinessKPI({
-        start: filters.dateRange.start,
-        end: filters.dateRange.end
+        start: filters.dateRange?.start || '',
+        end: filters.dateRange?.end || ''
       })
       if (kpiResult.success && kpiResult.data) {
         setKpiData(kpiResult.data)
@@ -2716,8 +2719,8 @@ export default function ServicesPage() {
 
       // 載入分類統計
       const categoryResult = await getProjectCategorySummary({
-        start: filters.dateRange.start,
-        end: filters.dateRange.end
+        start: filters.dateRange?.start || '',
+        end: filters.dateRange?.end || ''
       })
       if (categoryResult.success && categoryResult.data) {
         setCategorySummary(categoryResult.data)
@@ -2934,6 +2937,7 @@ export default function ServicesPage() {
       care_staff_name: '護理員姓名',
       service_fee: '服務費用',
       staff_salary: '護理員工資',
+      service_profit: '服務利潤',
       hourly_rate: '每小時收費',
       hourly_salary: '每小時工資',
       service_type: '服務類型',
@@ -3199,6 +3203,12 @@ export default function ServicesPage() {
                     case 'billing_amount':
                       const num = parseFloat(record[col] || '0')
                       value = isNaN(num) ? '$0.00' : `$${num.toFixed(2)}`
+                      break
+                    case 'service_profit':
+                      const serviceFee = parseFloat(record.service_fee || '0')
+                      const staffSalary = parseFloat(record.staff_salary || '0')
+                      const profit = serviceFee - staffSalary
+                      value = `$${profit.toFixed(2)}`
                       break
                     default:
                       value = String(record[col] || '')
@@ -3531,7 +3541,7 @@ export default function ServicesPage() {
               <tr>
                 ${columns.map(col => {
                   const value = record[col] || ''
-                  const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary'].includes(col)
+                  const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
                   return `<td class="${isNumber ? 'number' : ''}">${String(value)}</td>`
                 }).join('')}
               </tr>
@@ -3726,7 +3736,7 @@ export default function ServicesPage() {
                     <tr>
                       ${columns.map(col => {
                         const value = record[col] || ''
-                        const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'duration_hours', 'service_fee', 'staff_salary'].includes(col)
+                        const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'duration_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
                         let displayValue = String(value)
                         
                         // 特殊格式化
@@ -3736,6 +3746,11 @@ export default function ServicesPage() {
                           const month = String(date.getMonth() + 1).padStart(2, '0')
                           const day = String(date.getDate()).padStart(2, '0')
                           displayValue = `${year}-${month}-${day}`
+                        } else if (col === 'service_profit') {
+                          const serviceFee = parseFloat(record.service_fee || '0')
+                          const staffSalary = parseFloat(record.staff_salary || '0')
+                          const profit = serviceFee - staffSalary
+                          displayValue = profit.toFixed(2)
                         } else if (isNumber && value) {
                           const num = parseFloat(value)
                           displayValue = isNaN(num) ? '0' : num.toFixed(2)
@@ -3838,8 +3853,16 @@ export default function ServicesPage() {
         tableContent = records.map(record => `
           <tr>
             ${columns.map(col => {
-              const value = record[col] || ''
-              const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary'].includes(col)
+              let value = record[col] || ''
+              const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
+              
+              // 特殊處理服務利潤
+              if (col === 'service_profit') {
+                const serviceFee = parseFloat(record.service_fee || '0')
+                const staffSalary = parseFloat(record.staff_salary || '0')
+                value = (serviceFee - staffSalary).toFixed(2)
+              }
+              
               return `<td class="${isNumber ? 'number' : ''}">${String(value)}</td>`
             }).join('')}
           </tr>
@@ -4113,7 +4136,7 @@ export default function ServicesPage() {
           </div>
           
           <div class="meta">
-            日期範圍: ${filters.dateRange.start} ~ ${filters.dateRange.end}<br>
+            日期範圍: ${filters.dateRange?.start || '未設定'} ~ ${filters.dateRange?.end || '未設定'}<br>
             生成時間: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}
           </div>
           
@@ -4167,7 +4190,7 @@ export default function ServicesPage() {
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `mingcare_report_${filters.dateRange.start}_${filters.dateRange.end}.html`
+        link.download = `mingcare_report_${filters.dateRange?.start || 'unknown'}_${filters.dateRange?.end || 'unknown'}.html`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -4196,6 +4219,7 @@ export default function ServicesPage() {
       care_staff_name: '護理員姓名',
       service_fee: '服務費用',
       staff_salary: '護理員工資',
+      service_profit: '服務利潤',
       hourly_rate: '每小時收費',
       hourly_salary: '每小時工資',
       service_type: '服務類型',
@@ -4209,7 +4233,15 @@ export default function ServicesPage() {
       headers.join(','),
       ...records.map(record => 
         columns.map(col => {
-          const value = record[col] || ''
+          let value = record[col] || ''
+          
+          // 特殊處理服務利潤
+          if (col === 'service_profit') {
+            const serviceFee = parseFloat(record.service_fee || '0')
+            const staffSalary = parseFloat(record.staff_salary || '0')
+            value = (serviceFee - staffSalary).toFixed(2)
+          }
+          
           // 處理包含逗號、引號或換行的值
           const stringValue = String(value)
           if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
@@ -4230,7 +4262,7 @@ export default function ServicesPage() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `mingcare_report_${filters.dateRange.start}_${filters.dateRange.end}.csv`)
+    link.setAttribute('download', `mingcare_report_${filters.dateRange?.start || 'unknown'}_${filters.dateRange?.end || 'unknown'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -4450,14 +4482,14 @@ export default function ServicesPage() {
                     const isDownloading = staffDownloadStatus[staffName] === 'downloading'
                     
                     // 生成文件名：護理員A YYYY-MM工資明細
-                    const fileName = `${staffName} ${filters.dateRange.start.substring(0, 7)}工資明細`
+                    const fileName = `${staffName} ${filters.dateRange?.start?.substring(0, 7) || 'unknown'}工資明細`
                     
                     return (
                       <div key={staffName} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
                         <div>
                           <h4 className="font-medium text-text-primary">{fileName}</h4>
                           <p className="text-sm text-text-secondary mt-1">
-                            期間：{filters.dateRange.start} 至 {filters.dateRange.end}
+                            期間：{filters.dateRange?.start || '未設定'} 至 {filters.dateRange?.end || '未設定'}
                           </p>
                         </div>
                         
@@ -4785,6 +4817,7 @@ export default function ServicesPage() {
                     care_staff_name: '護理員姓名',
                     service_fee: '服務費用',
                     staff_salary: '護理員工資',
+                    service_profit: '服務利潤',
                     hourly_rate: '每小時收費',
                     hourly_salary: '每小時工資',
                     service_type: '服務類型',
