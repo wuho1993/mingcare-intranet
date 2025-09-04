@@ -186,7 +186,7 @@ function ReportsCalendarView({
 
       {/* 月曆網格 */}
       <div className="grid grid-cols-7 gap-1">
-        {calendarDays.map((date, index) => {
+        {calendarDays && calendarDays.map((date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
           const isToday = dateStr === formatDateSafely(new Date())
@@ -226,7 +226,7 @@ function ReportsCalendarView({
                     const isExpanded = expandedDates.has(dateKey)
                     const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, 3)
                     
-                    return recordsToShow.map((record, i) => (
+                    return (recordsToShow || []).map((record, i) => (
                       <div
                         key={`${record.id}-${i}`}
                         onClick={() => {
@@ -372,8 +372,8 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       const response = await fetchBillingSalaryRecords(filters, 1, 10000)
       
       if (response.success && response.data) {
-        const fetchedRecords = response.data.data
-        setTotalRecords(response.data.total) // 設置總記錄數
+        const fetchedRecords = response.data.data || []
+        setTotalRecords(response.data.total || 0) // 設置總記錄數
         setOriginalRecords(fetchedRecords)
         // 應用當前排序
         sortRecords(fetchedRecords, sortConfig)
@@ -1128,7 +1128,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
                 </tr>
               </thead>
               <tbody>
-                {voucherSummary.map((item, index) => (
+                {voucherSummary && voucherSummary.map((item, index) => (
                   <tr key={item.service_type} className={index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary'}>
                     <td className="py-3 px-4 text-sm text-text-primary">{item.service_type}</td>
                     <td className="py-3 px-4 text-sm text-text-primary">{item.count}</td>
@@ -1258,7 +1258,7 @@ function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
             </tr>
           </thead>
           <tbody>
-            {voucherData.serviceTypeSummary.map((item, index) => (
+            {voucherData.serviceTypeSummary && voucherData.serviceTypeSummary.map((item, index) => (
               <tr key={item.service_type} className={index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary'}>
                 <td className="py-3 px-4 text-sm text-text-primary">{item.service_type}</td>
                 <td className="py-3 px-4 text-sm text-text-primary">{item.count}</td>
@@ -1799,7 +1799,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
           {/* 月曆格子 - 排班視圖 */}
           <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((date, index) => {
+            {calendarDays && calendarDays.map((date, index) => {
               const dateStr = formatDateSafely(date)
               const isCurrentMonth = date.getMonth() === currentMonth
               const isToday = dateStr === formatDateSafely(new Date())
@@ -1848,7 +1848,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   {isCurrentMonth && (
                     <div className="space-y-2">
                       {/* 遠端排程 - 不可刪除 */}
-                      {remoteSchedules.map((schedule, i) => (
+                      {(remoteSchedules || []).map((schedule, i) => (
                         <div
                           key={`remote-${i}`}
                           className="text-base bg-white border border-gray-200 rounded p-3 shadow-sm"
@@ -1871,7 +1871,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                       ))}
                       
                       {/* 本地排程 - 可點擊編輯/刪除 */}
-                      {localDaySchedules.map((schedule, i) => (
+                      {(localDaySchedules || []).map((schedule, i) => (
                         <div
                           key={`local-${i}`}
                           onClick={(e) => {
@@ -2047,7 +2047,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       setCareStaffLoading(true)
       const response = await getAllCareStaff()
       if (response.success && response.data) {
-        setCareStaffList(response.data)
+        setCareStaffList(response.data || [])
       }
     } catch (error) {
       console.error('載入護理人員列表失敗:', error)
@@ -2833,7 +2833,7 @@ export default function ServicesPage() {
         throw new Error('無法獲取數據')
       }
 
-      let records = response.data.data
+      let records = response.data.data || []
       
       // 對數模式需要特殊排序：先按客戶名稱，再按日期
       if (exportMode === 'accounting') {
@@ -4332,14 +4332,14 @@ export default function ServicesPage() {
         return
       }
 
-      const allRecords = response.data.data
+      const allRecords = response.data.data || []
       const selectedColumns = Object.entries(exportColumns)
         .filter(([_, selected]) => selected)
         .map(([column, _]) => column)
 
       // 設置所有護理員為下載中狀態
       const newStatus: Record<string, string> = {}
-      staffList.forEach(staffName => {
+      ;(staffList || []).forEach(staffName => {
         newStatus[staffName] = 'downloading'
       })
       setStaffDownloadStatus(newStatus)
@@ -4517,7 +4517,7 @@ export default function ServicesPage() {
                                         .filter(([_, selected]) => selected)
                                         .map(([column, _]) => column)
                                       
-                                      await downloadSingleStaffPDF(staffName, response.data.data, selectedColumns)
+                                      await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
                                     }
                                   } catch (error) {
                                     console.error('下載失敗:', error)
@@ -4552,7 +4552,7 @@ export default function ServicesPage() {
                                       .filter(([_, selected]) => selected)
                                       .map(([column, _]) => column)
                                     
-                                    await downloadSingleStaffPDF(staffName, response.data.data, selectedColumns)
+                                    await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
                                   }
                                 } catch (error) {
                                   console.error('下載失敗:', error)
@@ -5555,7 +5555,7 @@ function ScheduleFormModal({
                     />
                     
                     {/* 護理人員搜尋建議 */}
-                    {showStaffSuggestions && staffSuggestions.length > 0 && (
+                    {showStaffSuggestions && staffSuggestions && staffSuggestions.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {staffSuggestions.map((staff, index) => (
                           <div
