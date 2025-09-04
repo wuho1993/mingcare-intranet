@@ -40,6 +40,9 @@ import {
 
 // 安全的日期格式化函數 - 避免時區問題
 const formatDateSafely = (date: Date): string => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return new Date().toISOString().split('T')[0] // 返回今日日期作為備選
+  }
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -368,8 +371,31 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       setLoading(true)
       setError(null)
       
+      // 二月和四月的特別調試
+      if (filters.dateRange?.start) {
+        const startMonth = new Date(filters.dateRange.start).getMonth() + 1
+        if (startMonth === 2 || startMonth === 4) {
+          console.log(`🔍 載入${startMonth}月記錄，filters:`, filters)
+        }
+      }
+      
       // 一次獲取所有記錄，不使用分頁
       const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+      
+      // 二月和四月的特別調試
+      if (filters.dateRange?.start) {
+        const startMonth = new Date(filters.dateRange.start).getMonth() + 1
+        if (startMonth === 2 || startMonth === 4) {
+          console.log(`🔍 ${startMonth}月 API 響應:`, {
+            success: response.success,
+            dataExists: !!response.data,
+            dataType: typeof response.data,
+            dataDataExists: !!(response.data?.data),
+            dataDataType: typeof response.data?.data,
+            dataDataLength: response.data?.data?.length
+          })
+        }
+      }
       
       if (response.success && response.data) {
         const fetchedRecords = response.data.data || []
@@ -496,6 +522,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   // 截斷地址顯示
   const truncateAddress = (address: string, maxLength: number = 30) => {
+    if (!address) return ''
     return address.length > maxLength ? address.substring(0, maxLength) + '...' : address
   }
 
@@ -4483,7 +4510,7 @@ export default function ServicesPage() {
                     const isDownloading = staffDownloadStatus[staffName] === 'downloading'
                     
                     // 生成文件名：護理員A YYYY-MM工資明細
-                    const fileName = `${staffName} ${filters.dateRange?.start?.substring(0, 7) || 'unknown'}工資明細`
+                    const fileName = `${staffName} ${(filters.dateRange?.start || 'unknown').substring(0, 7)}工資明細`
                     
                     return (
                       <div key={staffName} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
