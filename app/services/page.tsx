@@ -2905,6 +2905,22 @@ export default function ServicesPage() {
   }
 
   const generateAndDownloadStaffPDF = async (records: any[], columns: string[], staffName: string) => {
+    // 查詢員工資料
+    let staffData = null
+    try {
+      const { data, error } = await supabase
+        .from('care_staff_profiles')
+        .select('staff_id, name_chinese, name_english, hkid')
+        .eq('name_chinese', staffName)
+        .single()
+      
+      if (!error && data) {
+        staffData = data
+      }
+    } catch (error) {
+      console.error('查詢護理人員資料失敗:', error)
+    }
+
     // 完整的欄位標籤映射
     const columnLabels: Record<string, string> = {
       service_date: '服務日期',
@@ -2959,41 +2975,137 @@ export default function ServicesPage() {
         <title>${staffName} ${yearMonth}工資明細</title>
         <style>
           @page {
-            size: A4 landscape;
-            margin: 20mm;
+            size: A4 portrait;
+            margin: 15mm;
           }
           body {
             font-family: "PingFang TC", "Microsoft JhengHei", "SimHei", sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            font-size: max(11px, 0.8vw);
+            line-height: 1.3;
+            min-font-size: 9px;
+          }
+          @media print {
+            body {
+              font-size: 11px !important;
+            }
+            .responsive-text {
+              font-size: max(9px, 10px) !important;
+            }
+            .keep-together {
+              page-break-inside: avoid;
+            }
+            table {
+              page-break-inside: auto;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+          }
+          .header-container {
+            margin-bottom: 20px;
+            position: relative;
+          }
+          .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+          }
+          .company-info {
+            flex: 1;
+            text-align: left;
+          }
+          .company-logo {
+            flex: 0 0 180px;
+            text-align: center;
+          }
+          .company-logo img {
+            max-width: 180px;
+            max-height: 180px;
+          }
+          .company-stamp {
+            flex: 0 0 60px;
+            text-align: center;
+          }
+          .company-stamp img {
+            max-width: 60px;
+            max-height: 60px;
+          }
+          .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .company-details {
+            font-size: 11px;
+            line-height: 1.4;
+          }
+          .staff-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 15px;
+          }
+          .staff-info-title {
             font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #495057;
+          }
+          .staff-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 10px;
+          }
+          .staff-field {
+            display: flex;
+          }
+          .staff-field strong {
+            width: 70px;
+            color: #495057;
           }
           .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
           }
           .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
           }
           .subtitle {
-            font-size: 14px;
+            font-size: 12px;
             margin-bottom: 5px;
           }
           .summary {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
+            font-size: max(10px, 0.7vw);
           }
           th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 6px 4px;
             text-align: left;
-            font-size: 11px;
+            font-size: max(10px, 0.7vw);
+            word-wrap: break-word;
+          }
+          @media print {
+            table {
+              font-size: 10px !important;
+            }
+            th, td {
+              font-size: 10px !important;
+              padding: 4px 3px;
+            }
           }
           th {
             background-color: #f2f2f2;
@@ -3002,43 +3114,50 @@ export default function ServicesPage() {
           tr:nth-child(even) {
             background-color: #f9f9f9;
           }
-          .summary-section {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
-          }
-          .summary-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-            color: #495057;
-          }
-          .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-          }
-          .summary-item strong {
-            color: #495057;
-          }
-          .summary-total {
-            border-top: 2px solid #dee2e6;
-            padding-top: 10px;
-            margin-top: 10px;
-            font-weight: bold;
-            font-size: 15px;
-            color: #007bff;
-          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="title">${staffName} ${yearMonth} 工資明細</div>
-          <div class="subtitle">匯出日期: ${dateStr}</div>
+        <div class="header-container">
+          <!-- 公司信息與標誌 -->
+          <div class="company-header">
+            <div class="company-info">
+              <div class="company-name">明家居家護理服護有限公司</div>
+              <div class="company-details">
+                地址：新界荃灣橫龍街43-47號龍力工業大廈3樓308室<br>
+                電話：+852 2338 1811<br>
+                電郵：info@mingcarehome.com<br>
+                網址：www.mingcarehome.com
+              </div>
+            </div>
+            <div class="company-logo">
+              <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" onerror="this.style.display='none'">
+            </div>
+          </div>
+
+          <!-- 護理人員資料 -->
+          ${staffData ? `
+          <div class="staff-info">
+            <div class="staff-info-title">護理人員資料</div>
+            <div class="staff-details">
+              <div class="staff-field">
+                <strong>中文姓名:</strong>
+                <span>${staffData.name_chinese || staffName}</span>
+              </div>
+              <div class="staff-field">
+                <strong>英文姓名:</strong>
+                <span>${staffData.name_english || ''}</span>
+              </div>
+              <div class="staff-field">
+                <strong>員工編號:</strong>
+                <span>${staffData.staff_id || ''}</span>
+              </div>
+              <div class="staff-field">
+                <strong>身份證號:</strong>
+                <span>${staffData.hkid || ''}</span>
+              </div>
+            </div>
+          </div>
+          ` : ''}
         </div>
         
         <table>
@@ -3091,20 +3210,17 @@ export default function ServicesPage() {
           </tbody>
         </table>
 
-        <!-- 總結部分 -->
-        <div class="summary-section">
-          <div class="summary-title">工資總結</div>
-          <div class="summary-item">
-            <span><strong>服務次數:</strong></span>
-            <span>${totalRecords} 次</span>
+        <!-- 底部佈局：左邊統計，右邊印章 -->
+        <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <!-- 左邊：統計資訊 -->
+          <div style="flex: 1;">
+            <div style="margin-bottom: 5px; font-size: 12px;"><strong>服務次數:</strong> ${totalRecords} 次</div>
+            <div style="margin-bottom: 5px; font-size: 12px;"><strong>總時數:</strong> ${totalHours.toFixed(1)} 小時</div>
+            <div style="font-weight: bold; font-size: 14px; color: #000000;"><strong>總工資:</strong> $${totalSalary.toFixed(2)}</div>
           </div>
-          <div class="summary-item">
-            <span><strong>總時數:</strong></span>
-            <span>${totalHours.toFixed(1)} 小時</span>
-          </div>
-          <div class="summary-item summary-total">
-            <span><strong>總工資:</strong></span>
-            <span>$${totalSalary.toFixed(2)}</span>
+          <!-- 右邊：公司印章 -->
+          <div style="flex: 0 0 auto;">
+            <img src="/images/company-stamp.png" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
           </div>
         </div>
       </body>
@@ -3142,45 +3258,99 @@ export default function ServicesPage() {
         <title>工資總結報表</title>
         <style>
           @page {
-            size: A4;
-            margin: 20mm;
+            size: A4 portrait;
+            margin: 15mm;
           }
           body {
             font-family: "PingFang TC", "Microsoft JhengHei", "SimHei", sans-serif;
             margin: 0;
-            padding: 20px;
-            font-size: 12px;
+            padding: 15px;
+            font-size: max(11px, 0.8vw);
+            line-height: 1.3;
+            min-font-size: 9px;
+          }
+          @media print {
+            body {
+              font-size: 11px !important;
+            }
+            .keep-together {
+              page-break-inside: avoid;
+            }
+            table {
+              page-break-inside: auto;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+          }
+          .header-container {
+            margin-bottom: 20px;
+            position: relative;
+          }
+          .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+          }
+          .company-info {
+            flex: 1;
+            text-align: left;
+          }
+          .company-logo {
+            flex: 0 0 180px;
+            text-align: center;
+          }
+          .company-logo img {
+            max-width: 180px;
+            max-height: 180px;
+          }
+          .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .company-details {
+            font-size: 11px;
+            line-height: 1.4;
           }
           .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
           }
           .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
           }
           .subtitle {
-            font-size: 14px;
+            font-size: 12px;
             margin-bottom: 5px;
           }
           .summary {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
           }
           .section-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin: 20px 0 10px 0;
+            margin: 15px 0 8px 0;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
           }
           th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 6px;
             text-align: left;
+            font-size: max(11px, 0.8vw);
+          }
+          @media print {
+            th, td {
+              font-size: 11px !important;
+            }
           }
           th {
             background-color: #f2f2f2;
@@ -3193,12 +3363,45 @@ export default function ServicesPage() {
           tr:nth-child(even) {
             background-color: #f9f9f9;
           }
+          .footer-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+          .company-stamp {
+            flex: 0 0 60px;
+            text-align: left;
+          }
+          .company-stamp img {
+            max-width: 60px;
+            max-height: 60px;
+          }
+          .footer-company-info {
+            flex: 1;
+            text-align: right;
+            font-size: 10px;
+            line-height: 1.3;
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="title">工資總結報表</div>
-          <div class="subtitle">匯出日期: ${dateStr}</div>
+        <div class="header-container">
+          <!-- 公司信息與標誌 -->
+          <div class="company-header">
+            <div class="company-info">
+              <div class="company-name">明家居家護理服護有限公司</div>
+              <div class="company-details">
+                地址：新界荃灣橫龍街43-47號龍力工業大廈3樓308室<br>
+                電話：+852 2338 1811<br>
+                電郵：info@mingcarehome.com<br>
+                網址：www.mingcarehome.com
+              </div>
+            </div>
+            <div class="company-logo">
+              <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" onerror="this.style.display='none'">
+            </div>
+          </div>
         </div>
         
         <div class="summary">
@@ -3232,6 +3435,20 @@ export default function ServicesPage() {
             </tr>
           </tbody>
         </table>
+        
+        <!-- 底部佈局：左邊統計，右邊印章 -->
+        <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <!-- 左邊：統計資訊 -->
+          <div style="flex: 1;">
+            <div style="margin-bottom: 5px; font-size: 12px;"><strong>總護理人員數:</strong> ${summaryData.length}人</div>
+            <div style="margin-bottom: 5px; font-size: 12px;"><strong>總記錄數:</strong> ${totalRecords}筆</div>
+            <div style="font-weight: bold; font-size: 14px; color: #000000;"><strong>總金額:</strong> $${grandTotal.toFixed(2)}</div>
+          </div>
+          <!-- 右邊：公司印章 -->
+          <div style="flex: 0 0 auto;">
+            <img src="/images/company-stamp.png" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
+          </div>
+        </div>
       </body>
       </html>
     `
@@ -3635,79 +3852,97 @@ export default function ServicesPage() {
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>明家居家護理服務記錄報表</title>
+          <title>茗護護理服務記錄報表</title>
           <style>
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 10mm;
+                margin: 12mm;
               }
-              body { margin: 0; }
+              body { 
+                margin: 0; 
+                font-size: 10px;
+              }
               .customer-group {
                 page-break-inside: avoid;
-                page-break-after: always;
+                page-break-after: auto;
               }
               .customer-group:last-child {
                 page-break-after: auto;
               }
               .staff-group {
                 page-break-inside: avoid;
-                page-break-after: always;
+                page-break-after: auto;
               }
               .staff-group:last-child {
                 page-break-after: auto;
               }
               .total-summary-page {
-                page-break-before: always;
+                page-break-before: auto;
               }
             }
             body {
               font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微軟雅黑", Arial, sans-serif;
-              font-size: 12px;
-              line-height: 1.4;
+              font-size: max(10px, 0.7vw);
+              line-height: 1.3;
               margin: 0;
-              padding: 10px;
+              padding: 8px;
+              min-font-size: 9px;
+            }
+            @media print {
+              body {
+                font-size: 10px !important;
+              }
             }
             .header {
               text-align: center;
-              margin-bottom: 20px;
+              margin-bottom: 15px;
               border-bottom: 2px solid #333;
-              padding-bottom: 10px;
+              padding-bottom: 8px;
             }
             .header h1 {
               margin: 0;
-              font-size: 18px;
+              font-size: 16px;
               color: #333;
             }
             .header h2 {
               margin: 5px 0;
-              font-size: 14px;
+              font-size: 12px;
               color: #666;
             }
             .meta {
               text-align: center;
-              margin: 10px 0;
-              font-size: 11px;
+              margin: 8px 0;
+              font-size: 9px;
               color: #888;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin: 10px 0;
-              font-size: 12px;
+              margin: 8px 0;
+              font-size: max(9px, 0.6vw);
             }
             th, td {
               border: 1px solid #ddd;
-              padding: 5px 8px;
+              padding: 3px 4px;
               text-align: left;
               word-wrap: break-word;
+            }
+            @media print {
+              table {
+                font-size: 9px !important;
+              }
+              th, td {
+                font-size: 9px !important;
+                padding: 2px 3px;
+              }
             }
             th {
               background-color: #428bca;
               color: white;
               font-weight: bold;
               text-align: center;
-              font-size: 13px;
+              font-size: 10px;
             }
             tr:nth-child(even) {
               background-color: #f8f9fa;
@@ -3854,8 +4089,25 @@ export default function ServicesPage() {
           <button class="print-button" onclick="window.print()">列印 / 儲存為PDF</button>
           
           <div class="header">
-            <h1>MingCare Home Health Services Limited</h1>
-            <h2>明家居家護理服務記錄報表</h2>
+            <!-- Company Info and Logo Row -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+              <!-- Left: Company Info -->
+              <div style="flex: 1; font-size: 12px; line-height: 1.4; text-align: left;">
+                <div style="font-weight: bold; color: #2c5aa0;">明家居家護理服護有限公司</div>
+                <div>地址：新界荃灣橫龍街43-47號龍力工業大廈3樓308室</div>
+                <div>電話：+852 2338 1811</div>
+                <div>電郵：info@mingcarehome.com</div>
+                <div>網址：www.mingcarehome.com</div>
+              </div>
+              
+              <!-- Right: Company Logo -->
+              <div style="flex: 0 0 auto; text-align: right;">
+                <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" style="height: 180px; width: auto;">
+              </div>
+            </div>
+            
+            <h1>明家居家護理服護有限公司</h1>
+            <h2>護理服務記錄報表</h2>
             ${isAccountingMode ? '<div style="color: #428bca; font-weight: bold; margin-top: 5px;">對數模式</div>' : ''}
             ${exportMode === 'payroll' ? '<div style="color: #28a745; font-weight: bold; margin-top: 5px;">工資模式</div>' : ''}
           </div>
@@ -3880,10 +4132,17 @@ export default function ServicesPage() {
           
           ${summaryContent}
           
-          <div class="footer">
-            <strong>明家居家護理服務有限公司 MingCare Home Health Services Limited</strong><br>
-            此報表由系統自動生成，如有疑問請聯繫管理員<br>
-            報表包含 ${records.length} 筆記錄，共 ${columns.length} 個欄位
+          <!-- 底部佈局：左邊統計，右邊印章 -->
+          <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <!-- 左邊：報表統計 -->
+            <div style="flex: 1;">
+              <div style="margin-bottom: 5px; font-size: 12px;"><strong>報表記錄數:</strong> ${records.length} 筆</div>
+              <div style="margin-bottom: 5px; font-size: 12px;"><strong>欄位數:</strong> ${columns.length} 個</div>
+            </div>
+            <!-- 右邊：公司印章 -->
+            <div style="flex: 0 0 auto;">
+              <img src="/images/company-stamp.png" alt="公司印章" style="height: 80px; width: auto;">
+            </div>
           </div>
         </body>
         </html>
@@ -4031,6 +4290,89 @@ export default function ServicesPage() {
     }
   }
 
+  const downloadAllStaffPDFs = async () => {
+    try {
+      // 獲取所有記錄
+      const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+      if (!response.success || !response.data) {
+        alert('無法獲取記錄資料')
+        return
+      }
+
+      const allRecords = response.data.data
+      const selectedColumns = Object.entries(exportColumns)
+        .filter(([_, selected]) => selected)
+        .map(([column, _]) => column)
+
+      // 設置所有護理員為下載中狀態
+      const newStatus: Record<string, string> = {}
+      staffList.forEach(staffName => {
+        newStatus[staffName] = 'downloading'
+      })
+      setStaffDownloadStatus(newStatus)
+
+      let successCount = 0
+      let failureCount = 0
+
+      // 順序下載每個護理員的PDF（避免同時打開多個窗口）
+      for (const staffName of staffList) {
+        try {
+          // 篩選該護理員的記錄
+          const staffRecords = allRecords.filter(record => 
+            (record.care_staff_name || '未知護理人員') === staffName
+          )
+          
+          if (staffRecords.length === 0) {
+            console.warn(`護理員 ${staffName} 沒有記錄`)
+            setStaffDownloadStatus(prev => ({
+              ...prev,
+              [staffName]: 'error'
+            }))
+            failureCount++
+            continue
+          }
+
+          // 按日期排序
+          staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
+          
+          await generateAndDownloadStaffPDF(staffRecords, selectedColumns, staffName)
+          
+          // 更新為成功狀態
+          setStaffDownloadStatus(prev => ({
+            ...prev,
+            [staffName]: 'downloaded'
+          }))
+          
+          successCount++
+          
+          // 短暫延遲避免瀏覽器阻擋彈窗
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+        } catch (error) {
+          console.error(`下載護理員 ${staffName} PDF失敗:`, error)
+          setStaffDownloadStatus(prev => ({
+            ...prev,
+            [staffName]: 'error'
+          }))
+          failureCount++
+        }
+      }
+
+      // 顯示完成總結
+      if (successCount > 0 && failureCount === 0) {
+        alert(`全部下載完成！成功下載 ${successCount} 個護理員的工資明細`)
+      } else if (successCount > 0 && failureCount > 0) {
+        alert(`部分下載完成！成功下載 ${successCount} 個，失敗 ${failureCount} 個`)
+      } else {
+        alert('下載全部失敗，請檢查資料並重試')
+      }
+
+    } catch (error) {
+      console.error('批量下載失敗:', error)
+      alert('批量下載時發生錯誤，請重試')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
@@ -4067,7 +4409,31 @@ export default function ServicesPage() {
         <main className="px-6 lg:px-8 py-8 pb-16">
           <div className="card-apple">
             <div className="p-6">
-              <h3 className="text-lg font-medium text-text-primary mb-6">護理員工資明細</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-text-primary">護理員工資明細</h3>
+                {/* 一次過全部下載按鈕 */}
+                {!loadingStaff && staffList.length > 0 && (
+                  <button
+                    onClick={downloadAllStaffPDFs}
+                    disabled={Object.values(staffDownloadStatus).some(status => status === 'downloading')}
+                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      Object.values(staffDownloadStatus).some(status => status === 'downloading')
+                        ? 'bg-gray-100 text-gray-500 border border-gray-300 cursor-not-allowed'
+                        : 'bg-mingcare-blue text-white hover:bg-blue-600 active:bg-blue-700'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>
+                      {Object.values(staffDownloadStatus).some(status => status === 'downloading') 
+                        ? '下載中...' 
+                        : '一次過全部下載'
+                      }
+                    </span>
+                  </button>
+                )}
+              </div>
               
               {loadingStaff ? (
                 <div className="text-center py-12">
