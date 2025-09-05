@@ -3185,7 +3185,7 @@ export default function ServicesPage() {
               </div>
               <div class="staff-field">
                 <strong>身份證號:</strong>
-                <span>${staffData.hkid || ''}</span>
+                <span>${staffData.hkid ? staffData.hkid.substring(0, Math.max(0, staffData.hkid.length - 4)) + 'xxxx' : ''}</span>
               </div>
             </div>
           </div>
