@@ -48,7 +48,7 @@ export default function CommissionsPage() {
     try {
       // 按月份分組數據
       const monthlyData = new Map<string, CustomerCommissionData[]>()
-      filteredCommissionData.forEach(item => {
+      allFilteredCommissionData.forEach(item => {
         if (!monthlyData.has(item.service_month)) {
           monthlyData.set(item.service_month, [])
         }
@@ -69,13 +69,15 @@ export default function CommissionsPage() {
         const monthData = monthlyData.get(month)!
         const [year, monthNum] = month.split('-')
         
-        // 按介紹人分組
+        // 按介紹人分組 - 包含所有有佣金的記錄
         const introducerGroups = new Map<string, CustomerCommissionData[]>()
         monthData.forEach(item => {
-          // 只處理有佣金率設定的介紹人
+          // 處理有佣金率設定的介紹人，且實際有佣金的記錄
           const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
           const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
-          if (hasCommissionRate) {
+          const hasActualCommission = item.commission_amount > 0
+          
+          if (hasCommissionRate && hasActualCommission) {
             if (!introducerGroups.has(item.introducer)) {
               introducerGroups.set(item.introducer, [])
             }
@@ -83,11 +85,16 @@ export default function CommissionsPage() {
           }
         })
 
-        // 計算月統計
+        // 計算月統計 - 包含所有有佣金的記錄
         const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
         const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
         const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
-        const monthCommission = monthData.reduce((sum, item) => sum + item.commission_amount, 0)
+        
+        // 修正：計算所有佣金（包括Steven Kwok不達標的減半佣金）
+        const monthCommission = monthData.reduce((sum, item) => {
+          // 只計算實際有佣金的記錄
+          return sum + (item.commission_amount || 0)
+        }, 0)
 
         // 累加到總計
         totalServiceFee += monthServiceFee
@@ -98,6 +105,28 @@ export default function CommissionsPage() {
         // 收集所有介紹人（只計算有佣金率設定的）
         Array.from(introducerGroups.keys()).forEach(introducerName => {
           allIntroducers.add(introducerName)
+        })
+
+        console.log(`📊 ${month} 月份佣金統計調試:`)
+        console.log(`   月服務費: $${monthServiceFee.toLocaleString()}`)
+        console.log(`   月佣金: $${monthCommission.toLocaleString()}`)
+        console.log(`   介紹人組數: ${introducerGroups.size}`)
+        
+        // 檢查每個介紹人的佣金
+        introducerGroups.forEach((customers, introducerName) => {
+          const introducerCommission = customers.reduce((sum, c) => sum + (c.commission_amount || 0), 0)
+          const qualifiedCount = customers.filter(c => c.is_qualified).length
+          const unqualifiedCount = customers.filter(c => !c.is_qualified).length
+          const firstMonthCount = customers.filter(c => c.month_sequence === 1).length
+          const subsequentMonthCount = customers.filter(c => c.month_sequence > 1).length
+          
+          console.log(`   ${introducerName}: $${introducerCommission.toLocaleString()} (達標:${qualifiedCount}, 不達標:${unqualifiedCount})`)
+          console.log(`     首月:${firstMonthCount}, 後續:${subsequentMonthCount}`)
+          
+          // 詳細列出每個客戶的佣金
+          customers.forEach(c => {
+            console.log(`     客戶 ${c.customer_id}: 第${c.month_sequence}月, ${c.is_qualified ? '達標' : '不達標'}, 佣金$${c.commission_amount}`)
+          })
         })
 
         // 計算介紹人佣金和詳細客戶資料
@@ -155,12 +184,15 @@ export default function CommissionsPage() {
       }>()
 
       // 遍歷所有月份數據，按介紹人匯總
-      filteredCommissionData.forEach(item => {
+      allFilteredCommissionData.forEach(item => {
         // 只計算有佣金率設定的介紹人
         const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
         const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
         
-        if (hasCommissionRate && item.is_qualified) {
+        // 包含所有有佣金的客戶：達標的所有人 + 不達標的Steven Kwok
+        const hasCommission = hasCommissionRate && (item.is_qualified || item.introducer === 'Steven Kwok')
+        
+        if (hasCommission && item.commission_amount > 0) {
           if (!introducerSummary.has(item.introducer)) {
             introducerSummary.set(item.introducer, {
               introducerName: item.introducer,
@@ -644,18 +676,109 @@ export default function CommissionsPage() {
 
       if (customerError) throw customerError
 
-      const { data: billingData, error: billingError } = await supabase
-        .from('billing_salary_data')
-        .select(`
-          customer_id,
-          service_date,
-          service_hours,
-          service_fee,
-          project_category
-        `)
-        .not('project_category', 'in', '("MC街客","Steven140")')
+      // 獲取所有記錄，使用分頁避免超時
+      let allBillingData: any[] = []
+      let from = 0
+      const pageSize = 1000
+      let hasMore = true
 
-      if (billingError) throw billingError
+      while (hasMore) {
+        const { data: pageData, error: pageError } = await supabase
+          .from('billing_salary_data')
+          .select(`
+            customer_id,
+            customer_name,
+            service_date,
+            service_hours,
+            service_fee,
+            project_category
+          `)
+          .range(from, from + pageSize - 1)
+
+        if (pageError) throw pageError
+
+        if (pageData && pageData.length > 0) {
+          allBillingData = [...allBillingData, ...pageData]
+          from += pageSize
+          hasMore = pageData.length === pageSize
+        } else {
+          hasMore = false
+        }
+      }
+
+      const billingData = allBillingData
+
+      console.log(`📊 查詢結果檢查:`)
+      console.log(`   查詢返回記錄數: ${billingData?.length}`)
+      
+      // 檢查是否有古樹蕚的任何記錄
+      const allGuShuERecords = billingData?.filter(r => r.customer_id === 'CCSV-MC0011') || []
+      console.log(`   古樹蕚總記錄數: ${allGuShuERecords.length}`)
+      
+      if (allGuShuERecords.length > 0) {
+        console.log(`   古樹蕚記錄樣本:`)
+        allGuShuERecords.slice(0, 3).forEach((record, index) => {
+          console.log(`   記錄${index + 1}: ${record.service_date} - ${record.service_hours}小時, ${record.project_category}`)
+        })
+        
+        // 檢查古樹蕚的9月記錄
+        const september2025Records = allGuShuERecords.filter(r => {
+          const date = new Date(r.service_date)
+          return date.getFullYear() === 2025 && date.getMonth() === 8 // 9月是index 8
+        })
+        
+        console.log(`   🔍 古樹蕚2025年9月詳細檢查:`)
+        console.log(`   9月記錄數: ${september2025Records.length}`)
+        
+        if (september2025Records.length > 0) {
+          september2025Records.forEach((record, index) => {
+            console.log(`   9月記錄${index + 1}: ${record.service_date} - ${record.service_hours}小時, ${record.project_category}`)
+          })
+        }
+        
+        // 檢查所有月份的分佈
+        const monthlyDistribution: { [key: string]: number } = allGuShuERecords.reduce((acc, record) => {
+          const date = new Date(record.service_date)
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          acc[monthKey] = (acc[monthKey] || 0) + parseFloat(record.service_hours || 0)
+          return acc
+        }, {} as { [key: string]: number })
+        
+        console.log(`   📅 古樹蕚各月時數分佈:`)
+        Object.entries(monthlyDistribution).forEach(([month, hours]) => {
+          console.log(`   ${month}: ${hours}小時`)
+        })
+      } else {
+        console.log(`❌ 未找到古樹蕚的任何記錄！可能的問題:`)
+        console.log(`   1. customer_id 不是 'CCSV-MC0011'`)
+        console.log(`   2. 數據在其他表中`)
+        console.log(`   3. 查詢限制問題`)
+        
+        // 檢查是否有類似的客戶ID
+        const similarIds = billingData?.filter(r => 
+          r.customer_id?.includes('MC0011') || 
+          r.customer_name?.includes('古樹蕚')
+        ) || []
+        
+        console.log(`   尋找類似記錄: ${similarIds.length}筆`)
+        similarIds.slice(0, 3).forEach((record, index) => {
+          console.log(`   相似記錄${index + 1}: ID=${record.customer_id}, 姓名=${record.customer_name}`)
+        })
+      }
+
+      // 在前端進行項目類別篩選，避免 Supabase 查詢問題
+      const filteredBillingData = billingData?.filter(record => 
+        record.project_category !== 'MC街客' && record.project_category !== 'Steven140'
+      ) || []
+
+      console.log(`📊 數據篩選結果:`)
+      console.log(`   原始記錄數: ${billingData?.length}`)
+      console.log(`   篩選後記錄數: ${filteredBillingData.length}`)
+      
+      // 特別檢查古樹蕚的記錄
+      const guShuERecords = billingData?.filter(r => r.customer_id === 'CCSV-MC0011' && r.service_date.startsWith('2025-09')) || []
+      const guShuEFiltered = filteredBillingData.filter(r => r.customer_id === 'CCSV-MC0011' && r.service_date.startsWith('2025-09'))
+      console.log(`   古樹蕚9月原始: ${guShuERecords.length}筆, 篩選後: ${guShuEFiltered.length}筆`)
 
       // 在前端處理數據分組和計算
       const monthlyStats = new Map()
@@ -663,12 +786,12 @@ export default function CommissionsPage() {
       // 合併客戶和服務數據，同時過濾掉沒有佣金率設定的介紹人
       const qualifiedCustomers = customerData.filter(customer => {
         const hasCommissionRate = commissionRates?.some(rate => rate.introducer === customer.introducer)
-        const hasBillingData = billingData.some(billing => billing.customer_id === customer.customer_id)
+        const hasBillingData = filteredBillingData.some(billing => billing.customer_id === customer.customer_id)
         return hasCommissionRate && hasBillingData
       })
 
       qualifiedCustomers.forEach(customer => {
-        const customerBilling = billingData.filter(b => b.customer_id === customer.customer_id)
+        const customerBilling = filteredBillingData.filter(b => b.customer_id === customer.customer_id)
         
         customerBilling.forEach(billing => {
           const serviceMonth = new Date(billing.service_date).toISOString().substring(0, 7)
@@ -738,6 +861,11 @@ export default function CommissionsPage() {
             month_sequence: monthSequence,
             commission_amount: commissionAmount
           })
+          
+          // 調試：檢查 Steven Kwok 的記錄
+          if (monthData.introducer === 'Steven Kwok') {
+            console.log(`🔍 Steven Kwok 記錄: ${monthData.customer_id}, 第${monthSequence}月, ${isQualified ? '達標' : '不達標'}, 佣金$${commissionAmount}`)
+          }
         })
 
       // 儲存所有數據用於篩選
@@ -770,6 +898,14 @@ export default function CommissionsPage() {
         }
       })
 
+      console.log(`🎯 最終 Steven Kwok 統計:`)
+      const stevenData = Array.from(groupedByIntroducer.values()).find(item => item.introducer === 'Steven Kwok')
+      if (stevenData) {
+        console.log(`   總佣金: $${stevenData.total_commission}`)
+        console.log(`   首月: ${stevenData.first_month_count}, 後續: ${stevenData.subsequent_month_count}`)
+        console.log(`   客戶數: ${stevenData.customers.length}`)
+      }
+
       setCommissionData(Array.from(groupedByIntroducer.values()))
     } catch (err: any) {
       console.error('獲取佣金數據時發生錯誤:', err)
@@ -794,25 +930,49 @@ export default function CommissionsPage() {
   const getFilteredData = () => {
     let filtered = allCommissionData
 
+    console.log(`🔍 篩選調試:`)
+    console.log(`   原始數據: ${allCommissionData.length}`)
+    console.log(`   selectedIntroducer: "${selectedIntroducer}"`)
+    console.log(`   selectedYear: "${selectedYear}"`)
+    console.log(`   selectedMonth: "${selectedMonth}"`)
+
     // 按介紹人篩選
     if (selectedIntroducer !== 'all') {
+      const beforeFilter = filtered.length
       filtered = filtered.filter(item => item.introducer === selectedIntroducer)
+      console.log(`   介紹人篩選: ${beforeFilter} → ${filtered.length}`)
     }
 
     // 按年份篩選
     if (selectedYear !== 'all') {
+      const beforeFilter = filtered.length
       filtered = filtered.filter(item => item.service_month.startsWith(selectedYear))
+      console.log(`   年份篩選: ${beforeFilter} → ${filtered.length}`)
     }
 
     // 按月份篩選
     if (selectedMonth !== 'all') {
+      const beforeFilter = filtered.length
       filtered = filtered.filter(item => item.service_month.endsWith(`-${selectedMonth.padStart(2, '0')}`))
+      console.log(`   月份篩選: ${beforeFilter} → ${filtered.length}`)
+    }
+
+    // 計算篩選後的佣金總計
+    const totalCommissionFiltered = filtered.reduce((sum, item) => sum + item.commission_amount, 0)
+    console.log(`   篩選後佣金總計: $${totalCommissionFiltered}`)
+    
+    // 如果選擇了特定月份，顯示詳細信息
+    if (selectedMonth !== 'all' && filtered.length > 0) {
+      console.log(`   📋 ${selectedMonth}月詳細記錄:`)
+      filtered.forEach((item, index) => {
+        console.log(`   ${index + 1}. ${item.customer_id}(${item.customer_name}): 第${item.month_sequence}月, ${item.is_qualified ? '達標' : '不達標'}, 佣金$${item.commission_amount}`)
+      })
     }
 
     return filtered
   }
 
-  const filteredCommissionData = getFilteredData()
+  const allFilteredCommissionData = getFilteredData()
 
   // 獲取可用的年份和月份選項
   const availableYears = Array.from(new Set(allCommissionData.map(item => item.service_month.split('-')[0]))).sort()
@@ -820,7 +980,7 @@ export default function CommissionsPage() {
 
   // 按介紹人重新分組已篩選的數據
   const filteredGroupedData = new Map<string, IntroducerSummary>()
-  filteredCommissionData.forEach(result => {
+  allFilteredCommissionData.forEach(result => {
     if (!filteredGroupedData.has(result.introducer)) {
       filteredGroupedData.set(result.introducer, {
         introducer: result.introducer,
@@ -845,7 +1005,14 @@ export default function CommissionsPage() {
   })
 
   const filteredData = Array.from(filteredGroupedData.values())
-  const totalCommission = filteredData.reduce((sum, item) => sum + item.total_commission, 0)
+  
+  // 修正：使用客戶詳細記錄計算總佣金，確保包含所有有佣金的記錄
+  const totalCommission = allFilteredCommissionData.reduce((sum, item) => sum + item.commission_amount, 0)
+  
+  console.log(`💰 總佣金計算調試:`)
+  console.log(`   使用客戶詳細記錄: ${allFilteredCommissionData.length}筆`)
+  console.log(`   總佣金: $${totalCommission}`)
+  console.log(`   介紹人分組總佣金: $${filteredData.reduce((sum, item) => sum + item.total_commission, 0)}`)
 
   if (loading) {
     return (
@@ -1040,7 +1207,7 @@ export default function CommissionsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-mingcare-green">
-                      總佣金：{formatCurrency(introducerData.total_commission)}
+                      總佣金：{formatCurrency(introducerData.customers.reduce((sum, customer) => sum + customer.commission_amount, 0))}
                     </p>
                     <p className="text-sm text-text-secondary">
                       首月：{introducerData.first_month_count} | 後續：{introducerData.subsequent_month_count}
