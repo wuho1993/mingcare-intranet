@@ -140,10 +140,15 @@ export async function createBillingSalaryRecord(
 }
 
 export async function updateBillingSalaryRecord(
-  id: string,
-  formData: Partial<BillingSalaryFormData>
+  id: string, 
+  formData: BillingSalaryFormData
 ): Promise<ApiResponse<BillingSalaryRecord>> {
   try {
+    console.log('🔄 updateBillingSalaryRecord 開始:', {
+      id,
+      formData
+    })
+    
     const { data, error } = await supabase
       .from('billing_salary_data')
       .update(formData)
@@ -151,8 +156,13 @@ export async function updateBillingSalaryRecord(
       .select()
       .single()
 
+    console.log('🔄 updateBillingSalaryRecord 查詢結果:', {
+      data,
+      error
+    })
+
     if (error) {
-      console.error('Error updating billing salary record:', error)
+      console.error('❌ 更新記錄錯誤:', error)
       return {
         success: false,
         error: error.message
@@ -165,7 +175,7 @@ export async function updateBillingSalaryRecord(
       message: '記錄更新成功'
     }
   } catch (error) {
-    console.error('Error in updateBillingSalaryRecord:', error)
+    console.error('❌ updateBillingSalaryRecord 異常:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : '更新記錄時發生錯誤'
@@ -175,13 +185,19 @@ export async function updateBillingSalaryRecord(
 
 export async function deleteBillingSalaryRecord(id: string): Promise<ApiResponse<void>> {
   try {
+    console.log('🗑️ deleteBillingSalaryRecord 開始:', id)
+    
     const { error } = await supabase
       .from('billing_salary_data')
       .delete()
       .eq('id', id)
 
+    console.log('🗑️ deleteBillingSalaryRecord 查詢結果:', {
+      error
+    })
+
     if (error) {
-      console.error('Error deleting billing salary record:', error)
+      console.error('❌ 刪除記錄錯誤:', error)
       return {
         success: false,
         error: error.message
@@ -193,7 +209,7 @@ export async function deleteBillingSalaryRecord(id: string): Promise<ApiResponse
       message: '記錄刪除成功'
     }
   } catch (error) {
-    console.error('Error in deleteBillingSalaryRecord:', error)
+    console.error('❌ deleteBillingSalaryRecord 異常:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : '刪除記錄時發生錯誤'
@@ -285,20 +301,74 @@ export async function getBusinessKPI(
   dateRange: { start: string; end: string }
 ): Promise<ApiResponse<BusinessKPI>> {
   try {
-    // 當前期間統計
-    const { data: currentData, error: currentError } = await supabase
+    console.log('🔍 業務概覽 KPI 計算開始:', {
+      dateRange,
+      startDate: dateRange.start,
+      endDate: dateRange.end
+    })
+    
+    // 分批獲取所有記錄以避免 Supabase 限制
+    const getAllRecords = async () => {
+      let allData: any[] = []
+      let page = 0
+      const pageSize = 1000
+      let hasMore = true
+      
+      while (hasMore) {
+        const from = page * pageSize
+        const to = from + pageSize - 1
+        
+        const { data, error } = await supabase
+          .from('billing_salary_data')
+          .select('service_fee, staff_salary, service_hours')
+          .gte('service_date', dateRange.start)
+          .lte('service_date', dateRange.end)
+          .range(from, to)
+        
+        if (error) {
+          throw new Error(error.message)
+        }
+        
+        if (data && data.length > 0) {
+          allData = allData.concat(data)
+          hasMore = data.length === pageSize
+          page++
+        } else {
+          hasMore = false
+        }
+      }
+      
+      return allData
+    }
+    
+    // 獲取總記錄數用於驗證
+    const { count: totalCount, error: countError } = await supabase
       .from('billing_salary_data')
-      .select('service_fee, staff_salary, service_hours')
+      .select('*', { count: 'exact', head: true })
       .gte('service_date', dateRange.start)
       .lte('service_date', dateRange.end)
-
-    if (currentError) {
-      console.error('Error getting current KPI:', currentError)
+    
+    if (countError) {
+      console.error('❌ 查詢總記錄數錯誤:', countError)
       return {
         success: false,
-        error: currentError.message
+        error: countError.message
       }
     }
+    
+    // 獲取所有當前期間數據
+    const currentData = await getAllRecords()
+
+    console.log('📊 查詢結果:', {
+      recordCount: currentData?.length || 0,
+      totalCount: totalCount || 0,
+      isComplete: (currentData?.length || 0) === (totalCount || 0),
+      dateRange: `${dateRange.start} ~ ${dateRange.end}`,
+      sampleRecords: currentData?.slice(0, 3) || []
+    })
+    
+    // 更清楚的調試信息
+    console.log(`✅ 數據完整性檢查: 獲取 ${currentData?.length || 0} / ${totalCount || 0} 筆記錄 ${(currentData?.length || 0) === (totalCount || 0) ? '✅ 完整' : '❌ 不完整'}`)
 
     // 計算上月同期（用於增長率比較）
     const currentStart = new Date(dateRange.start)
@@ -310,15 +380,42 @@ export async function getBusinessKPI(
     const lastMonthEnd = new Date(currentEnd)
     lastMonthEnd.setMonth(lastMonthEnd.getMonth() - 1)
 
-    const { data: lastMonthData, error: lastMonthError } = await supabase
-      .from('billing_salary_data')
-      .select('service_fee, staff_salary, service_hours')
-      .gte('service_date', lastMonthStart.toISOString().split('T')[0])
-      .lte('service_date', lastMonthEnd.toISOString().split('T')[0])
-
-    if (lastMonthError) {
-      console.warn('Error getting last month KPI for comparison:', lastMonthError)
+    // 分批獲取上月數據
+    const getLastMonthRecords = async () => {
+      let allData: any[] = []
+      let page = 0
+      const pageSize = 1000
+      let hasMore = true
+      
+      while (hasMore) {
+        const from = page * pageSize
+        const to = from + pageSize - 1
+        
+        const { data, error } = await supabase
+          .from('billing_salary_data')
+          .select('service_fee, staff_salary, service_hours')
+          .gte('service_date', lastMonthStart.toISOString().split('T')[0])
+          .lte('service_date', lastMonthEnd.toISOString().split('T')[0])
+          .range(from, to)
+        
+        if (error) {
+          console.warn('Error getting last month data:', error)
+          return []
+        }
+        
+        if (data && data.length > 0) {
+          allData = allData.concat(data)
+          hasMore = data.length === pageSize
+          page++
+        } else {
+          hasMore = false
+        }
+      }
+      
+      return allData
     }
+    
+    const lastMonthData = await getLastMonthRecords()
 
     // 計算當前期間 KPI
     const totalRevenue = currentData?.reduce((sum, record) => sum + (record.service_fee || 0), 0) || 0
@@ -326,6 +423,15 @@ export async function getBusinessKPI(
     const totalProfit = totalRevenue - totalStaffSalary
     const totalServiceHours = currentData?.reduce((sum, record) => sum + (record.service_hours || 0), 0) || 0
     const avgProfitPerHour = totalServiceHours > 0 ? totalProfit / totalServiceHours : 0
+
+    console.log('💰 KPI 計算結果:', {
+      recordCount: currentData?.length || 0,
+      totalRevenue: totalRevenue.toLocaleString(),
+      totalStaffSalary: totalStaffSalary.toLocaleString(),
+      totalProfit: totalProfit.toLocaleString(),
+      totalServiceHours: totalServiceHours.toFixed(1),
+      avgProfitPerHour: avgProfitPerHour.toFixed(2)
+    })
 
     // 計算增長率
     const lastMonthRevenue = lastMonthData?.reduce((sum, record) => sum + (record.service_fee || 0), 0) || 0
@@ -366,19 +472,41 @@ export async function getProjectCategorySummary(
   dateRange: { start: string; end: string }
 ): Promise<ApiResponse<ProjectCategorySummary[]>> {
   try {
-    const { data, error } = await supabase
-      .from('billing_salary_data')
-      .select('project_category, service_fee, staff_salary, service_hours, customer_name')
-      .gte('service_date', dateRange.start)
-      .lte('service_date', dateRange.end)
-
-    if (error) {
-      console.error('Error getting project category summary:', error)
-      return {
-        success: false,
-        error: error.message
+    // 分批獲取所有記錄以避免 Supabase 限制
+    const getAllRecords = async () => {
+      let allData: any[] = []
+      let page = 0
+      const pageSize = 1000
+      let hasMore = true
+      
+      while (hasMore) {
+        const from = page * pageSize
+        const to = from + pageSize - 1
+        
+        const { data, error } = await supabase
+          .from('billing_salary_data')
+          .select('project_category, service_fee, staff_salary, service_hours, customer_name')
+          .gte('service_date', dateRange.start)
+          .lte('service_date', dateRange.end)
+          .range(from, to)
+        
+        if (error) {
+          throw new Error(error.message)
+        }
+        
+        if (data && data.length > 0) {
+          allData = allData.concat(data)
+          hasMore = data.length === pageSize
+          page++
+        } else {
+          hasMore = false
+        }
       }
+      
+      return allData
     }
+    
+    const data = await getAllRecords()
 
     // 按項目分類統計
     const summaryMap = new Map<ProjectCategory, ProjectCategorySummary>()
@@ -942,8 +1070,8 @@ export async function calculateVoucherSummary(
     const voucherRates = voucherRatesResponse.data
     const rateMap = new Map(voucherRates.map(rate => [rate.service_type, rate.service_rate]))
 
-    // 獲取符合篩選條件的記錄
-    const recordsResponse = await fetchBillingSalaryRecords(filters, 1, 10000)
+    // 獲取符合篩選條件的記錄 - 使用足夠大的 pageSize 以獲取所有記錄
+    const recordsResponse = await fetchBillingSalaryRecords(filters, 1, 50000)
     if (!recordsResponse.success || !recordsResponse.data) {
       throw new Error('無法獲取服務記錄')
     }

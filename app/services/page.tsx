@@ -308,6 +308,7 @@ function ReportsCalendarView({
             <div className="flex space-x-3">
               <button
                 onClick={() => {
+                  console.log('📝 編輯按鈕被點擊:', selectedRecord)
                   onEdit(selectedRecord)
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
@@ -318,6 +319,7 @@ function ReportsCalendarView({
               </button>
               <button
                 onClick={() => {
+                  console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
                   onDelete(selectedRecord.id)
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
@@ -463,8 +465,13 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   // 編輯功能
   const handleEdit = (record: BillingSalaryRecord) => {
+    console.log('🖊️ 第一個 handleEdit - 點擊編輯按鈕，記錄:', record)
     setEditingRecord(record)
     setIsEditModalOpen(true)
+    console.log('🖊️ 第一個 handleEdit - 模態框狀態已更新:', {
+      isEditModalOpen: true,
+      editingRecordId: record.id
+    })
   }
 
   const handleEditSave = async (formData: BillingSalaryFormData) => {
@@ -472,15 +479,22 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
     try {
       setLoading(true)
+      console.log('🔄 開始更新記錄:', {
+        recordId: editingRecord.id,
+        formData
+      })
+      
       const response = await updateBillingSalaryRecord(editingRecord.id, formData)
+      
+      console.log('📝 更新結果:', response)
       
       if (response.success) {
         // 顯示成功提示
-        alert('記錄更新成功！')
-        // 重新載入記錄
-        await loadRecords()
+        alert('記錄更新成功！頁面將自動重新載入。')
         setIsEditModalOpen(false)
         setEditingRecord(null)
+        // 強制刷新頁面
+        window.location.reload()
       } else {
         setError(response.error || '更新記錄失敗')
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
@@ -504,17 +518,24 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
     try {
       setLoading(true)
+      console.log('🗑️ 開始刪除記錄:', recordId)
+      
       const response = await deleteBillingSalaryRecord(recordId)
       
+      console.log('🗑️ 刪除結果:', response)
+      
       if (response.success) {
-        // 重新載入記錄
-        await loadRecords()
+        alert('記錄刪除成功！頁面將自動重新載入。')
+        // 強制刷新頁面
+        window.location.reload()
       } else {
         setError(response.error || '刪除記錄失敗')
+        alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
       }
     } catch (err) {
       console.error('刪除記錄失敗:', err)
       setError('刪除記錄失敗，請重試')
+      alert('刪除記錄失敗，請重試')
     } finally {
       setLoading(false)
     }
@@ -684,7 +705,10 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
               {/* 操作按鈕 */}
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => handleEdit(record)}
+                  onClick={() => {
+                    console.log('🖱️ 編輯按鈕被點擊，記錄ID:', record.id)
+                    handleEdit(record)
+                  }}
                   className="p-2 text-mingcare-blue hover:bg-blue-50 rounded-lg transition-colors"
                   title="編輯記錄"
                 >
@@ -693,7 +717,10 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
                   </svg>
                 </button>
                 <button
-                  onClick={() => handleDelete(record.id)}
+                  onClick={() => {
+                    console.log('🖱️ 刪除按鈕被點擊，記錄ID:', record.id)
+                    handleDelete(record.id)
+                  }}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   title="刪除記錄"
                 >
@@ -795,9 +822,9 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
         <div className="p-6">
           <h2 className="text-apple-heading text-text-primary mb-4">選擇時段</h2>
           
-          {/* 第一行：本月、上月按鈕 + 年月選擇器 */}
+          {/* 第一行：快捷選擇按鈕 */}
           <div className="flex items-center gap-4 mb-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => updateDateRange('thisMonth')}
                 className="px-4 py-2 text-sm rounded-lg border border-border-light bg-mingcare-blue text-white transition-all duration-200"
@@ -810,8 +837,35 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
               >
                 上月
               </button>
+              <button
+                onClick={() => updateDateRange('last3months')}
+                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              >
+                最近3個月
+              </button>
+              <button
+                onClick={() => updateDateRange('last6months')}
+                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              >
+                最近6個月
+              </button>
+              <button
+                onClick={() => updateDateRange('thisQuarter')}
+                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              >
+                本季度
+              </button>
+              <button
+                onClick={() => updateDateRange('thisYear')}
+                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              >
+                本年度
+              </button>
             </div>
-            
+          </div>
+          
+          {/* 第二行：年月選擇器 */}
+          <div className="flex items-center gap-4 mb-4">
             {/* 年月選擇器 */}
             <div className="flex items-center gap-2">
               <select
@@ -2815,6 +2869,27 @@ export default function ServicesPage() {
         start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
         end = new Date(now.getFullYear(), now.getMonth(), 0)
         break
+      case 'last3months':
+        // 最近3個月
+        start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        break
+      case 'last6months':
+        // 最近6個月
+        start = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        break
+      case 'thisQuarter':
+        // 本季度
+        const quarterStart = Math.floor(now.getMonth() / 3) * 3
+        start = new Date(now.getFullYear(), quarterStart, 1)
+        end = new Date(now.getFullYear(), quarterStart + 3, 0)
+        break
+      case 'thisYear':
+        // 本年度
+        start = new Date(now.getFullYear(), 0, 1)
+        end = new Date(now.getFullYear(), 12, 0)
+        break
       default:
         return
     }
@@ -4302,24 +4377,43 @@ export default function ServicesPage() {
 
   // 編輯功能
   const handleEdit = (record: BillingSalaryRecord) => {
+    console.log('🖊️ 第二個 handleEdit - 點擊編輯按鈕，記錄:', record)
     setEditingRecord(record)
     setIsEditModalOpen(true)
+    console.log('🖊️ 第二個 handleEdit - 模態框狀態已更新:', {
+      isEditModalOpen: true,
+      editingRecordId: record.id
+    })
   }
 
   const handleEditSave = async (formData: BillingSalaryFormData) => {
     if (!editingRecord) return
 
     try {
-      // 這裡可以調用 updateBillingSalaryRecord API
-      // 暫時關閉模態框
-      setIsEditModalOpen(false)
-      setEditingRecord(null)
+      setLoading(true)
+      console.log('🔄 第二個 handleEditSave 開始更新記錄:', {
+        recordId: editingRecord.id,
+        formData
+      })
       
-      // 可能需要重新載入數據
-      alert('記錄已更新')
+      const response = await updateBillingSalaryRecord(editingRecord.id, formData)
+      
+      console.log('📝 第二個 handleEditSave 更新結果:', response)
+      
+      if (response.success) {
+        alert('記錄更新成功！頁面將自動重新載入。')
+        setIsEditModalOpen(false)
+        setEditingRecord(null)
+        // 強制刷新頁面
+        window.location.reload()
+      } else {
+        alert('更新記錄失敗：' + (response.error || '未知錯誤'))
+      }
     } catch (error) {
       console.error('更新記錄失敗:', error)
       alert('更新失敗')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -4332,21 +4426,27 @@ export default function ServicesPage() {
     if (!confirm('確定要刪除這筆記錄嗎？此操作無法撤銷。')) return
 
     try {
+      setLoading(true)
+      console.log('🗑️ 第二個 handleDelete 開始刪除記錄:', recordId)
+      
       const response = await deleteBillingSalaryRecord(recordId)
       
+      console.log('🗑️ 第二個 handleDelete 刪除結果:', response)
+      
       if (response.success) {
-        alert('記錄刪除成功')
-        // 關閉任何打開的模態框
+        alert('記錄刪除成功！頁面將自動重新載入。')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 觸發數據重新載入
-        setRefreshTrigger(prev => prev + 1)
+        // 強制刷新頁面
+        window.location.reload()
       } else {
         alert('刪除記錄失敗: ' + (response.error || '未知錯誤'))
       }
     } catch (error) {
       console.error('刪除記錄失敗:', error)
       alert('刪除記錄失敗，請重試')
+    } finally {
+      setLoading(false)
     }
   }
 

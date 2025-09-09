@@ -233,6 +233,10 @@ export type DateRangePreset =
   | 'last90days'
   | 'thisMonth'
   | 'lastMonth'
+  | 'last3months'
+  | 'last6months'
+  | 'thisQuarter'
+  | 'thisYear'
   | 'custom'
 
 export interface DateRangePresetOption {

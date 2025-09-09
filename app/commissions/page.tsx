@@ -61,6 +61,7 @@ export default function CommissionsPage() {
       let totalServiceFee = 0
       let totalServiceHours = 0
       let totalQualifiedCustomers = 0
+      let totalUnqualifiedCustomers = 0
       let totalCommission = 0
       const allIntroducers = new Set<string>() // 用來統計所有出現的介紹人
 
@@ -89,6 +90,7 @@ export default function CommissionsPage() {
         const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
         const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
         const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
+        const monthUnqualifiedCount = monthData.filter(item => !item.is_qualified && item.commission_amount > 0).length
         
         // 修正：計算所有佣金（包括Steven Kwok不達標的減半佣金）
         const monthCommission = monthData.reduce((sum, item) => {
@@ -100,6 +102,7 @@ export default function CommissionsPage() {
         totalServiceFee += monthServiceFee
         totalServiceHours += monthServiceHours
         totalQualifiedCustomers += monthQualifiedCount
+        totalUnqualifiedCustomers += monthUnqualifiedCount
         totalCommission += monthCommission
 
         // 收集所有介紹人（只計算有佣金率設定的）
@@ -131,9 +134,12 @@ export default function CommissionsPage() {
 
         // 計算介紹人佣金和詳細客戶資料
         const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]) => {
-          const qualifiedCustomers = customers.filter(c => c.is_qualified)
-          const totalFee = qualifiedCustomers.reduce((sum, c) => sum + c.monthly_fee, 0)
-          const commissionAmount = qualifiedCustomers.reduce((sum, c) => sum + c.commission_amount, 0)
+          // 修正：包含所有有佣金的客戶，不只是達標的
+          const customersWithCommission = customers.filter(c => c.commission_amount > 0)
+          const qualifiedCustomers = customersWithCommission.filter(c => c.is_qualified)
+          const unqualifiedCustomers = customersWithCommission.filter(c => !c.is_qualified)
+          const totalFee = customersWithCommission.reduce((sum, c) => sum + c.monthly_fee, 0)
+          const commissionAmount = customersWithCommission.reduce((sum, c) => sum + c.commission_amount, 0)
           
           // 獲取佣金率
           const commissionRate = commissionRatesData.find(r => r.introducer === introducerName)?.first_month_commission || 0
@@ -142,6 +148,7 @@ export default function CommissionsPage() {
             introducerName,
             rate: commissionRate,
             qualifiedCustomers: qualifiedCustomers.length,
+            unqualifiedCustomers: unqualifiedCustomers.length,
             totalFee,
             amount: commissionAmount,
             customerDetails: customers.map(customer => ({
@@ -159,6 +166,7 @@ export default function CommissionsPage() {
           year,
           month: monthNum,
           qualifiedCustomers: monthQualifiedCount,
+          unqualifiedCustomers: monthUnqualifiedCount,
           totalHours: monthServiceHours,
           totalFee: monthServiceFee,
           totalCommission: monthCommission,
@@ -178,34 +186,68 @@ export default function CommissionsPage() {
       // 計算每個介紹人的總統計
       const introducerSummary = new Map<string, {
         introducerName: string,
-        totalCustomers: number,
+        qualifiedCustomers: number,
+        unqualifiedCustomers: number,
         totalServiceFee: number,
         totalCommission: number
       }>()
 
-      // 遍歷所有月份數據，按介紹人匯總
+      // 先按客戶分組，避免重複計算
+      const customerMap = new Map<string, {
+        introducer: string,
+        customer_id: string,
+        customer_name: string,
+        total_fee: number,
+        total_commission: number,
+        is_qualified: boolean
+      }>()
+      
       allFilteredCommissionData.forEach(item => {
+        const key = `${item.introducer}-${item.customer_id}`
+        if (!customerMap.has(key)) {
+          customerMap.set(key, {
+            introducer: item.introducer,
+            customer_id: item.customer_id,
+            customer_name: item.customer_name,
+            total_fee: 0,
+            total_commission: 0,
+            is_qualified: item.is_qualified
+          })
+        }
+        
+        const customer = customerMap.get(key)!
+        customer.total_fee += item.monthly_fee
+        customer.total_commission += item.commission_amount
+      })
+
+      // 再按介紹人匯總
+      customerMap.forEach(customer => {
         // 只計算有佣金率設定的介紹人
-        const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
+        const commissionRateRecord = commissionRatesData.find(r => r.introducer === customer.introducer)
         const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
         
         // 包含所有有佣金的客戶：達標的所有人 + 不達標的Steven Kwok
-        const hasCommission = hasCommissionRate && (item.is_qualified || item.introducer === 'Steven Kwok')
+        const hasCommission = hasCommissionRate && (customer.is_qualified || customer.introducer === 'Steven Kwok')
         
-        if (hasCommission && item.commission_amount > 0) {
-          if (!introducerSummary.has(item.introducer)) {
-            introducerSummary.set(item.introducer, {
-              introducerName: item.introducer,
-              totalCustomers: 0,
+        if (hasCommission && customer.total_commission > 0) {
+          if (!introducerSummary.has(customer.introducer)) {
+            introducerSummary.set(customer.introducer, {
+              introducerName: customer.introducer,
+              qualifiedCustomers: 0,
+              unqualifiedCustomers: 0,
               totalServiceFee: 0,
               totalCommission: 0
             })
           }
           
-          const summary = introducerSummary.get(item.introducer)!
-          summary.totalCustomers += 1
-          summary.totalServiceFee += item.monthly_fee
-          summary.totalCommission += item.commission_amount
+          const summary = introducerSummary.get(customer.introducer)!
+          if (customer.is_qualified) {
+            summary.qualifiedCustomers += 1
+          } else {
+            summary.unqualifiedCustomers += 1
+          }
+          summary.totalServiceFee += customer.total_fee
+          summary.totalCommission += customer.total_commission
         }
       })
 
@@ -476,6 +518,10 @@ export default function CommissionsPage() {
                   <span class="summary-value">${monthData.qualifiedCustomers}</span>
                 </div>
                 <div class="summary-item">
+                  <span class="summary-label">不達標客戶</span>
+                  <span class="summary-value">${monthData.unqualifiedCustomers}</span>
+                </div>
+                <div class="summary-item">
                   <span class="summary-label">總服務時數</span>
                   <span class="summary-value">${monthData.totalHours.toFixed(1)}</span>
                 </div>
@@ -527,6 +573,7 @@ export default function CommissionsPage() {
                       <tr>
                         <th>介紹人</th>
                         <th>達標客戶</th>
+                        <th>不達標客戶</th>
                         <th>總服務金額</th>
                         <th>佣金金額</th>
                       </tr>
@@ -536,6 +583,7 @@ export default function CommissionsPage() {
                         <tr>
                           <td>${commission.introducerName}</td>
                           <td class="number">${commission.qualifiedCustomers}</td>
+                          <td class="number">${commission.unqualifiedCustomers}</td>
                           <td class="number">$${commission.totalFee.toLocaleString()}</td>
                           <td class="number">$${commission.amount.toLocaleString()}</td>
                         </tr>
@@ -555,7 +603,8 @@ export default function CommissionsPage() {
               <thead>
                 <tr>
                   <th>介紹人</th>
-                  <th>達標客戶總數</th>
+                  <th>達標客戶數</th>
+                  <th>不達標客戶數</th>
                   <th>總服務金額</th>
                   <th>總佣金金額</th>
                 </tr>
@@ -564,7 +613,8 @@ export default function CommissionsPage() {
                 ${introducerSummaryArray.map(summary => `
                   <tr>
                     <td>${summary.introducerName}</td>
-                    <td class="number">${summary.totalCustomers}</td>
+                    <td class="number">${summary.qualifiedCustomers}</td>
+                    <td class="number">${summary.unqualifiedCustomers}</td>
                     <td class="number">$${summary.totalServiceFee.toLocaleString()}</td>
                     <td class="number">$${summary.totalCommission.toLocaleString()}</td>
                   </tr>
@@ -581,6 +631,10 @@ export default function CommissionsPage() {
               <div class="total-stat">
                 <span class="total-stat-label">總達標客戶</span>
                 <span class="total-stat-value">${totalQualifiedCustomers}</span>
+              </div>
+              <div class="total-stat">
+                <span class="total-stat-label">總不達標客戶</span>
+                <span class="total-stat-value">${totalUnqualifiedCustomers}</span>
               </div>
               <div class="total-stat">
                 <span class="total-stat-label">總服務時數</span>
