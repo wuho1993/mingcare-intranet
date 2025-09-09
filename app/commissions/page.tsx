@@ -1101,16 +1101,16 @@ export default function CommissionsPage() {
   return (
     <div className="min-h-screen bg-bg-primary">
       <header className="card-apple border-b border-border-light fade-in-apple sticky top-0 z-10">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-6 lg:py-8">
+        <div className="px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-3 sm:py-6 lg:py-8">
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary mb-1 truncate">佣金計算</h1>
-              <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">計算業務佣金、獎金及績效獎勵</p>
-              <p className="text-xs text-orange-600 mt-1">達標條件：每月服務費用 ≥ $6,000</p>
+              <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary mb-1 truncate">佣金計算</h1>
+              <p className="text-xs sm:text-sm text-text-secondary hidden md:block">計算業務佣金、獎金及績效獎勵</p>
+              <p className="text-xs text-orange-600 mt-1">達標：月費 ≥ $6,000</p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
-              className="btn-apple-secondary text-xs px-3 py-2 ml-3 flex-shrink-0"
+              className="btn-apple-secondary text-xs px-2 sm:px-3 py-2 ml-2 sm:ml-3 flex-shrink-0"
             >
               返回
             </button>
@@ -1118,17 +1118,17 @@ export default function CommissionsPage() {
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* 篩選器 */}
-        <div className="card-apple fade-in-apple mb-6">
+      <main className="px-3 sm:px-6 lg:px-8 py-3 sm:py-6 lg:py-8">
+        {/* 篩選器 - 移動端優化 */}
+        <div className="card-apple fade-in-apple mb-4 sm:mb-6">
           <div className="card-apple-content">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">介紹人篩選：</label>
+                <label className="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">介紹人：</label>
                 <select
                   value={selectedIntroducer}
                   onChange={(e) => setSelectedIntroducer(e.target.value)}
-                  className="form-input-apple w-full"
+                  className="form-input-apple w-full text-xs sm:text-sm"
                 >
                   <option value="all">全部介紹人</option>
                   {Array.from(new Set(allCommissionData.map(item => item.introducer))).map(introducer => (
@@ -1140,11 +1140,11 @@ export default function CommissionsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">年份篩選：</label>
+                <label className="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">年份：</label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="form-input-apple w-full"
+                  className="form-input-apple w-full text-xs sm:text-sm"
                 >
                   <option value="all">全部年份</option>
                   {availableYears.map(year => (
@@ -1156,11 +1156,11 @@ export default function CommissionsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">月份篩選：</label>
+                <label className="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">月份：</label>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="form-input-apple w-full"
+                  className="form-input-apple w-full text-xs sm:text-sm"
                 >
                   <option value="all">全部月份</option>
                   {availableMonths.map(month => (
@@ -1171,26 +1171,27 @@ export default function CommissionsPage() {
                 </select>
               </div>
               
-              <div className="sm:col-span-2 lg:col-span-2 flex items-end space-x-2">
+              {/* 操作按鈕 - 移動端優化 */}
+              <div className="sm:col-span-2 lg:col-span-2 grid grid-cols-2 sm:flex sm:items-end gap-2 sm:space-x-2">
                 <button
                   onClick={() => {
                     setSelectedIntroducer('all')
                     setSelectedYear('all')
                     setSelectedMonth('all')
                   }}
-                  className="btn-apple-secondary flex-1"
+                  className="btn-apple-secondary text-xs sm:text-sm py-2 sm:py-3 sm:flex-1"
                 >
                   清除篩選
                 </button>
                 <button
                   onClick={fetchCommissionData}
-                  className="btn-apple-primary flex-1"
+                  className="btn-apple-primary text-xs sm:text-sm py-2 sm:py-3 sm:flex-1"
                 >
                   重新載入
                 </button>
                 <button
                   onClick={generatePDF}
-                  className="btn-apple-primary flex-1 bg-green-600 hover:bg-green-700"
+                  className="btn-apple-primary col-span-2 sm:col-span-1 sm:flex-1 bg-green-600 hover:bg-green-700 text-xs sm:text-sm py-2 sm:py-3"
                 >
                   📄 導出PDF
                 </button>
@@ -1199,53 +1200,53 @@ export default function CommissionsPage() {
           </div>
         </div>
 
-        {/* 總覽統計 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* 總覽統計 - 移動端優化 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.1s' }}>
-            <div className="card-apple-content text-center">
-              <h3 className="text-sm font-medium text-text-secondary mb-2">總佣金</h3>
-              <p className="text-xl font-bold text-mingcare-green">{formatCurrency(totalCommission)}</p>
+            <div className="card-apple-content text-center py-3 sm:py-4">
+              <h3 className="text-xs sm:text-sm font-medium text-text-secondary mb-1 sm:mb-2">總佣金</h3>
+              <p className="text-sm sm:text-xl font-bold text-mingcare-green">{formatCurrency(totalCommission)}</p>
             </div>
           </div>
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.2s' }}>
-            <div className="card-apple-content text-center">
-              <h3 className="text-sm font-medium text-text-secondary mb-2">介紹人數量</h3>
-              <p className="text-xl font-bold text-mingcare-blue">{filteredData.length}</p>
+            <div className="card-apple-content text-center py-3 sm:py-4">
+              <h3 className="text-xs sm:text-sm font-medium text-text-secondary mb-1 sm:mb-2">介紹人數量</h3>
+              <p className="text-sm sm:text-xl font-bold text-mingcare-blue">{filteredData.length}</p>
             </div>
           </div>
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
-            <div className="card-apple-content text-center">
-              <h3 className="text-sm font-medium text-text-secondary mb-2">首月佣金</h3>
-              <p className="text-xl font-bold text-mingcare-purple">
+            <div className="card-apple-content text-center py-3 sm:py-4">
+              <h3 className="text-xs sm:text-sm font-medium text-text-secondary mb-1 sm:mb-2">首月佣金</h3>
+              <p className="text-sm sm:text-xl font-bold text-mingcare-purple">
                 {filteredData.reduce((sum, item) => sum + item.first_month_count, 0)}
               </p>
             </div>
           </div>
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.4s' }}>
-            <div className="card-apple-content text-center">
-              <h3 className="text-sm font-medium text-text-secondary mb-2">後續月份</h3>
-              <p className="text-xl font-bold text-mingcare-orange">
+            <div className="card-apple-content text-center py-3 sm:py-4">
+              <h3 className="text-xs sm:text-sm font-medium text-text-secondary mb-1 sm:mb-2">後續月份</h3>
+              <p className="text-sm sm:text-xl font-bold text-mingcare-orange">
                 {filteredData.reduce((sum, item) => sum + item.subsequent_month_count, 0)}
               </p>
             </div>
           </div>
         </div>
 
-        {/* 佣金明細 */}
-        <div className="space-y-6">
+        {/* 佣金明細 - 移動端優化 */}
+        <div className="space-y-4 sm:space-y-6">
           {filteredData.map((introducerData, index) => (
             <div key={introducerData.introducer} className="card-apple fade-in-apple" style={{ animationDelay: `${0.1 * (index + 1)}s` }}>
-              <div className="bg-bg-secondary px-6 py-4 border-b border-border-light rounded-t-apple">
+              <div className="bg-bg-secondary px-3 sm:px-6 py-3 sm:py-4 border-b border-border-light rounded-t-apple">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                   <div className="mb-2 sm:mb-0">
-                    <h2 className="text-lg font-semibold text-text-primary mb-1">
+                    <h2 className="text-base sm:text-lg font-semibold text-text-primary mb-1">
                       介紹人：{introducerData.introducer}
                     </h2>
                     {(() => {
                       const rate = commissionRatesData.find(r => r.introducer === introducerData.introducer)
                       return rate ? (
-                        <div className="text-sm text-text-secondary">
-                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
+                        <div className="text-xs sm:text-sm text-text-secondary">
+                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 text-xs">
                             首月: {formatCurrency(rate.first_month_commission)}
                           </span>
                           <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded">
@@ -1270,7 +1271,8 @@ export default function CommissionsPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* 桌面版表格 */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-bg-secondary">
                     <tr>
@@ -1322,6 +1324,61 @@ export default function CommissionsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* 移動版卡片佈局 */}
+              <div className="sm:hidden space-y-3 p-3">
+                {introducerData.customers.map((customer, customerIndex) => (
+                  <div key={`${customer.customer_id}-${customer.service_month}`} className="bg-white border border-border-light rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-text-primary text-sm">{customer.customer_name}</div>
+                        <div className="text-xs text-text-secondary">{customer.customer_id}</div>
+                      </div>
+                      <div className="text-right">
+                        {customer.is_qualified ? (
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            customer.month_sequence === 1 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {customer.month_sequence === 1 ? '首月' : `第${customer.month_sequence}月`}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                            不達標
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-text-secondary">服務月份：</span>
+                        <span className="text-text-primary">{formatMonth(customer.service_month)}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">服務時數：</span>
+                        <span className="text-text-primary">{customer.monthly_hours.toFixed(1)}h</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">服務費用：</span>
+                        <span className="text-text-primary">{formatCurrency(customer.monthly_fee)}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary">佣金金額：</span>
+                        {customer.commission_amount > 0 ? (
+                          <span className={`font-semibold ${customer.is_qualified ? "text-mingcare-green" : "text-orange-600"}`}>
+                            {formatCurrency(customer.commission_amount)}
+                            {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">$0</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}

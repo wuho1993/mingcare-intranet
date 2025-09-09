@@ -38,6 +38,33 @@ import {
   VoucherRate
 } from '../../services/billing-salary-management'
 
+// 佣金相關類型定義
+interface CommissionRate {
+  introducer: string
+  first_month_commission: number
+  subsequent_month_commission: number
+}
+
+interface CustomerCommissionData {
+  customer_id: string
+  customer_name: string
+  introducer: string
+  service_month: string
+  monthly_hours: number
+  monthly_fee: number
+  is_qualified: boolean
+  month_sequence: number
+  commission_amount: number
+  first_service_date: string
+}
+
+interface MonthlyCommissionSummary {
+  totalCommission: number
+  totalQualifiedCustomers: number
+  totalCustomers: number
+  introducerCount: number
+}
+
 // 安全的日期格式化函數 - 避免時區問題
 const formatDateSafely = (date: Date): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
@@ -78,6 +105,24 @@ function ReportsCalendarView({
   const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecord[]>>({})
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [isMobile, setIsMobile] = useState(false)
+
+  // 監聽螢幕尺寸變化
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    
+    // 初始化
+    handleResize()
+    
+    // 監聽 resize 事件
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
   const [selectedRecord, setSelectedRecord] = useState<BillingSalaryRecord | null>(null)
   const [showRecordMenu, setShowRecordMenu] = useState(false)
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
@@ -152,43 +197,43 @@ function ReportsCalendarView({
   }
 
   return (
-    <div className="space-y-6">
-      {/* 月份導航 */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      {/* 月份導航 - 移動端優化 */}
+      <div className="flex justify-between items-center px-2 sm:px-0">
         <button
           onClick={() => navigateMonth('prev')}
-          className="p-2 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+          className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         
-        <h4 className="text-lg font-medium text-text-primary">
+        <h4 className="text-base sm:text-lg font-medium text-text-primary">
           {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
         </h4>
         
         <button
           onClick={() => navigateMonth('next')}
-          className="p-2 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+          className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
-      {/* 星期標題 */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      {/* 星期標題 - 移動端優化 */}
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
         {['日', '一', '二', '三', '四', '五', '六'].map(day => (
-          <div key={day} className="p-2 text-center font-medium text-text-secondary bg-bg-secondary rounded">
+          <div key={day} className="p-1 sm:p-2 text-center font-medium text-text-secondary bg-bg-secondary rounded text-xs sm:text-sm">
             {day}
           </div>
         ))}
       </div>
 
-      {/* 月曆網格 */}
-      <div className="grid grid-cols-7 gap-1">
+      {/* 月曆網格 - 移動端優化 */}
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
         {calendarDays && calendarDays.map((date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
@@ -196,38 +241,41 @@ function ReportsCalendarView({
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
           const dayRecords = calendarData[dateStr] || []
           
-          // 根據記錄數量動態調整高度
+          // 根據記錄數量動態調整高度 - 移動端小一些
+          const baseHeight = isMobile ? 80 : 120
+          const additionalHeight = isMobile ? 50 : 80
           const minHeight = dayRecords.length > 0 
-            ? Math.max(120, 120 + (dayRecords.length - 1) * 80) 
-            : 120
+            ? Math.max(baseHeight, baseHeight + (dayRecords.length - 1) * additionalHeight)
+            : baseHeight
           
           return (
             <div
               key={index}
               style={{ minHeight: `${minHeight}px` }}
               className={`
-                p-2 border rounded-lg
+                p-1 sm:p-2 border rounded-lg
                 ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' : 
                   isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
-                ${isToday ? 'ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
+                ${isToday ? 'ring-1 sm:ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
               `}
             >
               <div className={`
-                text-sm font-bold mb-2
+                text-xs sm:text-sm font-bold mb-1 sm:mb-2
                 ${isToday ? 'text-mingcare-blue' : 
                   isCurrentMonth ? 'text-text-primary' : 'text-gray-300'}
               `}>
                 {date.getDate()}
               </div>
               
-              {/* 服務記錄 */}
+              {/* 服務記錄 - 移動端優化 */}
               {isCurrentMonth && dayRecords.length > 0 && (
-                <div className="space-y-1">
-                  {/* 決定要顯示多少筆記錄 */}
+                <div className="space-y-0.5 sm:space-y-1">
+                  {/* 決定要顯示多少筆記錄 - 移動端顯示較少 */}
                   {(() => {
                     const dateKey = formatDateSafely(date)
                     const isExpanded = expandedDates.has(dateKey)
-                    const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, 3)
+                    const maxRecords = isMobile ? 2 : 3
+                    const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, maxRecords)
                     
                     return (recordsToShow || []).map((record, i) => (
                       <div
@@ -236,15 +284,16 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className="text-sm bg-white border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
+                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
                       >
-                        <div className="font-medium text-gray-800 mb-1 leading-tight">
-                          {record.customer_name}/{record.care_staff_name}
+                        <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
+                          <span className="hidden sm:inline">{record.customer_name}/{record.care_staff_name}</span>
+                          <span className="sm:hidden">{record.customer_name.substring(0, 6)}/{record.care_staff_name.substring(0, 6)}</span>
                         </div>
-                        <div className="text-blue-600 mb-1 leading-tight">
+                        <div className="text-blue-600 mb-0.5 sm:mb-1 leading-tight text-xs">
                           {record.service_type}
                         </div>
-                        <div className="text-gray-600 text-sm">
+                        <div className="text-gray-600 text-xs">
                           {record.start_time}-{record.end_time}
                         </div>
                       </div>
@@ -604,15 +653,15 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   return (
     <div className="space-y-4">
-      {/* 排序控制按鈕 */}
-      <div className="flex items-center justify-between border-b border-border-light pb-4">
-        <div className="flex items-center space-x-2">
+      {/* 排序控制按鈕 - 移動端優化 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border-light pb-4 space-y-3 sm:space-y-0">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-text-secondary font-medium">排序：</span>
           
           {/* 按日期排序 */}
           <button
             onClick={() => handleSort('service_date')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'service_date'
                 ? 'bg-mingcare-blue text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
@@ -621,7 +670,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
             <span>日期</span>
             {sortConfig.field === 'service_date' && (
               <svg 
-                className={`w-4 h-4 transition-transform ${
+                className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
                 }`} 
                 fill="none" 
@@ -636,16 +685,17 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           {/* 按客戶名稱排序 */}
           <button
             onClick={() => handleSort('customer_name')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_name'
                 ? 'bg-mingcare-blue text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
-            <span>客戶名稱</span>
+            <span className="hidden sm:inline">客戶名稱</span>
+            <span className="sm:hidden">客戶</span>
             {sortConfig.field === 'customer_name' && (
               <svg 
-                className={`w-4 h-4 transition-transform ${
+                className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
                 }`} 
                 fill="none" 
@@ -660,16 +710,17 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           {/* 按客戶編號排序 */}
           <button
             onClick={() => handleSort('customer_id')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_id'
                 ? 'bg-mingcare-blue text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
-            <span>客戶編號</span>
+            <span className="hidden sm:inline">客戶編號</span>
+            <span className="sm:hidden">編號</span>
             {sortConfig.field === 'customer_id' && (
               <svg 
-                className={`w-4 h-4 transition-transform ${
+                className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
                 }`} 
                 fill="none" 
@@ -683,36 +734,36 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
         </div>
 
         {/* 記錄數量顯示 */}
-        <div className="text-sm text-text-secondary">
+        <div className="text-xs sm:text-sm text-text-secondary text-center sm:text-right">
           共 {records?.length || 0} 筆記錄
         </div>
       </div>
 
-      {/* 記錄列表 */}
+      {/* 記錄列表 - 移動端優化 */}
       <div className="space-y-3">
         {records && records.map((record) => (
           <div 
             key={record.id}
-            className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
+            className="border border-border-light rounded-lg p-3 sm:p-4 hover:shadow-md transition-all duration-200 bg-white"
           >
-            {/* 第1行：日期、所屬項目、操作按鈕 */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-4">
-                <span className="font-medium text-text-primary">{record.service_date}</span>
-                <span className="text-sm text-text-secondary">{record.project_category}</span>
+            {/* 第1行：日期、所屬項目、操作按鈕 - 移動端垂直佈局 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-2 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
+                <span className="font-medium text-text-primary text-sm sm:text-base">{record.service_date}</span>
+                <span className="text-xs sm:text-sm text-text-secondary">{record.project_category}</span>
               </div>
               
-              {/* 操作按鈕 */}
-              <div className="flex items-center space-x-2">
+              {/* 操作按鈕 - 移動端優化 */}
+              <div className="flex items-center space-x-2 self-end sm:self-center">
                 <button
                   onClick={() => {
                     console.log('🖱️ 編輯按鈕被點擊，記錄ID:', record.id)
                     handleEdit(record)
                   }}
-                  className="p-2 text-mingcare-blue hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-mingcare-blue hover:bg-blue-50 rounded-lg transition-colors"
                   title="編輯記錄"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
@@ -721,41 +772,46 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
                     console.log('🖱️ 刪除按鈕被點擊，記錄ID:', record.id)
                     handleDelete(record.id)
                   }}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   title="刪除記錄"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            {/* 第2行：客戶姓名+編號、服務類型 */}
-            <div className="flex items-center justify-between mb-2">
+            {/* 第2行：客戶姓名+編號、服務類型 - 移動端優化 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-text-primary">
+                <span className="font-medium text-text-primary text-sm sm:text-base">
                   {record.customer_name} ({record.customer_id})
                 </span>
               </div>
-              <span className="text-sm bg-mingcare-blue text-white px-3 py-1 rounded-full">
+              <span className="text-xs sm:text-sm bg-mingcare-blue text-white px-2 sm:px-3 py-1 rounded-full self-start sm:self-center">
                 {record.service_type}
               </span>
             </div>
 
-            {/* 第3行：服務地址 */}
+            {/* 第3行：服務地址 - 移動端優化 */}
             <div className="mb-2">
               <span 
-                className="text-sm text-text-secondary cursor-help block"
+                className="text-xs sm:text-sm text-text-secondary cursor-help block break-words overflow-hidden"
                 title={record.service_address}
+                style={{ 
+                  display: '-webkit-box', 
+                  WebkitLineClamp: 1, 
+                  WebkitBoxOrient: 'vertical' 
+                }}
               >
-                {truncateAddress(record.service_address)}
+                {record.service_address}
               </span>
             </div>
 
-            {/* 第4行：時間、時數、護理人員 */}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-4">
+            {/* 第4行：時間、時數、護理人員 - 移動端垂直佈局 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm space-y-1 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
                 <span className="text-text-secondary">
                   {record.start_time}-{record.end_time}
                 </span>
@@ -763,7 +819,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
                   {record.service_hours}小時
                 </span>
               </div>
-              <span className="font-medium text-text-primary">
+              <span className="font-medium text-text-primary self-start sm:self-center">
                 {record.care_staff_name}
               </span>
             </div>
@@ -772,7 +828,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       </div>
       
       {/* 記錄統計信息 */}
-      <div className="text-center text-sm text-text-secondary mt-6">
+      <div className="text-center text-xs sm:text-sm text-text-secondary mt-6">
         共 {totalRecords} 筆記錄
       </div>
 
@@ -814,7 +870,14 @@ interface ReportsTabProps {
 }
 
 // 概覽頁面組件
-function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading, categorySummary }: OverviewTabProps) {
+function OverviewTab({ 
+  filters, 
+  setFilters, 
+  updateDateRange, 
+  kpiData, 
+  kpiLoading, 
+  categorySummary
+}: OverviewTabProps) {
   return (
     <div className="space-y-8">
       {/* 選擇時段 - 根據圖片格式 */}
@@ -961,8 +1024,8 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
         </div>
       </div>
 
-      {/* KPI 卡片 - 簡化版 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI 卡片 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {kpiLoading ? (
           <div className="col-span-full text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
@@ -970,11 +1033,11 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
           </div>
         ) : kpiData ? (
           <>
-            <div className="card-apple border border-border-light p-6 text-center">
-              <div className="text-3xl font-bold text-text-primary mb-2">
+            <div className="card-apple border border-border-light p-4 md:p-6 text-center">
+              <div className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
                 ${kpiData.totalRevenue.toLocaleString()}
               </div>
-              <div className="text-sm text-text-secondary">總收入</div>
+              <div className="text-xs md:text-sm text-text-secondary">總收入</div>
               {kpiData.revenueGrowthRate !== 0 && (
                 <div className={`text-xs mt-2 ${
                   kpiData.revenueGrowthRate >= 0 ? 'text-green-600' : 'text-red-600'
@@ -984,28 +1047,28 @@ function OverviewTab({ filters, setFilters, updateDateRange, kpiData, kpiLoading
               )}
             </div>
 
-            <div className="card-apple border border-border-light p-6 text-center">
-              <div className="text-3xl font-bold text-text-primary mb-2">
+            <div className="card-apple border border-border-light p-4 md:p-6 text-center">
+              <div className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
                 ${kpiData.totalProfit.toLocaleString()}
               </div>
-              <div className="text-sm text-text-secondary">總利潤</div>
+              <div className="text-xs md:text-sm text-text-secondary">總利潤</div>
               <div className="text-xs text-text-secondary mt-2">
                 利潤率: {kpiData.totalRevenue > 0 ? ((kpiData.totalProfit / kpiData.totalRevenue) * 100).toFixed(1) : 0}%
               </div>
             </div>
 
-            <div className="card-apple border border-border-light p-6 text-center">
-              <div className="text-3xl font-bold text-text-primary mb-2">
+            <div className="card-apple border border-border-light p-4 md:p-6 text-center">
+              <div className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
                 {kpiData.totalServiceHours.toFixed(1)}
               </div>
-              <div className="text-sm text-text-secondary">總服務時數</div>
+              <div className="text-xs md:text-sm text-text-secondary">總服務時數</div>
             </div>
 
-            <div className="card-apple border border-border-light p-6 text-center">
-              <div className="text-3xl font-bold text-text-primary mb-2">
+            <div className="card-apple border border-border-light p-4 md:p-6 text-center">
+              <div className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
                 ${kpiData.avgProfitPerHour.toFixed(2)}
               </div>
-              <div className="text-sm text-text-secondary">每小時利潤</div>
+              <div className="text-xs md:text-sm text-text-secondary">每小時利潤</div>
             </div>
           </>
         ) : (
@@ -2278,11 +2341,11 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         <div className="p-6" style={{ overflow: 'visible' }}>
           <h2 className="text-apple-heading text-text-primary mb-6">篩選條件</h2>
           
-          {/* 第一行：日期區間 + 快捷按鈕 */}
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-4 py-2">
-              <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          {/* 第一行：日期區間 + 快捷按鈕 - 移動端優化 */}
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
+            <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-3 py-2 w-full sm:w-auto">
+              <svg className="w-4 h-4 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <input
                 type="date"
@@ -2291,7 +2354,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   ...prev,
                   dateRange: { ...prev.dateRange, start: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-sm"
+                className="border-none outline-none bg-transparent text-sm min-w-0 flex-1"
               />
               <span className="text-text-secondary">-</span>
               <input
@@ -2301,36 +2364,38 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   ...prev,
                   dateRange: { ...prev.dateRange, end: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-sm"
+                className="border-none outline-none bg-transparent text-sm min-w-0 flex-1"
               />
             </div>
             
-            <button
-              onClick={() => {
-                const today = formatDateSafely(new Date())
-                setFilters(prev => ({
-                  ...prev,
-                  dateRange: { start: today, end: today }
-                }))
-              }}
-              className="px-4 py-2 text-sm border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200 whitespace-nowrap"
-            >
-              今日記錄
-            </button>
-            
-            <button
-              onClick={() => updateDateRange('thisMonth')}
-              className="px-4 py-2 text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap"
-            >
-              本月記錄
-            </button>
+            <div className="flex space-x-2 sm:space-x-3">
+              <button
+                onClick={() => {
+                  const today = formatDateSafely(new Date())
+                  setFilters(prev => ({
+                    ...prev,
+                    dateRange: { start: today, end: today }
+                  }))
+                }}
+                className="px-3 py-2 text-xs sm:text-sm border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200 whitespace-nowrap flex-1 sm:flex-none"
+              >
+                今日記錄
+              </button>
+              
+              <button
+                onClick={() => updateDateRange('thisMonth')}
+                className="px-3 py-2 text-xs sm:text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap flex-1 sm:flex-none"
+              >
+                本月記錄
+              </button>
+            </div>
           </div>
 
-          {/* 第二行：客戶搜尋 + 下拉篩選 */}
-          <div className="grid grid-cols-4 gap-4 mb-6 relative">
+          {/* 第二行：客戶搜尋 + 下拉篩選 - 移動端優化 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 relative">
             <div className="relative z-20 overflow-visible">
               <div className="relative customer-search-container overflow-visible">
-                <svg className="absolute left-3 top-3 w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <input
@@ -2358,17 +2423,17 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                       setShowCustomerSuggestions(false)
                     }, 150)
                   }}
-                  className="w-full pl-10 pr-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent text-xs sm:text-sm"
                 />
                 
-                {/* 客戶搜尋建議下拉選單 - 使用 Portal */}
+                {/* 客戶搜尋建議下拉選單 - 使用 Portal + 移動端優化 */}
                 {showCustomerSuggestions && typeof window !== 'undefined' && createPortal(
                   <div 
                     className="fixed bg-white border border-border-light rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[9999]" 
                     style={{ 
-                      top: `${dropdownPosition.top}px`,
-                      left: `${dropdownPosition.left}px`,
-                      width: `${dropdownPosition.width}px`,
+                      top: `${Math.min(dropdownPosition.top, window.innerHeight - 250)}px`,
+                      left: `${Math.max(8, Math.min(dropdownPosition.left, window.innerWidth - dropdownPosition.width - 8))}px`,
+                      width: `${Math.min(dropdownPosition.width, window.innerWidth - 16)}px`,
                       backgroundColor: '#ffffff',
                       border: '1px solid #e5e7eb'
                     }}
@@ -2417,22 +2482,22 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 )}
               </div>
               
-              {/* 選中客戶的 chips 顯示 */}
+              {/* 選中客戶的 chips 顯示 - 移動端優化 */}
               {selectedCustomers && selectedCustomers.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-1 sm:gap-2">
                   {selectedCustomers && selectedCustomers.map((customer) => (
                     <div
                       key={customer.customer_id}
-                      className="inline-flex items-center bg-mingcare-blue text-white text-sm px-3 py-1 rounded-full"
+                      className="inline-flex items-center bg-mingcare-blue text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full"
                     >
-                      <span className="mr-2">
+                      <span className="mr-1 sm:mr-2 truncate max-w-[120px] sm:max-w-none">
                         {customer.customer_name} ({customer.customer_id})
                       </span>
                       <button
                         onClick={() => removeSelectedCustomer(customer)}
-                        className="hover:bg-white hover:bg-opacity-20 rounded-full p-1"
+                        className="hover:bg-white hover:bg-opacity-20 rounded-full p-0.5 sm:p-1 ml-1"
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -2445,7 +2510,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             <div>
               <div className="relative project-category-dropdown">
                 <div
-                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white min-h-[48px] cursor-pointer"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white min-h-[44px] sm:min-h-[48px] cursor-pointer"
                   onClick={() => setIsProjectCategoryDropdownOpen(!isProjectCategoryDropdownOpen)}
                 >
                   <div className="flex flex-wrap gap-1">
@@ -2455,9 +2520,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         return (
                           <span
                             key={category}
-                            className="inline-flex items-center px-2 py-1 bg-mingcare-blue/10 text-mingcare-blue text-sm rounded-md"
+                            className="inline-flex items-center px-2 py-0.5 sm:py-1 bg-mingcare-blue/10 text-mingcare-blue text-xs sm:text-sm rounded-md"
                           >
-                            {option?.label}
+                            <span className="truncate max-w-[80px] sm:max-w-none">{option?.label}</span>
                             <button
                               type="button"
                               onClick={(e) => {
@@ -2475,22 +2540,22 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         )
                       })
                     ) : (
-                      <span className="text-text-secondary">選擇所屬項目（可多選）</span>
+                      <span className="text-text-secondary text-xs sm:text-sm">選擇所屬項目（可多選）</span>
                     )}
                   </div>
                 </div>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
                 
                 {isProjectCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
                     {PROJECT_CATEGORY_OPTIONS.map(option => {
                       const isSelected = filters.projectCategory?.includes(option.value) || false
                       return (
                         <div
                           key={option.value}
-                          className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between ${
+                          className={`px-3 sm:px-4 py-2 sm:py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between text-xs sm:text-sm ${
                             isSelected ? 'bg-mingcare-blue/5 text-mingcare-blue' : 'text-text-primary'
                           }`}
                           onClick={() => {
@@ -2505,9 +2570,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                             }))
                           }}
                         >
-                          <span>{option.label}</span>
+                          <span className="truncate">{option.label}</span>
                           {isSelected && (
-                            <svg className="w-4 h-4 text-mingcare-blue" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-mingcare-blue flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
@@ -2527,7 +2592,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     ...prev,
                     serviceType: e.target.value as ServiceType | undefined
                   }))}
-                  className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-10"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
                 >
                   <option value="">選擇服務類型</option>
                   {SERVICE_TYPE_OPTIONS.map(option => (
@@ -2536,7 +2601,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -2560,35 +2625,35 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
       {/* 詳細列表 */}
       <div className="card-apple border border-border-light fade-in-apple">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               {/* 檢視模式切換 */}
-              <div className="flex items-center border border-border-light rounded-lg p-1">
+              <div className="flex items-center border border-border-light rounded-lg p-1 w-full sm:w-auto">
                 <button
                   onClick={() => setReportsViewMode('list')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 flex-1 sm:flex-none ${
                     reportsViewMode === 'list'
                       ? 'bg-mingcare-blue text-white'
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
                   <span>列表</span>
                 </button>
                 <button
                   onClick={() => setReportsViewMode('calendar')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 flex-1 sm:flex-none ${
                     reportsViewMode === 'calendar'
                       ? 'bg-mingcare-blue text-white'
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>月曆</span>
@@ -2599,11 +2664,11 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
-                className="px-6 py-3 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
               >
                 {exportLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
                     <span>導出中...</span>
                   </>
                 ) : (
@@ -4717,73 +4782,77 @@ export default function ServicesPage() {
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
       <header className="card-apple border-b border-border-light fade-in-apple">
-        <div className="px-6 lg:px-8">
-          <div className="flex justify-between items-center py-8">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-apple-title text-text-primary mb-2">護理服務管理</h1>
-              <p className="text-apple-body text-text-secondary">安排護理服務、管理服務排程及記錄</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-1 sm:mb-2">護理服務管理</h1>
+              <p className="text-sm sm:text-base text-text-secondary">安排護理服務、管理服務排程及記錄</p>
             </div>
-            <BackToHomeButton />
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-apple-secondary text-xs sm:text-sm self-start sm:self-auto"
+            >
+              返回主頁
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="px-6 lg:px-8 py-8">
-        {/* Tab 導航 */}
-        <div className="mb-8">
-          <div className="border-b border-border-light">
-            <nav className="-mb-px flex space-x-8">
-              {/* 1. 詳細報表 */}
-              <button
-                onClick={() => setActiveTab('reports')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'reports'
-                    ? 'border-mingcare-blue text-mingcare-blue'
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Tab 導航 - 移動端優化 */}
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="card-apple border border-border-light fade-in-apple">
+            <div className="p-3 sm:p-4">
+              <nav className="flex space-x-1 sm:space-x-2">
+                {/* 1. 詳細報表 */}
+                <button
+                  onClick={() => setActiveTab('reports')}
+                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                    activeTab === 'reports'
+                      ? 'bg-mingcare-blue text-white shadow-lg'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                  }`}
+                >
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span>詳細報表</span>
-                </div>
-              </button>
-              
-              {/* 2. 排程管理 */}
-              <button
-                onClick={() => setActiveTab('schedule')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'schedule'
-                    ? 'border-mingcare-blue text-mingcare-blue'
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="hidden sm:inline">詳細報表</span>
+                  <span className="sm:hidden">報表</span>
+                </button>
+                
+                {/* 2. 排程管理 */}
+                <button
+                  onClick={() => setActiveTab('schedule')}
+                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                    activeTab === 'schedule'
+                      ? 'bg-mingcare-blue text-white shadow-lg'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                  }`}
+                >
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>排程管理</span>
-                </div>
-              </button>
-              
-              {/* 3. 業務概覽 */}
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'overview'
-                    ? 'border-mingcare-blue text-mingcare-blue'
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-light'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="hidden sm:inline">排程管理</span>
+                  <span className="sm:hidden">排程</span>
+                </button>
+                
+                {/* 3. 業務概覽 */}
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                    activeTab === 'overview'
+                      ? 'bg-mingcare-blue text-white shadow-lg'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                  }`}
+                >
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  <span>業務概覽</span>
-                </div>
-              </button>
-            </nav>
+                  <span className="hidden sm:inline">業務概覽</span>
+                  <span className="sm:hidden">概覽</span>
+                </button>
+              </nav>
+            </div>
           </div>
         </div>
 
