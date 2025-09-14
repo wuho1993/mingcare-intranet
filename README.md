@@ -1,2 +1,0 @@
-# Ming Care Intranet
-
