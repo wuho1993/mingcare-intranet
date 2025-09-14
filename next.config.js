@@ -7,8 +7,8 @@ const nextConfig = {
     unoptimized: true,
     domains: ['www.mingcarehome.net', 'mingcarehome.net']
   },
+  // IMPORTANT: NO basePath or assetPrefix for custom domain deployment
   // Only use basePath for GitHub Pages static deployment
-  // Comment out for Vercel/Hostinger deployment
   // ...(process.env.NODE_ENV === 'production' && {
   //   basePath: '/mingcare-intranet',
   //   assetPrefix: '/mingcare-intranet/',
@@ -16,8 +16,8 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  // Ensure proper asset handling for custom domain
-  assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.mingcarehome.net' : '',
+  // Remove assetPrefix for custom domain - assets should load from root
+  // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.mingcarehome.net' : '',
   // Add security headers
   async headers() {
     return [
