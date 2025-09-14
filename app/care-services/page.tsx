@@ -69,7 +69,7 @@ export default function CareServicesPage() {
               <div className="flex-shrink-0">
                 <img 
                   className="h-8 w-auto" 
-                  src="/mingcare-intranet/images/mingcare-logo.png" 
+                  src="/images/mingcare-logo.png" 
                   alt="MingCare" 
                 />
               </div>

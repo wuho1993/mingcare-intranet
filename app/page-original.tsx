@@ -72,7 +72,7 @@ export default function LoginPage() {
               <div className="mx-auto flex items-center justify-center mb-2 sm:mb-3 overflow-visible">
                 <div className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 -my-8 sm:-my-10 lg:-my-12">
                   <Image 
-                    src={`${process.env.NODE_ENV === 'production' ? '/mingcare-intranet' : ''}/images/mingcare-logo.png`}
+                    src="/images/mingcare-logo.png"
                     alt="MingCare Logo" 
                     width={1024}
                     height={1024}
