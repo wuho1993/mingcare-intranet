@@ -9,8 +9,9 @@
     "lint": "next lint",
     "export": "next build",
     "build:hostinger": "rm -rf .next && NODE_ENV=production next build",
-    "build:github": "rm -rf .next && cp next.config.github.js next.config.js && next build && git checkout next.config.js",
+    "build:github": "rm -rf .next && cp next.config.github-pages.js next.config.js && next build && git checkout next.config.js",
     "deploy:hostinger": "npm run build:hostinger && npm run start",
+    "deploy": "npm run build:github",
     "clean": "rm -rf .next out node_modules/.cache"
   },
   "dependencies": {
