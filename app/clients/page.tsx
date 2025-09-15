@@ -183,12 +183,20 @@ export default function ClientsPage() {
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-1 sm:mb-2">客戶管理中心</h1>
               <p className="text-sm sm:text-base text-text-secondary">管理所有客戶資料、聯絡信息及服務記錄</p>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="btn-apple-secondary text-xs sm:text-sm self-start sm:self-auto"
-            >
-              返回主頁
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                onClick={() => router.push('/clients/summary')}
+                className="btn-apple-primary text-xs sm:text-sm px-3 sm:px-4 py-2"
+              >
+                📊 客戶總結
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="btn-apple-secondary text-xs sm:text-sm self-start sm:self-auto"
+              >
+                返回主頁
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -275,7 +283,7 @@ export default function ClientsPage() {
                   onChange={(e) => {
                     const newFilters = { ...filters }
                     if (e.target.value) {
-                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客'
+                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客' | '家訪客戶' | '家訪客戶'
                     } else {
                       delete newFilters.customer_type
                     }
@@ -287,6 +295,8 @@ export default function ClientsPage() {
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
                   <option value="明家街客">明家街客</option>
+                  <option value="家訪客戶">家訪客戶</option>
+                  <option value="家訪客戶">家訪客戶</option>
                 </select>
               </div>
 

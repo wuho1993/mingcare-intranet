@@ -156,7 +156,7 @@ ENUM TYPES（列舉型別）
 contract_status_enum = { 同意, 不同意 }
 copay_level_enum = { 5%, 8%, 12%, 16%, 25%, 40% }
 covid_vaccine_enum = { 1針, 2針, 3針, 4針, 無接種, Other }
-customer_type_enum = { 社區券客戶, 明家街客 }
+customer_type_enum = { 社區券客戶, 明家街客, 家訪客戶 }
 district_enum = { 中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區, 屯門區, 東區, 沙田區, 油尖旺區, 深水埗區, 灣仔區, 荃灣區, 葵青區, 西貢區, 觀塘區, 離島區, 黃大仙區, 未分類（醫院,院舍) }
 gender_enum = { 男, 女 }
 health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }

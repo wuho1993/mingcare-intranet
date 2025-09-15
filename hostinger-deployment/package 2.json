@@ -1,6 +1,6 @@
 {
   "name": "mingcare-intranet",
-  "version": "1.1.0",
+  "version": "1.0.5",
   "description": "明家居家護理服務 Intranet 系統",
   "scripts": {
     "dev": "next dev",
@@ -9,9 +9,8 @@
     "lint": "next lint",
     "export": "next build",
     "build:hostinger": "rm -rf .next && NODE_ENV=production next build",
-    "build:github": "rm -rf .next && cp next.config.github-pages.js next.config.js && next build && git checkout next.config.js",
+    "build:github": "rm -rf .next && cp next.config.github.js next.config.js && next build && git checkout next.config.js",
     "deploy:hostinger": "npm run build:hostinger && npm run start",
-    "deploy": "npm run build:github",
     "clean": "rm -rf .next out node_modules/.cache"
   },
   "dependencies": {
@@ -29,9 +28,7 @@
     "postcss": "^8.4.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "recharts": "^3.2.0",
-    "tailwindcss": "^3.3.0",
-    "tesseract.js": "^6.0.1"
+    "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
     "@types/html2pdf.js": "^0.10.0",

@@ -59,11 +59,8 @@ export class CustomerManagementService {
    * 規則:
    * 1. 社區券客戶 → CCSV-MC-0001
    * 2. 明家街客 → MC-0001  
-   * 3. 家訪客戶 → 不生成編號
-   * 4. Steven Kwok + 社區券 → S-CCSV-0001
-   * 5. Steven Kwok + 明家街客 → MC-0001 (共用)
-   * 
-   * 注意：家訪客戶不會調用此函數，因為他們不需要編號
+   * 3. Steven Kwok + 社區券 → S-CCSV-0001
+   * 4. Steven Kwok + 明家街客 → MC-0001 (共用)
    */
   static async generateNextCustomerId(
     customerType: CustomerType,

@@ -18,20 +18,6 @@ const nextConfig = {
   },
   // Remove assetPrefix for custom domain - assets should load from root
   // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.mingcarehome.net' : '',
-  
-  // Webpack configuration for Tesseract.js
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        child_process: false,
-      }
-    }
-    return config
-  },
-  
   // Add security headers
   async headers() {
     return [

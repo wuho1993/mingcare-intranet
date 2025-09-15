@@ -6,7 +6,7 @@
 // ========================================================================
 
 export interface CustomerIdGenerationRequest {
-  customer_type: '社區券客戶' | '明家街客';
+  customer_type: '社區券客戶' | '明家街客' | '家訪客戶';
   introducer: string;
 }
 
@@ -58,7 +58,7 @@ export interface CustomerListItem {
 export interface CustomerData {
   id?: string;
   customer_id?: string;
-  customer_type: '社區券客戶' | '明家街客';
+  customer_type: '社區券客戶' | '明家街客' | '家訪客戶';
   customer_name: string;
   phone: string;
   district: string;
@@ -122,7 +122,7 @@ export interface PaginatedResponse<T> {
 // Enum 選項 (從數據庫結構對應)
 // ========================================================================
 
-export const CUSTOMER_TYPE_OPTIONS = ['社區券客戶', '明家街客'] as const;
+export const CUSTOMER_TYPE_OPTIONS = ['社區券客戶', '明家街客', '家訪客戶'] as const;
 
 export const DISTRICT_OPTIONS = [
   '中西區', '九龍城區', '元朗區', '北區', '南區', '大埔區', 

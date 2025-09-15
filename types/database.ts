@@ -8,7 +8,7 @@
 export type ContractStatus = '同意' | '不同意';
 export type CopayLevel = '5%' | '8%' | '12%' | '16%' | '25%' | '40%';
 export type CovidVaccine = '1針' | '2針' | '3針' | '4針' | '無接種' | 'Other';
-export type CustomerType = '社區券客戶' | '明家街客';
+export type CustomerType = '社區券客戶' | '明家街客' | '家訪客戶';
 export type District = 
   | '中西區' | '九龍城區' | '元朗區' | '北區' | '南區' | '大埔區' 
   | '屯門區' | '東區' | '沙田區' | '油尖旺區' | '深水埗區' | '灣仔區' 
