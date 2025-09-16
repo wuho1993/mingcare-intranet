@@ -194,6 +194,12 @@ export class CustomerManagementService {
         // 符合 API 規格的搜尋邏輯，處理 customer_id 可能為 null 的情況
         query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,customer_id.ilike.%${filters.search}%`);
       }
+      if (filters?.lds_status) {
+        query = query.eq('lds_status', filters.lds_status);
+      }
+      if (filters?.voucher_application_status) {
+        query = query.eq('voucher_application_status', filters.voucher_application_status);
+      }
 
       // 符合 API 規格的分頁
       const from = (page - 1) * pageSize;

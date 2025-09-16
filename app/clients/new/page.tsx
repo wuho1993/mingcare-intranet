@@ -974,7 +974,7 @@ export default function NewCustomerPage() {
               )}
 
               {/* 家訪客戶資訊 - 引導式流程 */}
-              {formData.customer_type === '家訪客戶' && (
+              {formData.customer_type === '家訪客戶' && formData.introducer && (
                 <div className="mt-6 pt-6 border-t border-border-primary">
                   <h3 className="text-apple-body font-semibold text-text-primary mb-4">家訪客戶專用流程</h3>
                   

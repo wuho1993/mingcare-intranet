@@ -268,8 +268,8 @@ export default function ClientsPage() {
               />
             </div>
 
-            {/* Enhanced Filter Controls - Compact Mobile Layout */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            {/* Enhanced Filter Controls - Updated Layout */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {/* 客戶類型 */}
               <div className="min-w-0">
                 <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
@@ -295,7 +295,6 @@ export default function ClientsPage() {
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
                   <option value="明家街客">明家街客</option>
-                  <option value="家訪客戶">家訪客戶</option>
                   <option value="家訪客戶">家訪客戶</option>
                 </select>
               </div>
@@ -409,6 +408,63 @@ export default function ClientsPage() {
                   <option value="Kanas Leung">Kanas</option>
                   <option value="Joe Cheung">Joe</option>
                   <option value="Candy Ho">Candy</option>
+                </select>
+              </div>
+
+              {/* LDS 狀況 */}
+              <div className="min-w-0">
+                <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="truncate">LDS 狀況</span>
+                </label>
+                <select 
+                  value={filters.lds_status || ''}
+                  onChange={(e) => {
+                    const newFilters = { ...filters }
+                    if (e.target.value) {
+                      newFilters.lds_status = e.target.value
+                    } else {
+                      delete newFilters.lds_status
+                    }
+                    setFilters(newFilters)
+                    setCurrentPage(1)
+                  }}
+                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  <option value="">全部</option>
+                  <option value="已完成評估">已完成評估</option>
+                  <option value="已經持有">已經持有</option>
+                  <option value="待社工評估">待社工評估</option>
+                </select>
+              </div>
+
+              {/* 社區券申請狀況 */}
+              <div className="min-w-0">
+                <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                  <span className="truncate">社區券狀況</span>
+                </label>
+                <select 
+                  value={filters.voucher_application_status || ''}
+                  onChange={(e) => {
+                    const newFilters = { ...filters }
+                    if (e.target.value) {
+                      newFilters.voucher_application_status = e.target.value
+                    } else {
+                      delete newFilters.voucher_application_status
+                    }
+                    setFilters(newFilters)
+                    setCurrentPage(1)
+                  }}
+                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                >
+                  <option value="">全部</option>
+                  <option value="已經持有">已經持有</option>
+                  <option value="申請中">申請中</option>
                 </select>
               </div>
             </div>

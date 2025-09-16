@@ -96,6 +96,8 @@ export interface CustomerFilters {
   district?: string;
   introducer?: string;
   project_manager?: string;
+  lds_status?: string;
+  voucher_application_status?: string;
 }
 
 export type ViewMode = 'card' | 'list';
