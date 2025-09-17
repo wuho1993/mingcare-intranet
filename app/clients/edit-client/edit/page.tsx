@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../../../lib/supabase'
 import { CustomerManagementService } from '../../../../services/customer-management'
-import HKIDScanner from '../../../../components/HKIDScanner'
 import type { 
   CustomerFormData,
   CustomerType,
@@ -40,9 +39,6 @@ export default function EditClientPage() {
   // 客戶類型轉換警告
   const [showTypeChangeWarning, setShowTypeChangeWarning] = useState(false)
   const [pendingCustomerType, setPendingCustomerType] = useState<CustomerType | null>(null)
-  
-  // HKID 掃描功能
-  const [showHKIDScanner, setShowHKIDScanner] = useState(false)
   
   const [formData, setFormData] = useState<CustomerFormData>({
     customer_type: '社區券客戶',
@@ -188,26 +184,6 @@ export default function EditClientPage() {
   const cancelCustomerTypeChange = () => {
     setPendingCustomerType(null)
     setShowTypeChangeWarning(false)
-  }
-
-  // 處理 HKID 掃描結果
-  const handleHKIDScanResult = (result: { name: string; hkid: string; dob: string }) => {
-    updateFormData('customer_name', result.name)
-    updateFormData('hkid', result.hkid)
-    updateFormData('dob', result.dob)
-    setShowHKIDScanner(false)
-    
-    // 顯示成功提示
-    setErrors(prev => ({ 
-      ...prev, 
-      general: '', 
-      success: '身份證資訊已成功識別並填入' 
-    }))
-  }
-
-  // 處理 HKID 掃描錯誤
-  const handleHKIDScanError = (error: string) => {
-    setErrors(prev => ({ ...prev, general: error }))
   }
 
   // 自動計算年齡
@@ -817,55 +793,9 @@ export default function EditClientPage() {
                 <div className="mt-6 pt-6 border-t border-border-primary">
                   <h3 className="text-apple-body font-semibold text-text-primary mb-4">身份證快速錄入</h3>
                   
-                  <div className="space-y-4">
-                    <div className="bg-bg-secondary rounded-apple-sm p-4">
-                      <div className="flex items-start space-x-3 mb-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-apple-body font-medium text-text-primary">便捷錄入提示</p>
-                          <p className="text-apple-caption text-text-secondary mt-1">
-                            使用身份證掃描功能可自動識別客戶姓名、身份證號碼和出生日期，提高錄入效率。
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {!showHKIDScanner ? (
-                        <button
-                          type="button"
-                          onClick={() => setShowHKIDScanner(true)}
-                          className="btn-apple-primary w-full flex items-center justify-center space-x-2"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span>開始身份證掃描</span>
-                        </button>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-apple-body font-medium text-text-primary">身份證掃描</h4>
-                            <button
-                              type="button"
-                              onClick={() => setShowHKIDScanner(false)}
-                              className="text-text-secondary hover:text-text-primary"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                          <HKIDScanner
-                            onScanResult={handleHKIDScanResult}
-                            onError={handleHKIDScanError}
-                          />
-                        </div>
-                      )}
-                    </div>
+                  {/* 身份證掃描功能已移除，請手動輸入客戶資訊 */}
+                  <div className="bg-bg-secondary rounded-apple-sm p-4">
+                    <p className="text-apple-body text-text-secondary">請手動填寫客戶基本資訊</p>
                   </div>
                 </div>
               )}
