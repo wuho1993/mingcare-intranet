@@ -880,9 +880,12 @@ function OverviewTab({
 }: OverviewTabProps) {
   return (
     <div className="space-y-8">
-      {/* 選擇時段 - 根據圖片格式 */}
-      <div className="card-apple border border-border-light fade-in-apple">
-        <div className="p-6">
+      {/* 搜尋與篩選 - 根據圖片格式 */}
+      <div className="card-apple mb-4 sm:mb-6 fade-in-apple">
+        <div className="card-apple-header">
+          <h3 className="text-lg sm:text-xl font-semibold text-text-primary">搜尋與篩選</h3>
+        </div>
+        <div className="card-apple-content">
           <h2 className="text-apple-heading text-text-primary mb-4">選擇時段</h2>
 
           {/* 第一行：快捷選擇按鈕 */}
@@ -2336,9 +2339,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
   return (
     <div className="space-y-8">
-      {/* 詳細篩選 */}
-      <div className="card-apple border border-border-light fade-in-apple" style={{ overflow: 'visible' }}>
-        <div className="p-6" style={{ overflow: 'visible' }}>
+      {/* 搜尋與篩選 */}
+      <div className="card-apple mb-4 sm:mb-6 fade-in-apple" style={{ overflow: 'visible' }}>
+        <div className="card-apple-header">
+          <h3 className="text-lg sm:text-xl font-semibold text-text-primary">搜尋與篩選</h3>
+        </div>
+        <div className="card-apple-content" style={{ overflow: 'visible' }}>
           <h2 className="text-apple-heading text-text-primary mb-6">篩選條件</h2>
 
           {/* 第一行：日期區間 + 快捷按鈕 - 移動端優化 */}
