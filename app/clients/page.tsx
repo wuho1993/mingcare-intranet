@@ -92,6 +92,17 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
     return acc
   }, {} as Record<string, number>)
 
+  // LDS Status for customers with voucher application status "申請中"
+  const ldsStatsForApplying = customers
+    .filter(customer => customer.voucher_application_status === '申請中')
+    .reduce((acc, customer) => {
+      const status = (customer as any).lds_status
+      if (status && status.trim()) {
+        acc[status] = (acc[status] || 0) + 1
+      }
+      return acc
+    }, {} as Record<string, number>)
+
   // Home visit status (home_visit_status_enum: 已完成, 未完成)
   const homeVisitStats = customers.reduce((acc, customer) => {
     const status = (customer as any).home_visit_status
@@ -206,31 +217,8 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
         </div>
       </div>
 
-      {/* Voucher Status and Top Referrers */}
+      {/* Top Referrers and Monthly Service Usage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Voucher Status */}
-        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.6s' }}>
-          <div className="card-apple-header">
-            <h3 className="text-lg font-semibold text-text-primary">社區券狀態統計</h3>
-          </div>
-          <div className="card-apple-content">
-            <div className="space-y-4">
-              {Object.entries(voucherStats).map(([status, count]) => (
-                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      status === '已經持有' ? 'bg-emerald-500' :
-                      status === '申請中' ? 'bg-orange-500' : 'bg-gray-400'
-                    }`}></div>
-                    <span className="text-sm font-medium text-text-primary">{status}</span>
-                  </div>
-                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Top Referrers */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.7s' }}>
           <div className="card-apple-header">
@@ -309,15 +297,39 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
               {Object.entries(voucherStats)
                 .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
                 .map(([status, count]) => (
-                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      status === '已經持有' ? 'bg-emerald-500' :
-                      status === '申請中' ? 'bg-orange-500' : 'bg-gray-400'
-                    }`}></div>
-                    <span className="text-sm font-medium text-text-primary">{status}</span>
+                <div key={status}>
+                  <div className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        status === '已經持有' ? 'bg-emerald-500' :
+                        status === '申請中' ? 'bg-orange-500' : 'bg-gray-400'
+                      }`}></div>
+                      <span className="text-sm font-medium text-text-primary">{status}</span>
+                    </div>
+                    <span className="text-lg font-bold text-mingcare-blue">{count}</span>
                   </div>
-                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
+                  
+                  {/* Show LDS breakdown for 申請中 customers */}
+                  {status === '申請中' && Object.keys(ldsStatsForApplying).length > 0 && (
+                    <div className="ml-6 mt-2 space-y-2">
+                      <div className="text-xs text-text-secondary font-medium">LDS狀態分佈:</div>
+                      {Object.entries(ldsStatsForApplying)
+                        .filter(([ldsStatus]) => ldsStatus !== '未設定')
+                        .map(([ldsStatus, ldsCount]) => (
+                        <div key={ldsStatus} className="flex justify-between items-center py-1 px-2 bg-bg-primary rounded text-xs">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              ldsStatus === '已經持有' ? 'bg-emerald-400' :
+                              ldsStatus === '已完成評估' ? 'bg-blue-400' :
+                              ldsStatus === '待社工評估' ? 'bg-amber-400' : 'bg-gray-300'
+                            }`}></div>
+                            <span className="text-text-secondary">{ldsStatus}</span>
+                          </div>
+                          <span className="text-mingcare-blue font-semibold">{ldsCount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
