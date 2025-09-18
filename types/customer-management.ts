@@ -48,6 +48,7 @@ export interface CustomerListItem {
   project_manager: string;
   created_at: string;
   customer_type: string;
+  introducer?: string;
   voucher_application_status?: string;
   lds_status?: string;
   home_visit_status?: string;

@@ -24,6 +24,27 @@ interface CustomerSummaryProps {
 }
 
 function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
+  // State for monthly service usage data
+  const [monthlyServiceUsage, setMonthlyServiceUsage] = useState<Record<string, number>>({})
+  const [isLoadingServiceUsage, setIsLoadingServiceUsage] = useState(false)
+
+  // Load monthly service usage data on component mount
+  useEffect(() => {
+    const loadMonthlyServiceUsage = async () => {
+      setIsLoadingServiceUsage(true)
+      try {
+        const usage = await CustomerManagementService.getMonthlyVoucherServiceUsage()
+        setMonthlyServiceUsage(usage)
+      } catch (error) {
+        console.error('Error loading monthly service usage:', error)
+      } finally {
+        setIsLoadingServiceUsage(false)
+      }
+    }
+    
+    loadMonthlyServiceUsage()
+  }, [])
+
   // Calculate statistics based on actual database fields
   const totalCustomers = customers.length
   
@@ -227,6 +248,51 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Monthly Voucher Service Usage by Introducer */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.75s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">
+              本月社區券服務使用情況（按介紹人）
+            </h3>
+            <div className="text-sm text-text-secondary">
+              {new Date().getFullYear()}年{new Date().getMonth() + 1}月
+            </div>
+          </div>
+          <div className="card-apple-content">
+            {isLoadingServiceUsage ? (
+              <div className="flex justify-center items-center py-4">
+                <div className="text-sm text-text-secondary">載入中...</div>
+              </div>
+            ) : Object.keys(monthlyServiceUsage).length === 0 ? (
+              <div className="text-center py-4">
+                <div className="text-sm text-text-secondary">本月暫無社區券服務記錄</div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(monthlyServiceUsage)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .map(([introducer, count]) => (
+                  <div key={introducer} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                    <span className="text-sm text-text-primary font-medium">{introducer}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
+                      <span className="text-xs text-text-secondary">人次</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="mt-4 pt-3 border-t border-border-primary">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium text-text-primary">總服務人次</span>
+                    <span className="font-bold text-mingcare-blue">
+                      {Object.values(monthlyServiceUsage).reduce((sum, count) => sum + count, 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
