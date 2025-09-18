@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
+import { generateCustomerPDF } from '../../services/pdf-export'
 import type {
   CustomerListItem,
   CustomerFilters,
@@ -21,9 +22,11 @@ interface User {
 interface CustomerSummaryProps {
   customers: CustomerListItem[]
   filters: CustomerFilters
+  onExportPDF: () => void
+  exportLoading: boolean
 }
 
-function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
+function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: CustomerSummaryProps) {
   // State for monthly service usage data
   const [monthlyServiceUsage, setMonthlyServiceUsage] = useState<Record<string, number>>({})
   const [isLoadingServiceUsage, setIsLoadingServiceUsage] = useState(false)
@@ -72,6 +75,20 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
     return acc
   }, {} as Record<string, number>)
 
+  // Introducer stats grouped by customer type
+  const introducerByCustomerTypeStats = customers.reduce((acc, customer) => {
+    const introducer = (customer as any).introducer
+    const customerType = customer.customer_type
+    
+    if (introducer && introducer.trim() && customerType) {
+      if (!acc[introducer]) {
+        acc[introducer] = {}
+      }
+      acc[introducer][customerType] = (acc[introducer][customerType] || 0) + 1
+    }
+    return acc
+  }, {} as Record<string, Record<string, number>>)
+
   // Voucher application status (voucher_application_status_enum: 已經持有, 申請中)
   const voucherStats = customers.reduce((acc, customer) => {
     const status = customer.voucher_application_status
@@ -103,18 +120,20 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
       return acc
     }, {} as Record<string, number>)
 
-  // Home visit status (home_visit_status_enum: 已完成, 未完成)
-  const homeVisitStats = customers.reduce((acc, customer) => {
-    const status = (customer as any).home_visit_status
-    // Only count customers who have a home visit status (exclude null/undefined/empty)
-    if (status && status.trim()) {
-      acc[status] = (acc[status] || 0) + 1
-    }
-    return acc
-  }, {} as Record<string, number>)
-
   return (
     <div className="space-y-6">
+      {/* Header with Export Button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-text-primary">客戶統計總覽</h2>
+        <button
+          onClick={onExportPDF}
+          disabled={exportLoading}
+          className="btn-apple text-sm"
+        >
+          {exportLoading ? '導出中...' : '導出報表'}
+        </button>
+      </div>
+
       {/* Overview Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Customers */}
@@ -225,16 +244,33 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
             <h3 className="text-lg font-semibold text-text-primary">主要介紹人</h3>
           </div>
           <div className="card-apple-content">
-            <div className="space-y-3">
-              {Object.entries(introducerStats)
-                .sort(([,a], [,b]) => (b as number) - (a as number))
+            <div className="space-y-4">
+              {Object.entries(introducerByCustomerTypeStats)
+                .sort(([,a], [,b]) => {
+                  const aTotal = Object.values(a).reduce((sum, count) => sum + count, 0)
+                  const bTotal = Object.values(b).reduce((sum, count) => sum + count, 0)
+                  return bTotal - aTotal
+                })
                 .slice(0, 6)
-                .map(([introducer, count]) => (
-                <div key={introducer} className="flex justify-between items-center">
-                  <span className="text-sm text-text-primary truncate">{introducer}</span>
-                  <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
-                </div>
-              ))}
+                .map(([introducer, customerTypes]) => {
+                  const totalCount = Object.values(customerTypes).reduce((sum, count) => sum + count, 0)
+                  return (
+                    <div key={introducer} className="border-b border-divider-light last:border-b-0 pb-3 last:pb-0">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-text-primary truncate">{introducer}</span>
+                        <span className="text-sm font-semibold text-mingcare-blue">{totalCount}</span>
+                      </div>
+                      <div className="pl-2 space-y-1">
+                        {Object.entries(customerTypes).map(([customerType, count]) => (
+                          <div key={customerType} className="flex justify-between items-center">
+                            <span className="text-xs text-text-secondary">• {customerType}</span>
+                            <span className="text-xs text-text-secondary">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
           </div>
         </div>
@@ -335,31 +371,6 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
             </div>
           </div>
         </div>
-
-        {/* Home Visit Status */}
-        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.9s' }}>
-          <div className="card-apple-header">
-            <h3 className="text-lg font-semibold text-text-primary">家訪狀態統計</h3>
-          </div>
-          <div className="card-apple-content">
-            <div className="space-y-4">
-              {Object.entries(homeVisitStats)
-                .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
-                .map(([status, count]) => (
-                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      status === '已完成' ? 'bg-emerald-500' :
-                      status === '未完成' ? 'bg-red-500' : 'bg-gray-400'
-                    }`}></div>
-                    <span className="text-sm font-medium text-text-primary">{status}</span>
-                  </div>
-                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Applied Filters Summary */}
@@ -400,6 +411,13 @@ export default function ClientsPage() {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  // 導出相關狀態
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [exportCustomerType, setExportCustomerType] = useState<'all' | 'mingcare-street' | 'voucher' | 'home-visit'>('all')
+  const [exportStartMonth, setExportStartMonth] = useState('2025-09') // 當前月份
+  const [exportEndMonth, setExportEndMonth] = useState('2025-09') // 當前月份
 
   useEffect(() => {
     const getUser = async () => {
@@ -444,6 +462,53 @@ export default function ClientsPage() {
     } catch (error) {
       console.error('載入完整客戶數據失敗:', error)
     }
+  }
+
+  // 導出功能
+  const handleExportPDF = () => {
+    setShowExportModal(true)
+  }
+
+  const handleExportConfirm = async () => {
+    setExportLoading(true)
+    setShowExportModal(false)
+
+    try {
+      // 將月份轉換為完整的日期範圍
+      let dateRange = undefined
+      if (exportStartMonth && exportEndMonth) {
+        // 開始日期：月初第1天
+        const startDate = `${exportStartMonth}-01`
+        // 結束日期：月末最後一天
+        const endYear = parseInt(exportEndMonth.split('-')[0])
+        const endMonth = parseInt(exportEndMonth.split('-')[1])
+        const lastDayOfMonth = new Date(endYear, endMonth, 0).getDate()
+        const endDate = `${exportEndMonth}-${lastDayOfMonth.toString().padStart(2, '0')}`
+        
+        dateRange = {
+          startDate,
+          endDate
+        }
+      }
+
+      const options = {
+        customerType: exportCustomerType,
+        dateRange,
+        includeStats: exportCustomerType === 'voucher'
+      }
+
+      await generateCustomerPDF(options)
+      alert('PDF 報表已生成並下載')
+    } catch (error) {
+      console.error('導出 PDF 時發生錯誤:', error)
+      alert('導出時發生錯誤，請重試')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleCancelExport = () => {
+    setShowExportModal(false)
   }
 
   // 搜尋建議 (debounced)
@@ -1366,9 +1431,95 @@ export default function ClientsPage() {
 
         {/* Customer Summary Tab */}
         {activeTab === 'summary' && (
-          <CustomerSummary customers={allCustomers} filters={filters} />
+          <CustomerSummary 
+            customers={allCustomers} 
+            filters={filters} 
+            onExportPDF={handleExportPDF}
+            exportLoading={exportLoading}
+          />
         )}
       </main>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCancelExport}>
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">導出客戶報表</h3>
+            
+            <div className="space-y-4">
+              {/* Customer Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">客戶類型</label>
+                <select
+                  value={exportCustomerType}
+                  onChange={(e) => setExportCustomerType(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                >
+                  <option value="all">全部客戶</option>
+                  <option value="mingcare-street">明家街客</option>
+                  <option value="voucher">社區券客戶</option>
+                  <option value="home-visit">家訪客戶</option>
+                </select>
+              </div>
+
+              {/* Month Range Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">開始月份</label>
+                  <input
+                    type="month"
+                    value={exportStartMonth}
+                    onChange={(e) => setExportStartMonth(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    placeholder="2025-09"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">結束月份</label>
+                  <input
+                    type="month"
+                    value={exportEndMonth}
+                    onChange={(e) => setExportEndMonth(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    placeholder="2025-09"
+                  />
+                </div>
+              </div>
+
+              {/* Export Info */}
+              <div className="bg-blue-50 p-3 rounded-md">
+                <p className="text-sm text-blue-800">
+                  {exportCustomerType === 'voucher' 
+                    ? `將導出社區券客戶報表，包含詳細統計分析（${exportStartMonth ? exportStartMonth.split('-')[1] : '9'}月服務使用情況、介紹人分佈、狀態統計等）`
+                    : '將導出基本客戶列表和統計信息'
+                  }
+                </p>
+                {exportStartMonth && exportEndMonth && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    統計範圍：{exportStartMonth} 至 {exportEndMonth}（月初第1天至月末最後一天）
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={handleCancelExport}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleExportConfirm}
+                disabled={exportLoading}
+                className="px-4 py-2 bg-mingcare-blue text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exportLoading ? '導出中...' : '確認導出'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
