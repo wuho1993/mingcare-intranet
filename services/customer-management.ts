@@ -505,72 +505,95 @@ export class CustomerManagementService {
       const startOfMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
       const endOfMonth = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
 
-      console.log('Querying billing_salary_data for month:', { startOfMonth, endOfMonth });
+      console.log('=== Monthly Voucher Service Usage Query ===');
+      console.log('Current date:', now.toISOString().split('T')[0]);
+      console.log('Current year:', currentYear);
+      console.log('Current month (0-indexed):', currentMonth);
+      console.log('Current month (display):', currentMonth + 1);
+      console.log('Date range:', { startOfMonth, endOfMonth });
+      console.log('Filtering by project_category: MC社區券(醫點）');
 
-      // 查詢 billing_salary_data 表中本月的社區券服務記錄
-      const { data: billingData, error } = await supabase
+      // Step 1: 首先獲取所有社區券客戶及其介紹人信息
+      console.log('Step 1: Fetching 社區券客戶 from customer_personal_data...');
+      const { data: voucherCustomers, error: customerError } = await supabase
+        .from('customer_personal_data')
+        .select('customer_name, introducer')
+        .eq('customer_type', '社區券客戶');
+
+      if (customerError) {
+        console.error('Error querying voucher customers:', customerError);
+        return {};
+      }
+
+      if (!voucherCustomers || voucherCustomers.length === 0) {
+        console.log('No 社區券客戶 found in customer_personal_data');
+        return {};
+      }
+
+      console.log(`Found ${voucherCustomers.length} 社區券客戶`);
+      
+      // 獲取客戶姓名列表
+      const voucherCustomerNames = voucherCustomers.map(c => c.customer_name).filter(Boolean);
+      console.log('Voucher customer names:', voucherCustomerNames.slice(0, 5), '...'); // Log first 5 names
+
+      if (voucherCustomerNames.length === 0) {
+        console.log('No customer names found');
+        return {};
+      }
+
+      // Step 2: 查詢 billing_salary_data 表中本月這些客戶的服務記錄
+      console.log('Step 2: Querying billing_salary_data for current month...');
+      const { data: billingData, error: billingError } = await supabase
         .from('billing_salary_data')
-        .select(`
-          customer_id,
-          customer_name,
-          service_date
-        `)
+        .select('customer_name, service_date, project_category')
         .gte('service_date', startOfMonth)
         .lte('service_date', endOfMonth)
-        .eq('project_category', '社區券');
+        .in('customer_name', voucherCustomerNames)
+        .eq('project_category', 'MC社區券(醫點）');
 
-      if (error) {
-        console.error('Error querying billing_salary_data:', error);
+      if (billingError) {
+        console.error('Error querying billing_salary_data:', billingError);
         return {};
       }
 
       if (!billingData || billingData.length === 0) {
-        console.log('No voucher service records found for current month');
+        console.log('No billing records found for voucher customers in current month');
         return {};
       }
 
-      console.log('Found billing records:', billingData.length);
+      console.log(`Found ${billingData.length} billing records for current month`);
 
-      // 獲取這些客戶的介紹人信息
-      const customerIds = Array.from(new Set(billingData.map(record => record.customer_id)));
-      
-      const { data: customerData, error: customerError } = await supabase
-        .from('customer_personal_data')
-        .select('customer_id, introducer')
-        .in('customer_id', customerIds);
-
-      if (customerError) {
-        console.error('Error querying customer introducer data:', customerError);
-        return {};
-      }
-
-      // 創建客戶ID到介紹人的映射
+      // Step 3: 創建客戶姓名到介紹人的映射
       const customerIntroducerMap = new Map();
-      customerData?.forEach(customer => {
-        customerIntroducerMap.set(customer.customer_id, customer.introducer || '未知');
+      voucherCustomers.forEach(customer => {
+        if (customer.customer_name) {
+          customerIntroducerMap.set(customer.customer_name, customer.introducer || '未知');
+        }
       });
 
-      // 按介紹人分組計算服務人數
+      // Step 4: 按介紹人分組計算服務人數
       const introducerServiceCount = new Map<string, Set<string>>();
       
       billingData.forEach(record => {
-        const introducer = customerIntroducerMap.get(record.customer_id) || '未知';
+        const introducer = customerIntroducerMap.get(record.customer_name) || '未知';
         
         if (!introducerServiceCount.has(introducer)) {
           introducerServiceCount.set(introducer, new Set());
         }
         
         // 使用 Set 確保同一個客戶在同一介紹人下只被計算一次
-        introducerServiceCount.get(introducer)!.add(record.customer_id);
+        introducerServiceCount.get(introducer)!.add(record.customer_name);
       });
 
-      // 轉換為最終結果格式
+      // Step 5: 轉換為最終結果格式
       const result: Record<string, number> = {};
       introducerServiceCount.forEach((customerSet, introducer) => {
         result[introducer] = customerSet.size;
       });
 
       console.log('Monthly voucher service usage by introducer:', result);
+      console.log('Total customers served:', Object.values(result).reduce((sum, count) => sum + count, 0));
+      
       return result;
 
     } catch (error) {
