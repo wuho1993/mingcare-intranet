@@ -297,24 +297,23 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
         </div>
       </div>
 
-      {/* LDS Status and Home Visit Status */}
+      {/* Voucher Application Status and Home Visit Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LDS Status */}
+        {/* Voucher Application Status */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.8s' }}>
           <div className="card-apple-header">
-            <h3 className="text-lg font-semibold text-text-primary">LDS狀態統計</h3>
+            <h3 className="text-lg font-semibold text-text-primary">社區券狀態統計</h3>
           </div>
           <div className="card-apple-content">
             <div className="space-y-4">
-              {Object.entries(ldsStats)
+              {Object.entries(voucherStats)
                 .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
                 .map(([status, count]) => (
                 <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${
                       status === '已經持有' ? 'bg-emerald-500' :
-                      status === '已完成評估' ? 'bg-blue-500' :
-                      status === '待社工評估' ? 'bg-orange-500' : 'bg-gray-400'
+                      status === '申請中' ? 'bg-orange-500' : 'bg-gray-400'
                     }`}></div>
                     <span className="text-sm font-medium text-text-primary">{status}</span>
                   </div>
