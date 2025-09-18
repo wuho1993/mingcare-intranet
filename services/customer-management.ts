@@ -562,11 +562,16 @@ export class CustomerManagementService {
 
       console.log(`Found ${billingData.length} billing records for current month`);
 
-      // Step 3: 按所屬項目(project_category)分組計算服務人數
+      // Step 3: 按所屬項目(project_category)分組計算服務人數（排除MC街客）
       const projectCategoryServiceCount = new Map<string, Set<string>>();
       
       billingData.forEach(record => {
         const projectCategory = record.project_category || '未知';
+        
+        // 跳過 MC街客，只統計社區券相關項目
+        if (projectCategory === 'MC街客') {
+          return;
+        }
         
         if (!projectCategoryServiceCount.has(projectCategory)) {
           projectCategoryServiceCount.set(projectCategory, new Set());
