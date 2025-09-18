@@ -16,11 +16,11 @@ import type {
 import type { CustomerType, Introducer, CustomerFormData } from '../types/database'
 
 export class CustomerManagementService {
-  
+
   // ========================================================================
   // 工具函數 (內部使用)
   // ========================================================================
-  
+
   /**
    * 檢查 ID 是否為 UUID 格式
    * @param id 要檢查的 ID
@@ -29,7 +29,7 @@ export class CustomerManagementService {
   private static isUUID(id: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   }
-  
+
   /**
    * 智能查詢：根據 ID 格式自動選擇查詢欄位
    * @param id UUID 或客戶編號
@@ -37,33 +37,30 @@ export class CustomerManagementService {
    * @returns 查詢結果
    */
   private static async queryBySmartId(
-    id: string, 
+    id: string,
     operation: (queryBuilder: any, idField: string) => any
   ) {
     const isUUID = this.isUUID(id);
     const idField = isUUID ? 'id' : 'customer_id';
-    
+
     console.log(`Using ${idField} query for ${isUUID ? 'UUID' : 'customer number'}:`, id);
-    
+
     return operation(supabase.from('customer_personal_data'), idField);
   }
-  
+
   // ========================================================================
   // 客戶編號生成 (使用 Supabase RPC - 並發安全)
   // ========================================================================
-  
+
   /**
    * 生成下一個客戶編號
    * 使用後端 RPC 函數，確保並發安全
-   * 
+   *
    * 規則:
    * 1. 社區券客戶 → CCSV-MC-0001
-   * 2. 明家街客 → MC-0001  
-   * 3. 家訪客戶 → 不生成編號
-   * 4. Steven Kwok + 社區券 → S-CCSV-0001
-   * 5. Steven Kwok + 明家街客 → MC-0001 (共用)
-   * 
-   * 注意：家訪客戶不會調用此函數，因為他們不需要編號
+   * 2. 明家街客 → MC-0001
+   * 3. Steven Kwok + 社區券 → S-CCSV-0001
+   * 4. Steven Kwok + 明家街客 → MC-0001 (共用)
    */
   static async generateNextCustomerId(
     customerType: CustomerType,
@@ -94,7 +91,7 @@ export class CustomerManagementService {
   // ========================================================================
   // 搜尋建議功能 (符合 API 規格)
   // ========================================================================
-  
+
   /**
    * 獲取搜尋建議 (支援姓名/電話/編號)
    * API 規格: GET /api/customers/search-suggestions?q={query}&limit={limit}
@@ -106,9 +103,9 @@ export class CustomerManagementService {
     try {
       // 符合 API 規格的參數檢查
       if (request.query.length < 2) {
-        return { 
-          data: [], 
-          error: '請輸入至少 2 個字元後再搜尋' 
+        return {
+          data: [],
+          error: '請輸入至少 2 個字元後再搜尋'
         };
       }
 
@@ -147,7 +144,7 @@ export class CustomerManagementService {
   // ========================================================================
   // 客戶列表管理 (符合 API 規格)
   // ========================================================================
-  
+
   /**
    * 獲取客戶列表 (支援篩選和分頁)
    * API 規格: GET /api/customers?page={page}&limit={limit}&filters={filters}
@@ -194,12 +191,6 @@ export class CustomerManagementService {
         // 符合 API 規格的搜尋邏輯，處理 customer_id 可能為 null 的情況
         query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,customer_id.ilike.%${filters.search}%`);
       }
-      if (filters?.lds_status) {
-        query = query.eq('lds_status', filters.lds_status);
-      }
-      if (filters?.voucher_application_status) {
-        query = query.eq('voucher_application_status', filters.voucher_application_status);
-      }
 
       // 符合 API 規格的分頁
       const from = (page - 1) * pageSize;
@@ -236,42 +227,42 @@ export class CustomerManagementService {
   // ========================================================================
   // 客戶 CRUD 操作 (符合 API 規格)
   // ========================================================================
-  
+
   /**
    * 根據 ID 獲取客戶詳細資料
    * API 規格: GET /api/customers/{customer_id}
-   * 
+   *
    * 智能查詢：自動識別 UUID 或客戶編號格式
    */
   static async getCustomerById(id: string): Promise<ApiResponse<CustomerData>> {
     try {
       console.log('Fetching customer with ID:', id);
-      
+
       // 使用智能查詢
       const result = await this.queryBySmartId(id, (queryBuilder, idField) =>
         queryBuilder.select('*').eq(idField, id).single()
       );
-      
+
       const { data, error } = result;
 
       // 如果第一次查詢失敗，嘗試另一種方式（備用邏輯）
       if (error && error.code === 'PGRST116') {
         console.log('First query failed, trying alternative method...');
-        
+
         const isUUID = this.isUUID(id);
         const alternativeField = isUUID ? 'customer_id' : 'id';
-        
+
         const alternativeResult = await supabase
           .from('customer_personal_data')
           .select('*')
           .eq(alternativeField, id)
           .single();
-          
+
         if (alternativeResult.error) {
           console.error('Database error:', alternativeResult.error);
           throw alternativeResult.error;
         }
-        
+
         console.log('Customer data found via alternative method:', alternativeResult.data);
         return { data: alternativeResult.data || undefined };
       }
@@ -337,9 +328,9 @@ export class CustomerManagementService {
         throw new Error(error.message);
       }
 
-      return { 
-        success: true, 
-        customer_id: customerId 
+      return {
+        success: true,
+        customer_id: customerId
       };
     } catch (error: any) {
       console.error('新增客戶失敗:', error);
@@ -353,7 +344,7 @@ export class CustomerManagementService {
   /**
    * 更新客戶資料
    * API 規格: PUT /api/customers/{customer_id}
-   * 
+   *
    * 智能查詢：自動識別 UUID 或客戶編號格式
    */
   static async updateCustomer(id: string, customerData: Partial<CustomerData>): Promise<ApiResponse<CustomerData>> {
@@ -388,7 +379,7 @@ export class CustomerManagementService {
   /**
    * 刪除客戶
    * API 規格: DELETE /api/customers/{customer_id}
-   * 
+   *
    * 智能查詢：自動識別 UUID 或客戶編號格式
    */
   static async deleteCustomer(id: string): Promise<ApiResponse<void>> {
@@ -412,7 +403,7 @@ export class CustomerManagementService {
   // ========================================================================
   // 驗證函數 (符合 API 規格驗證規則)
   // ========================================================================
-  
+
   /**
    * 客戶資料驗證 (符合後端驗證規則)
    */
@@ -434,11 +425,11 @@ export class CustomerManagementService {
     if (data.phone && !/^[0-9]{8}$/.test(data.phone)) {
       errors.phone = '電話格式錯誤，請輸入 8 位數字';
     }
-    
+
     if (data.hkid && !/^[A-Z]{1,2}[0-9]{6}([0-9A])$/.test(data.hkid)) {
       errors.hkid = 'HKID 格式錯誤';
     }
-    
+
     if (data.dob && new Date(data.dob) > new Date()) {
       errors.dob = '出生日期不能是未來日期';
     }
@@ -452,7 +443,7 @@ export class CustomerManagementService {
         errors.copay_level = '請選擇自付比例（copay_level）';
       }
     }
-    
+
     if (data.copay_level === '5%' && data.charity_support === undefined) {
       errors.charity_support = 'copay_level 為 5% 時，必須選擇慈善資助（charity_support）';
     }

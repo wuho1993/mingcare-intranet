@@ -7,10 +7,10 @@ import { supabase } from '../../lib/supabase'
 import { CareStaffManagementService } from '../../services/care-staff-management'
 import { FileUploadCard } from '../../components/FileUploadCard'
 import { FileUploadService } from '../../services/file-upload'
-import type { 
+import type {
   CareStaff,
-  CareStaffListItem, 
-  CareStaffFilters, 
+  CareStaffListItem,
+  CareStaffFilters,
   ViewMode,
   CareStaffSearchSuggestion,
   CareStaffSort,
@@ -44,22 +44,22 @@ export default function CareStaffPage() {
   const [sort, setSort] = useState<CareStaffSort>({ field: 'created_at', direction: 'desc' })
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  
+
   // Drawer 編輯狀態
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<CareStaff | null>(null)
   const [editLoading, setEditLoading] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
-  
+
   // 文件上載狀態
   const [fileUrls, setFileUrls] = useState<Record<string, string>>({})
   const [fileUploadDisabled, setFileUploadDisabled] = useState(false)
-  
+
   // 選項數據
   const [languageOptions, setLanguageOptions] = useState<Array<{id: number, label: string}>>([])
   const [jobPositionOptions, setJobPositionOptions] = useState<Array<{id: number, label: string}>>([])
   const [optionsLoading, setOptionsLoading] = useState(false)
-  
+
   const router = useRouter()
 
   // 確保只在客戶端渲染
@@ -86,7 +86,7 @@ export default function CareStaffPage() {
   const getJobPositionColor = (position: string) => {
     // 簡化職位名稱（去除英文部分）
     const simplifiedPosition = position.replace(/\s*\([^)]*\)/g, '').trim()
-    
+
     const colorMap: { [key: string]: string } = {
       '陪診員': 'bg-blue-100 text-blue-800',
       '居家照顧員': 'bg-green-100 text-green-800',
@@ -106,7 +106,7 @@ export default function CareStaffPage() {
       '物理治療助理': 'bg-amber-100 text-amber-800',
       '職業治療助理': 'bg-violet-100 text-violet-800'
     }
-    
+
     return colorMap[simplifiedPosition] || 'bg-gray-100 text-gray-800'
   }
 
@@ -156,7 +156,7 @@ export default function CareStaffPage() {
     try {
       setOptionsLoading(true)
       const result = await CareStaffManagementService.getCareStaffOptions()
-      
+
       setLanguageOptions(result.languages || [])
       setJobPositionOptions(result.job_positions || [])
     } catch (error) {
@@ -199,10 +199,10 @@ export default function CareStaffPage() {
       console.log('開始搜尋建議:', query)
       const result = await CareStaffManagementService.getCareStaffSuggestions({ query })
       const suggestions = result.data || []
-      
+
       console.log('搜尋建議結果:', suggestions.length, '筆')
       setSearchSuggestions(suggestions)
-      
+
       updateDropdownPosition() // 更新位置
       // 確保有結果時顯示建議，沒有結果時也要更新狀態
       setShowSuggestions(true) // 總是顯示，即使沒有結果也要顯示空狀態
@@ -217,12 +217,12 @@ export default function CareStaffPage() {
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
     setSearchQuery(query)
-    
+
     // 如果正在使用中文輸入法，不觸發搜尋
     if (isComposing) {
       return
     }
-    
+
     // 清除之前的 timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout)
@@ -251,7 +251,7 @@ export default function CareStaffPage() {
   const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
     setIsComposing(false)
     const query = e.currentTarget.value
-    
+
     // 輸入法結束後，根據新的搜尋邏輯立即觸發搜尋
     const shouldTriggerSearch = query.length >= 1 // 至少1個字符就可以搜尋
 
@@ -270,7 +270,7 @@ export default function CareStaffPage() {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedSuggestionIndex(prev => 
+          setSelectedSuggestionIndex(prev =>
             prev < searchSuggestions.length - 1 ? prev + 1 : prev
           )
           break
@@ -332,7 +332,7 @@ export default function CareStaffPage() {
 
   // 處理排序
   const handleSort = (field: SortField) => {
-    const newDirection: SortDirection = 
+    const newDirection: SortDirection =
       sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc'
     const newSort = { field, direction: newDirection }
     setSort(newSort)
@@ -349,7 +349,7 @@ export default function CareStaffPage() {
       if (result.data) {
         setEditingStaff(result.data)
         setIsDrawerOpen(true)
-        
+
         // 初始化文件 URLs
         setFileUrls({
           hkid_copy_url: result.data.hkid_copy_url || '',
@@ -380,7 +380,7 @@ export default function CareStaffPage() {
     try {
       setEditLoading(true)
       const result = await CareStaffManagementService.deleteCareStaff(staff.id)
-      
+
       if (result.success) {
         // 刪除成功，重新載入列表
         await loadCareStaff()
@@ -401,38 +401,38 @@ export default function CareStaffPage() {
   // 處理保存編輯
   const handleSaveEdit = async (formData: FormData) => {
     if (!editingStaff) return
-    
+
     try {
       setSaveLoading(true)
-      
+
       // 表單驗證
       const name_chinese = formData.get('name_chinese') as string
       const phone = formData.get('phone') as string
       const contract_status = formData.get('contract_status') as string
-      
+
       // 必填欄位驗證
       if (!name_chinese?.trim()) {
         alert('中文姓名為必填欄位')
         return
       }
-      
+
       if (!phone?.trim()) {
         alert('聯絡電話為必填欄位')
         return
       }
-      
+
       // 電話格式驗證（8位數字）
       const phoneRegex = /^\d{8}$/
       if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
         alert('聯絡電話必須為8位數字')
         return
       }
-      
+
       if (!contract_status) {
         alert('合約狀態為必填欄位')
         return
       }
-      
+
       // 構建更新數據
       const updateData: Partial<CareStaffFormData> = {
         name_chinese: name_chinese.trim(),
@@ -446,10 +446,10 @@ export default function CareStaffPage() {
         emergency_contact: (formData.get('emergency_contact') as string)?.trim() || undefined,
         emergency_contact_phone: (formData.get('emergency_contact_phone') as string)?.trim() || undefined,
       }
-      
+
       // 更新護理人員資料
       const result = await CareStaffManagementService.updateCareStaff(editingStaff.id, updateData)
-      
+
       if (result.data) {
         alert('護理人員資料已更新')
         setIsDrawerOpen(false)
@@ -470,20 +470,20 @@ export default function CareStaffPage() {
   // 處理文件上載成功
   const handleFileUploadSuccess = async (fieldName: string, url: string) => {
     if (!editingStaff) return
-    
+
     try {
       setFileUploadDisabled(true)
-      
+
       // 更新本地狀態
       setFileUrls(prev => ({
         ...prev,
         [fieldName]: url
       }))
-      
+
       // 立即更新資料庫
       const updateData = { [fieldName]: url }
       const result = await CareStaffManagementService.updateCareStaff(editingStaff.id, updateData)
-      
+
       if (result.data) {
         // 更新編輯中的護理人員資料
         setEditingStaff(prev => prev ? { ...prev, [fieldName]: url } : null)
@@ -512,21 +512,21 @@ export default function CareStaffPage() {
   // 處理文件移除
   const handleFileRemove = async (fieldName: string) => {
     if (!editingStaff) return
-    
+
     try {
       setFileUploadDisabled(true)
-      
+
       // 更新資料庫
       const updateData = { [fieldName]: null }
       const result = await CareStaffManagementService.updateCareStaff(editingStaff.id, updateData)
-      
+
       if (result.data) {
         // 更新本地狀態
         setFileUrls(prev => ({
           ...prev,
           [fieldName]: ''
         }))
-        
+
         // 更新編輯中的護理人員資料
         setEditingStaff(prev => prev ? { ...prev, [fieldName]: null } : null)
         alert('檔案連結已移除')
@@ -629,7 +629,7 @@ export default function CareStaffPage() {
 
               {/* Search Suggestions Portal */}
               {mounted && showSuggestions && searchQuery.length >= 1 && createPortal(
-                <div 
+                <div
                   className="fixed bg-white border border-border-light rounded-apple-sm shadow-apple-card max-h-80 overflow-y-auto z-[9999] scrollbar-thin scrollbar-thumb-bg-tertiary scrollbar-track-transparent"
                   style={{
                     top: `${dropdownPosition.top}px`,
@@ -662,8 +662,8 @@ export default function CareStaffPage() {
                             key={suggestion.id}
                             onClick={() => handleSuggestionClick(suggestion)}
                             className={`w-full text-left px-4 py-3 transition-colors border-b border-border-light last:border-b-0 group focus:outline-none ${
-                              isSelected 
-                                ? 'bg-brand-primary text-white' 
+                              isSelected
+                                ? 'bg-brand-primary text-white'
                                 : 'hover:bg-bg-tertiary focus:bg-bg-tertiary'
                             }`}
                             ref={(el) => {
@@ -676,8 +676,8 @@ export default function CareStaffPage() {
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className={`text-sm font-medium transition-colors ${
-                                  isSelected 
-                                    ? 'text-white' 
+                                  isSelected
+                                    ? 'text-white'
                                     : 'text-text-primary group-hover:text-brand-primary group-focus:text-brand-primary'
                                 }`}>
                                   {suggestion.name_chinese}
@@ -700,8 +700,8 @@ export default function CareStaffPage() {
                                 </div>
                               </div>
                               <div className={`text-xs px-2 py-1 rounded-full transition-colors ${
-                                isSelected 
-                                  ? 'bg-blue-500 text-white' 
+                                isSelected
+                                  ? 'bg-blue-500 text-white'
                                   : 'text-text-tertiary bg-bg-secondary group-hover:bg-brand-secondary group-focus:bg-brand-secondary'
                               }`}>
                                 {suggestion.match_type === 'name' && '姓名'}
@@ -727,7 +727,7 @@ export default function CareStaffPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div className="form-group-apple">
                 <label className="form-label-apple text-sm sm:text-base">性別</label>
-                <select 
+                <select
                   value={filters.gender || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -749,7 +749,7 @@ export default function CareStaffPage() {
               </div>
               <div className="form-group-apple">
                 <label className="form-label-apple text-sm sm:text-base">偏好地區</label>
-                <select 
+                <select
                   value={filters.preferred_area || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -788,7 +788,7 @@ export default function CareStaffPage() {
               </div>
               <div className="form-group-apple sm:col-span-2 lg:col-span-1">
                 <label className="form-label-apple text-sm sm:text-base">職位</label>
-                <select 
+                <select
                   value={filters.job_position || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -835,7 +835,7 @@ export default function CareStaffPage() {
                     setCurrentPage(1)
                     setSearchQuery('')
                     setShowSuggestions(false)
-                    
+
                     // 重新載入全部護理人員（無任何篩選）
                     try {
                       setLoading(true)
@@ -873,15 +873,15 @@ export default function CareStaffPage() {
                   共 <span className="font-semibold text-mingcare-blue">{totalCount}</span> 位護理人員
                 </span>
               </div>
-              
+
               {/* View Mode Toggle */}
               <div className="flex items-center space-x-4">
                 <div className="flex rounded-apple-sm border border-border-light p-1 bg-bg-tertiary">
                   <button
                     onClick={() => setViewMode('card')}
                     className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
-                      viewMode === 'card' 
-                        ? 'bg-white text-mingcare-blue shadow-apple' 
+                      viewMode === 'card'
+                        ? 'bg-white text-mingcare-blue shadow-apple'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -896,8 +896,8 @@ export default function CareStaffPage() {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
-                      viewMode === 'list' 
-                        ? 'bg-white text-mingcare-blue shadow-apple' 
+                      viewMode === 'list'
+                        ? 'bg-white text-mingcare-blue shadow-apple'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -1014,8 +1014,8 @@ export default function CareStaffPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-border-light">
                         {careStaff.map((staff, index) => (
-                          <tr 
-                            key={staff.id} 
+                          <tr
+                            key={staff.id}
                             className="hover:bg-bg-tertiary transition-colors cursor-pointer"
                             onClick={() => handleEditStaff(staff)}
                           >
@@ -1055,8 +1055,8 @@ export default function CareStaffPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                staff.contract_status === '同意' 
-                                  ? 'bg-green-100 text-green-800' 
+                                staff.contract_status === '同意'
+                                  ? 'bg-green-100 text-green-800'
                                   : staff.contract_status === '不同意'
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-gray-100 text-gray-800'
@@ -1093,7 +1093,7 @@ export default function CareStaffPage() {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="space-y-3 mb-4">
                             <div className="flex items-center text-apple-caption text-text-secondary">
                               <svg className="h-4 w-4 mr-3 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1101,7 +1101,7 @@ export default function CareStaffPage() {
                               </svg>
                               <span>{staff.phone}</span>
                             </div>
-                            
+
                             <div className="flex items-center text-apple-caption text-text-secondary">
                               <svg className="h-4 w-4 mr-3 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -1110,7 +1110,7 @@ export default function CareStaffPage() {
                               <span>{staff.preferred_area || '沒有提供'}</span>
                             </div>
                           </div>
-                          
+
                           {/* 職位標籤區域 */}
                           <div className="mb-4">
                             <div className="flex flex-wrap gap-2">
@@ -1130,7 +1130,7 @@ export default function CareStaffPage() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="border-t border-border-light pt-3">
                             <div className="flex justify-between items-center text-apple-caption text-text-tertiary">
                               <span>建立於 {new Date(staff.created_at).toLocaleDateString('zh-TW')}</span>
@@ -1150,16 +1150,16 @@ export default function CareStaffPage() {
         </div>
 
         {/* TODO: 分頁控制 */}
-        
+
         {/* 編輯 Drawer */}
         {isDrawerOpen && editingStaff && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
-            <div 
+            <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
               onClick={() => setIsDrawerOpen(false)}
             />
-            
+
             {/* Drawer */}
             <div className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform transition-transform">
               <div className="flex flex-col h-full">
@@ -1193,9 +1193,9 @@ export default function CareStaffPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Content */}
-                <form 
+                <form
                   action={handleSaveEdit}
                   className="flex-1 overflow-y-auto"
                 >
@@ -1287,7 +1287,7 @@ export default function CareStaffPage() {
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">性別</label>
-                        <select 
+                        <select
                           name="gender"
                           defaultValue={editingStaff.gender || ''}
                           className="form-select-apple"
@@ -1302,7 +1302,7 @@ export default function CareStaffPage() {
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">偏好工作區域</label>
-                        <select 
+                        <select
                           name="preferred_area"
                           defaultValue={editingStaff.preferred_area || ''}
                           className="form-select-apple"
@@ -1334,7 +1334,7 @@ export default function CareStaffPage() {
                       </div>
                       <div className="form-group-apple">
                         <label className="form-label-apple">合約狀態 *</label>
-                        <select 
+                        <select
                           name="contract_status"
                           defaultValue={editingStaff.contract_status || ''}
                           className="form-select-apple"
@@ -1589,7 +1589,7 @@ export default function CareStaffPage() {
                                   if (!editingStaff) return
                                   const currentLanguages = editingStaff.language || []
                                   let newLanguages: string[]
-                                  
+
                                   if (e.target.checked) {
                                     // 添加語言
                                     newLanguages = [...currentLanguages, language]
@@ -1597,7 +1597,7 @@ export default function CareStaffPage() {
                                     // 移除語言
                                     newLanguages = currentLanguages.filter(lang => lang !== language)
                                   }
-                                  
+
                                   setEditingStaff({
                                     ...editingStaff,
                                     language: newLanguages
@@ -1631,7 +1631,7 @@ export default function CareStaffPage() {
                         onRemove={() => handleFileRemove('hkid_copy_url')}
                         disabled={fileUploadDisabled}
                       />
-                      
+
                       {[1, 2, 3, 4, 5].map((num) => (
                         <FileUploadCard
                           key={num}
@@ -1644,7 +1644,7 @@ export default function CareStaffPage() {
                           disabled={fileUploadDisabled}
                         />
                       ))}
-                      
+
                       <FileUploadCard
                         label="SCRC 文件"
                         fieldName="scrc_status"
@@ -1658,7 +1658,7 @@ export default function CareStaffPage() {
                   </div>
                   </div>
                 </form>
-                
+
                 {/* Footer */}
                 <div className="border-t border-border-light px-6 py-4 bg-bg-secondary">
                   <div className="flex justify-end space-x-3">

@@ -6,7 +6,7 @@
 // ========================================================================
 
 export interface CustomerIdGenerationRequest {
-  customer_type: '社區券客戶' | '明家街客' | '家訪客戶';
+  customer_type: '社區券客戶' | '明家街客';
   introducer: string;
 }
 
@@ -58,7 +58,7 @@ export interface CustomerListItem {
 export interface CustomerData {
   id?: string;
   customer_id?: string;
-  customer_type: '社區券客戶' | '明家街客' | '家訪客戶';
+  customer_type: '社區券客戶' | '明家街客';
   customer_name: string;
   phone: string;
   district: string;
@@ -69,7 +69,7 @@ export interface CustomerData {
   health_status: string;
   introducer: string;
   project_manager: string;
-  
+
   // 社區券相關欄位 (條件顯示)
   voucher_application_status?: '申請中' | '已經持有';
   voucher_number?: string; // 已經持有時必填
@@ -77,7 +77,7 @@ export interface CustomerData {
   charity_support?: boolean; // copay_level=5%時必選
   lds_status?: '已完成評估' | '已經持有' | '待社工評估';
   home_visit_status?: '已完成' | '未完成';
-  
+
   created_at?: string;
 }
 
@@ -96,8 +96,6 @@ export interface CustomerFilters {
   district?: string;
   introducer?: string;
   project_manager?: string;
-  lds_status?: string;
-  voucher_application_status?: string;
 }
 
 export type ViewMode = 'card' | 'list';
@@ -124,12 +122,12 @@ export interface PaginatedResponse<T> {
 // Enum 選項 (從數據庫結構對應)
 // ========================================================================
 
-export const CUSTOMER_TYPE_OPTIONS = ['社區券客戶', '明家街客', '家訪客戶'] as const;
+export const CUSTOMER_TYPE_OPTIONS = ['社區券客戶', '明家街客'] as const;
 
 export const DISTRICT_OPTIONS = [
-  '中西區', '九龍城區', '元朗區', '北區', '南區', '大埔區', 
-  '屯門區', '東區', '沙田區', '油尖旺區', '深水埗區', '灣仔區', 
-  '荃灣區', '葵青區', '西貢區', '觀塘區', '離島區', '黃大仙區', 
+  '中西區', '九龍城區', '元朗區', '北區', '南區', '大埔區',
+  '屯門區', '東區', '沙田區', '油尖旺區', '深水埗區', '灣仔區',
+  '荃灣區', '葵青區', '西貢區', '觀塘區', '離島區', '黃大仙區',
   '未分類（醫院,院舍)'
 ] as const;
 
@@ -138,8 +136,8 @@ export const HEALTH_STATUS_OPTIONS = [
 ] as const;
 
 export const INTRODUCER_OPTIONS = [
-  'Kanas Leung', 'Joe Cheung', 'Candy Ho', 'Steven Kwok', 
-  'Dr.Lee', 'Annie', 'Janet', '陸sir', '吳翹政', '余翠英', 
+  'Kanas Leung', 'Joe Cheung', 'Candy Ho', 'Steven Kwok',
+  'Dr.Lee', 'Annie', 'Janet', '陸sir', '吳翹政', '余翠英',
   '陳小姐MC01', '曾先生'
 ] as const;
 

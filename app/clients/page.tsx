@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
-import type { 
-  CustomerListItem, 
-  CustomerFilters, 
+import type {
+  CustomerListItem,
+  CustomerFilters,
   ViewMode,
-  SearchSuggestion 
+  SearchSuggestion
 } from '../../types/customer-management'
 
 interface User {
@@ -66,12 +66,12 @@ export default function ClientsPage() {
   // 搜尋建議 (debounced)
   const handleSearchInput = async (query: string) => {
     setSearchQuery(query)
-    
+
     // 清除之前的 timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout)
     }
-    
+
     if (query.length >= 2) {
       // Debounce search - 等待 300ms 後執行
       const timeout = setTimeout(async () => {
@@ -88,7 +88,7 @@ export default function ClientsPage() {
           console.error('搜尋建議失敗:', error)
         }
       }, 300)
-      
+
       setSearchTimeout(timeout)
     } else {
       setSuggestions([])
@@ -112,7 +112,7 @@ export default function ClientsPage() {
       const newFilters = { ...filters, search: searchTerm.trim() }
       setFilters(newFilters)
       setCurrentPage(1) // 重置到第一頁
-      
+
       try {
         const response = await CustomerManagementService.getCustomers(
           newFilters,
@@ -183,26 +183,18 @@ export default function ClientsPage() {
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-1 sm:mb-2">客戶管理中心</h1>
               <p className="text-sm sm:text-base text-text-secondary">管理所有客戶資料、聯絡信息及服務記錄</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <button
-                onClick={() => router.push('/clients/summary')}
-                className="btn-apple-primary text-xs sm:text-sm px-3 sm:px-4 py-2"
-              >
-                📊 客戶總結
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="btn-apple-secondary text-xs sm:text-sm self-start sm:self-auto"
-              >
-                返回主頁
-              </button>
-            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-apple-secondary text-xs sm:text-sm self-start sm:self-auto"
+            >
+              返回主頁
+            </button>
           </div>
         </div>
       </header>
 
       <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        
+
         {/* Search and Filter Section */}
         <div className="card-apple mb-4 sm:mb-6 fade-in-apple">
           <div className="card-apple-header">
@@ -268,8 +260,8 @@ export default function ClientsPage() {
               />
             </div>
 
-            {/* Enhanced Filter Controls - Updated Layout */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            {/* Enhanced Filter Controls - Compact Mobile Layout */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               {/* 客戶類型 */}
               <div className="min-w-0">
                 <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
@@ -278,12 +270,12 @@ export default function ClientsPage() {
                   </svg>
                   <span className="truncate">客戶類型</span>
                 </label>
-                <select 
+                <select
                   value={filters.customer_type || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
                     if (e.target.value) {
-                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客' | '家訪客戶' | '家訪客戶'
+                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客'
                     } else {
                       delete newFilters.customer_type
                     }
@@ -295,7 +287,6 @@ export default function ClientsPage() {
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
                   <option value="明家街客">明家街客</option>
-                  <option value="家訪客戶">家訪客戶</option>
                 </select>
               </div>
 
@@ -308,7 +299,7 @@ export default function ClientsPage() {
                   </svg>
                   <span className="truncate">地區</span>
                 </label>
-                <select 
+                <select
                   value={filters.district || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -352,7 +343,7 @@ export default function ClientsPage() {
                   </svg>
                   <span className="truncate">介紹人</span>
                 </label>
-                <select 
+                <select
                   value={filters.introducer || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -390,7 +381,7 @@ export default function ClientsPage() {
                   </svg>
                   <span className="truncate">負責同事</span>
                 </label>
-                <select 
+                <select
                   value={filters.project_manager || ''}
                   onChange={(e) => {
                     const newFilters = { ...filters }
@@ -410,63 +401,6 @@ export default function ClientsPage() {
                   <option value="Candy Ho">Candy</option>
                 </select>
               </div>
-
-              {/* LDS 狀況 */}
-              <div className="min-w-0">
-                <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
-                  <svg className="w-3 h-3 mr-1 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="truncate">LDS 狀況</span>
-                </label>
-                <select 
-                  value={filters.lds_status || ''}
-                  onChange={(e) => {
-                    const newFilters = { ...filters }
-                    if (e.target.value) {
-                      newFilters.lds_status = e.target.value
-                    } else {
-                      delete newFilters.lds_status
-                    }
-                    setFilters(newFilters)
-                    setCurrentPage(1)
-                  }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  <option value="">全部</option>
-                  <option value="已完成評估">已完成評估</option>
-                  <option value="已經持有">已經持有</option>
-                  <option value="待社工評估">待社工評估</option>
-                </select>
-              </div>
-
-              {/* 社區券申請狀況 */}
-              <div className="min-w-0">
-                <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
-                  <svg className="w-3 h-3 mr-1 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                  </svg>
-                  <span className="truncate">社區券狀況</span>
-                </label>
-                <select 
-                  value={filters.voucher_application_status || ''}
-                  onChange={(e) => {
-                    const newFilters = { ...filters }
-                    if (e.target.value) {
-                      newFilters.voucher_application_status = e.target.value
-                    } else {
-                      delete newFilters.voucher_application_status
-                    }
-                    setFilters(newFilters)
-                    setCurrentPage(1)
-                  }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                >
-                  <option value="">全部</option>
-                  <option value="已經持有">已經持有</option>
-                  <option value="申請中">申請中</option>
-                </select>
-              </div>
             </div>
 
             {/* Clear Filters Button - Compact */}
@@ -479,7 +413,7 @@ export default function ClientsPage() {
                     setCurrentPage(1)
                     setSearchQuery('')
                     setShowSuggestions(false)
-                    
+
                     // 重新載入全部客戶（無任何篩選）
                     try {
                       setLoading(true)
@@ -549,7 +483,7 @@ export default function ClientsPage() {
                   </div>
                 )}
               </div>
-              
+
               {/* 新增客戶 & 檢視切換按鈕 */}
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
@@ -562,13 +496,13 @@ export default function ClientsPage() {
                   <span className="hidden sm:inline">新增客戶</span>
                   <span className="sm:hidden">新增</span>
                 </button>
-                
+
                 <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50">
                   <button
                     onClick={() => setViewMode('card')}
                     className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                      viewMode === 'card' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
+                      viewMode === 'card'
+                        ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -582,8 +516,8 @@ export default function ClientsPage() {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                      viewMode === 'list' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
+                      viewMode === 'list'
+                        ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -613,8 +547,8 @@ export default function ClientsPage() {
                   {Object.keys(filters).length > 0 ? '沒有符合條件的客戶' : '暫無客戶資料'}
                 </h3>
                 <p className="text-apple-body text-text-secondary mb-6 max-w-md mx-auto">
-                  {Object.keys(filters).length > 0 
-                    ? '嘗試調整搜尋條件或篩選器以找到您需要的客戶' 
+                  {Object.keys(filters).length > 0
+                    ? '嘗試調整搜尋條件或篩選器以找到您需要的客戶'
                     : '開始新增客戶以建立您的客戶資料庫'
                   }
                 </p>
@@ -644,15 +578,15 @@ export default function ClientsPage() {
                       >
                         {/* Enhanced Customer Type Header Bar */}
                         <div className={`px-3 py-2 md:px-4 md:py-3 text-white font-medium text-xs md:text-sm rounded-t-2xl md:rounded-t-3xl ${
-                          customer.customer_type === '社區券客戶' 
-                            ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                          customer.customer_type === '社區券客戶'
+                            ? 'bg-gradient-to-r from-green-500 to-green-600'
                             : 'bg-gradient-to-r from-blue-500 to-blue-600'
                         }`}>
                           <div className="flex items-center justify-center">
                             <span>{customer.customer_type}</span>
                           </div>
                         </div>
-                        
+
                         <div className="p-3 md:p-6 bg-white rounded-b-2xl md:rounded-b-3xl relative z-10">
                           {/* Card Header */}
                           <div className="flex justify-between items-start mb-2 md:mb-4">
@@ -665,7 +599,7 @@ export default function ClientsPage() {
                               </p>
                             </div>
                           </div>
-                          
+
                           {/* Card Body */}
                           <div className="space-y-2 md:space-y-3 mb-2 md:mb-4">
                             <div className="flex items-center text-xs md:text-apple-caption text-text-secondary">
@@ -682,7 +616,7 @@ export default function ClientsPage() {
                               <span className="line-clamp-2">{customer.service_address}</span>
                             </div>
                           </div>
-                          
+
                           {/* Status Information - 2個標籤一行 */}
                           <div className="space-y-1.5 md:space-y-2 mb-2 md:mb-4">
                             <div className="grid grid-cols-2 gap-1.5 md:gap-2">
@@ -690,8 +624,8 @@ export default function ClientsPage() {
                                 <div className="text-xs">
                                   <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">社區券：</span>
                                   <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
-                                    customer.voucher_application_status === '已經持有' 
-                                      ? 'bg-green-100 text-green-800' 
+                                    customer.voucher_application_status === '已經持有'
+                                      ? 'bg-green-100 text-green-800'
                                       : 'bg-yellow-100 text-yellow-800'
                                   }`}>
                                     {customer.voucher_application_status}
@@ -703,7 +637,7 @@ export default function ClientsPage() {
                                   <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">LDS：</span>
                                   <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
                                     customer.lds_status === '已完成評估' || customer.lds_status === '已經持有'
-                                      ? 'bg-blue-100 text-blue-800' 
+                                      ? 'bg-blue-100 text-blue-800'
                                       : 'bg-gray-100 text-gray-800'
                                   }`}>
                                     {customer.lds_status}
@@ -716,8 +650,8 @@ export default function ClientsPage() {
                                 <div className="text-xs">
                                   <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">家訪：</span>
                                   <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
-                                    customer.home_visit_status === '已完成' 
-                                      ? 'bg-green-100 text-green-800' 
+                                    customer.home_visit_status === '已完成'
+                                      ? 'bg-green-100 text-green-800'
                                       : 'bg-red-100 text-red-800'
                                   }`}>
                                     {customer.home_visit_status}
@@ -734,7 +668,7 @@ export default function ClientsPage() {
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Card Footer - 移除客戶類型，只保留日期 */}
                           <div className="pt-2 md:pt-4 border-t border-border-light text-right">
                             <span className="text-xs text-text-tertiary">
@@ -773,16 +707,16 @@ export default function ClientsPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-border-light">
                         {customers.map((customer, index) => (
-                          <tr 
-                            key={customer.id} 
+                          <tr
+                            key={customer.id}
                             className="hover:bg-bg-tertiary transition-colors cursor-pointer"
                             onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className={`w-1 h-8 rounded-full mr-3 ${
-                                  customer.customer_type === '社區券客戶' 
-                                    ? 'bg-green-500' 
+                                  customer.customer_type === '社區券客戶'
+                                    ? 'bg-green-500'
                                     : 'bg-blue-500'
                                 }`} />
                                 <div>
@@ -805,8 +739,8 @@ export default function ClientsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                customer.customer_type === '社區券客戶' 
-                                  ? 'bg-green-100 text-green-800' 
+                                customer.customer_type === '社區券客戶'
+                                  ? 'bg-green-100 text-green-800'
                                   : 'bg-blue-100 text-blue-800'
                               }`}>
                                 {customer.customer_type}
@@ -818,8 +752,8 @@ export default function ClientsPage() {
                                   <div className="flex items-center text-xs">
                                     <span className="font-medium text-text-primary mr-1">社區券：</span>
                                     <span className={`px-2 py-1 rounded-full text-xs ${
-                                      customer.voucher_application_status === '已經持有' 
-                                        ? 'bg-green-100 text-green-800' 
+                                      customer.voucher_application_status === '已經持有'
+                                        ? 'bg-green-100 text-green-800'
                                         : 'bg-yellow-100 text-yellow-800'
                                     }`}>
                                       {customer.voucher_application_status}
@@ -831,7 +765,7 @@ export default function ClientsPage() {
                                     <span className="font-medium text-text-primary mr-1">LDS：</span>
                                     <span className={`px-2 py-1 rounded-full text-xs ${
                                       customer.lds_status === '已完成評估' || customer.lds_status === '已經持有'
-                                        ? 'bg-blue-100 text-blue-800' 
+                                        ? 'bg-blue-100 text-blue-800'
                                         : 'bg-gray-100 text-gray-800'
                                     }`}>
                                       {customer.lds_status}
@@ -842,8 +776,8 @@ export default function ClientsPage() {
                                   <div className="flex items-center text-xs">
                                     <span className="font-medium text-text-primary mr-1">家訪：</span>
                                     <span className={`px-2 py-1 rounded-full text-xs ${
-                                      customer.home_visit_status === '已完成' 
-                                        ? 'bg-green-100 text-green-800' 
+                                      customer.home_visit_status === '已完成'
+                                        ? 'bg-green-100 text-green-800'
                                         : 'bg-red-100 text-red-800'
                                     }`}>
                                       {customer.home_visit_status}
@@ -883,7 +817,7 @@ export default function ClientsPage() {
                   共 <span className="font-medium">{totalCount}</span> 項結果
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button 
+                  <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage <= 1}
                     className="btn-apple-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -892,7 +826,7 @@ export default function ClientsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  
+
                   {/* Page Numbers */}
                   <div className="flex items-center space-x-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -906,7 +840,7 @@ export default function ClientsPage() {
                       } else {
                         pageNum = currentPage - 2 + i
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
@@ -921,8 +855,8 @@ export default function ClientsPage() {
                       )
                     })}
                   </div>
-                  
-                  <button 
+
+                  <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage >= totalPages}
                     className="btn-apple-secondary px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -91,13 +91,13 @@ interface SortConfig {
 }
 
 // 報表月曆檢視組件
-function ReportsCalendarView({ 
-  filters, 
-  onEdit, 
+function ReportsCalendarView({
+  filters,
+  onEdit,
   onDelete,
-  refreshTrigger 
-}: { 
-  filters: BillingSalaryFilters; 
+  refreshTrigger
+}: {
+  filters: BillingSalaryFilters;
   onEdit: (record: BillingSalaryRecord) => void;
   onDelete: (recordId: string) => void;
   refreshTrigger?: number;
@@ -112,13 +112,13 @@ function ReportsCalendarView({
     const handleResize = () => {
       setIsMobile(window.innerWidth < 640)
     }
-    
+
     // 初始化
     handleResize()
-    
+
     // 監聽 resize 事件
     window.addEventListener('resize', handleResize)
-    
+
     return () => {
       window.removeEventListener('resize', handleResize)
     }
@@ -133,7 +133,7 @@ function ReportsCalendarView({
       setLoading(true)
       try {
         const response = await fetchBillingSalaryRecords(filters, 1, 1000) // 獲取更多記錄用於月曆顯示
-        
+
         if (response.success && response.data) {
           // 將記錄按日期分組
           const groupedByDate: Record<string, BillingSalaryRecord[]> = {}
@@ -144,7 +144,7 @@ function ReportsCalendarView({
             }
             groupedByDate[dateKey].push(record)
           })
-          
+
           setCalendarData(groupedByDate)
         }
       } catch (error) {
@@ -164,16 +164,16 @@ function ReportsCalendarView({
     const firstDay = new Date(year, month, 1)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay()) // 從週日開始
-    
+
     const days = []
     const current = new Date(startDate)
-    
+
     // 生成6週的日期（42天）
     for (let i = 0; i < 42; i++) {
       days.push(new Date(current))
       current.setDate(current.getDate() + 1)
     }
-    
+
     return days
   }
 
@@ -208,11 +208,11 @@ function ReportsCalendarView({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        
+
         <h4 className="text-base sm:text-lg font-medium text-text-primary">
           {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
         </h4>
-        
+
         <button
           onClick={() => navigateMonth('next')}
           className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
@@ -240,33 +240,33 @@ function ReportsCalendarView({
           const isToday = dateStr === formatDateSafely(new Date())
           const isWeekend = date.getDay() === 0 || date.getDay() === 6
           const dayRecords = calendarData[dateStr] || []
-          
+
           // 根據記錄數量動態調整高度 - 移動端小一些
           const baseHeight = isMobile ? 80 : 120
           const additionalHeight = isMobile ? 50 : 80
-          const minHeight = dayRecords.length > 0 
+          const minHeight = dayRecords.length > 0
             ? Math.max(baseHeight, baseHeight + (dayRecords.length - 1) * additionalHeight)
             : baseHeight
-          
+
           return (
             <div
               key={index}
               style={{ minHeight: `${minHeight}px` }}
               className={`
                 p-1 sm:p-2 border rounded-lg
-                ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' : 
+                ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' :
                   isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
                 ${isToday ? 'ring-1 sm:ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
               `}
             >
               <div className={`
                 text-xs sm:text-sm font-bold mb-1 sm:mb-2
-                ${isToday ? 'text-mingcare-blue' : 
+                ${isToday ? 'text-mingcare-blue' :
                   isCurrentMonth ? 'text-text-primary' : 'text-gray-300'}
               `}>
                 {date.getDate()}
               </div>
-              
+
               {/* 服務記錄 - 移動端優化 */}
               {isCurrentMonth && dayRecords.length > 0 && (
                 <div className="space-y-0.5 sm:space-y-1">
@@ -276,7 +276,7 @@ function ReportsCalendarView({
                     const isExpanded = expandedDates.has(dateKey)
                     const maxRecords = isMobile ? 2 : 3
                     const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, maxRecords)
-                    
+
                     return (recordsToShow || []).map((record, i) => (
                       <div
                         key={`${record.id}-${i}`}
@@ -299,7 +299,7 @@ function ReportsCalendarView({
                       </div>
                     ))
                   })()}
-                  
+
                   {/* 展開/收合按鈕 */}
                   {dayRecords.length > 3 && (
                     <button
@@ -307,19 +307,19 @@ function ReportsCalendarView({
                         e.stopPropagation()
                         const dateKey = formatDateSafely(date)
                         const newExpandedDates = new Set(expandedDates)
-                        
+
                         if (expandedDates.has(dateKey)) {
                           newExpandedDates.delete(dateKey)
                         } else {
                           newExpandedDates.add(dateKey)
                         }
-                        
+
                         setExpandedDates(newExpandedDates)
                       }}
                       className="w-full text-sm text-mingcare-blue hover:text-blue-700 text-center py-1 rounded hover:bg-blue-50 transition-colors"
                     >
-                      {expandedDates.has(formatDateSafely(date)) 
-                        ? '收合記錄' 
+                      {expandedDates.has(formatDateSafely(date))
+                        ? '收合記錄'
                         : `還有 ${dayRecords.length - 3} 筆記錄...`
                       }
                     </button>
@@ -336,7 +336,7 @@ function ReportsCalendarView({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
             <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
-            
+
             {/* 記錄詳情 */}
             <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <div className="text-sm text-text-secondary mb-1">
@@ -402,7 +402,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'service_date', direction: 'desc' })
-  
+
   // 分頁狀態
   const [currentPage, setCurrentPage] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
@@ -421,7 +421,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     try {
       setLoading(true)
       setError(null)
-      
+
       // 二月和四月的特別調試
       if (filters.dateRange?.start) {
         const startMonth = new Date(filters.dateRange.start).getMonth() + 1
@@ -429,10 +429,10 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           console.log(`🔍 載入${startMonth}月記錄，filters:`, filters)
         }
       }
-      
+
       // 一次獲取所有記錄，不使用分頁
       const response = await fetchBillingSalaryRecords(filters, 1, 10000)
-      
+
       // 二月和四月的特別調試
       if (filters.dateRange?.start) {
         const startMonth = new Date(filters.dateRange.start).getMonth() + 1
@@ -447,7 +447,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           })
         }
       }
-      
+
       if (response.success && response.data) {
         const fetchedRecords = response.data.data || []
         setTotalRecords(response.data.total || 0) // 設置總記錄數
@@ -502,11 +502,11 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
   // 處理排序按鈕點擊
   const handleSort = (field: SortField) => {
-    const newDirection: SortDirection = 
-      sortConfig.field === field && sortConfig.direction === 'desc' 
-        ? 'asc' 
+    const newDirection: SortDirection =
+      sortConfig.field === field && sortConfig.direction === 'desc'
+        ? 'asc'
         : 'desc'
-    
+
     const newConfig: SortConfig = { field, direction: newDirection }
     setSortConfig(newConfig)
     sortRecords(originalRecords, newConfig)
@@ -532,11 +532,11 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
         recordId: editingRecord.id,
         formData
       })
-      
+
       const response = await updateBillingSalaryRecord(editingRecord.id, formData)
-      
+
       console.log('📝 更新結果:', response)
-      
+
       if (response.success) {
         // 顯示成功提示
         alert('記錄更新成功！頁面將自動重新載入。')
@@ -568,11 +568,11 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
     try {
       setLoading(true)
       console.log('🗑️ 開始刪除記錄:', recordId)
-      
+
       const response = await deleteBillingSalaryRecord(recordId)
-      
+
       console.log('🗑️ 刪除結果:', response)
-      
+
       if (response.success) {
         alert('記錄刪除成功！頁面將自動重新載入。')
         // 強制刷新頁面
@@ -625,7 +625,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           </svg>
         </div>
         <p className="text-red-600 font-medium mb-2">{error}</p>
-        <button 
+        <button
           onClick={loadRecords}
           className="px-4 py-2 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-colors"
         >
@@ -657,7 +657,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border-light pb-4 space-y-3 sm:space-y-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-text-secondary font-medium">排序：</span>
-          
+
           {/* 按日期排序 */}
           <button
             onClick={() => handleSort('service_date')}
@@ -669,12 +669,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           >
             <span>日期</span>
             {sortConfig.field === 'service_date' && (
-              <svg 
+              <svg
                 className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
-                }`} 
-                fill="none" 
-                stroke="currentColor" 
+                }`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -694,12 +694,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
             <span className="hidden sm:inline">客戶名稱</span>
             <span className="sm:hidden">客戶</span>
             {sortConfig.field === 'customer_name' && (
-              <svg 
+              <svg
                 className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
-                }`} 
-                fill="none" 
-                stroke="currentColor" 
+                }`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -719,12 +719,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
             <span className="hidden sm:inline">客戶編號</span>
             <span className="sm:hidden">編號</span>
             {sortConfig.field === 'customer_id' && (
-              <svg 
+              <svg
                 className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${
                   sortConfig.direction === 'desc' ? 'rotate-180' : ''
-                }`} 
-                fill="none" 
-                stroke="currentColor" 
+                }`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -742,7 +742,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       {/* 記錄列表 - 移動端優化 */}
       <div className="space-y-3">
         {records && records.map((record) => (
-          <div 
+          <div
             key={record.id}
             className="border border-border-light rounded-lg p-3 sm:p-4 hover:shadow-md transition-all duration-200 bg-white"
           >
@@ -752,7 +752,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
                 <span className="font-medium text-text-primary text-sm sm:text-base">{record.service_date}</span>
                 <span className="text-xs sm:text-sm text-text-secondary">{record.project_category}</span>
               </div>
-              
+
               {/* 操作按鈕 - 移動端優化 */}
               <div className="flex items-center space-x-2 self-end sm:self-center">
                 <button
@@ -796,13 +796,13 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
             {/* 第3行：服務地址 - 移動端優化 */}
             <div className="mb-2">
-              <span 
+              <span
                 className="text-xs sm:text-sm text-text-secondary cursor-help block break-words overflow-hidden"
                 title={record.service_address}
-                style={{ 
-                  display: '-webkit-box', 
-                  WebkitLineClamp: 1, 
-                  WebkitBoxOrient: 'vertical' 
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical'
                 }}
               >
                 {record.service_address}
@@ -826,7 +826,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
           </div>
         ))}
       </div>
-      
+
       {/* 記錄統計信息 */}
       <div className="text-center text-xs sm:text-sm text-text-secondary mt-6">
         共 {totalRecords} 筆記錄
@@ -870,12 +870,12 @@ interface ReportsTabProps {
 }
 
 // 概覽頁面組件
-function OverviewTab({ 
-  filters, 
-  setFilters, 
-  updateDateRange, 
-  kpiData, 
-  kpiLoading, 
+function OverviewTab({
+  filters,
+  setFilters,
+  updateDateRange,
+  kpiData,
+  kpiLoading,
   categorySummary
 }: OverviewTabProps) {
   return (
@@ -884,7 +884,7 @@ function OverviewTab({
       <div className="card-apple border border-border-light fade-in-apple">
         <div className="p-6">
           <h2 className="text-apple-heading text-text-primary mb-4">選擇時段</h2>
-          
+
           {/* 第一行：快捷選擇按鈕 */}
           <div className="flex items-center gap-4 mb-4">
             <div className="flex gap-2 flex-wrap">
@@ -926,7 +926,7 @@ function OverviewTab({
               </button>
             </div>
           </div>
-          
+
           {/* 第二行：年月選擇器 */}
           <div className="flex items-center gap-4 mb-4">
             {/* 年月選擇器 */}
@@ -938,14 +938,14 @@ function OverviewTab({
                   const month = filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
-                  
+
                   // 使用本地日期格式避免時區問題
-                  const start = year + '-' + 
+                  const start = year + '-' +
                                String(month + 1).padStart(2, '0') + '-01'
-                  const end = endDate.getFullYear() + '-' + 
-                             String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                  const end = endDate.getFullYear() + '-' +
+                             String(endDate.getMonth() + 1).padStart(2, '0') + '-' +
                              String(endDate.getDate()).padStart(2, '0')
-                  
+
                   setFilters(prev => ({
                     ...prev,
                     dateRange: { start, end }
@@ -962,7 +962,7 @@ function OverviewTab({
                   )
                 })}
               </select>
-              
+
               <select
                 value={filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()}
                 onChange={(e) => {
@@ -970,14 +970,14 @@ function OverviewTab({
                   const month = parseInt(e.target.value)
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
-                  
+
                   // 使用本地日期格式避免時區問題
-                  const start = year + '-' + 
+                  const start = year + '-' +
                                String(month + 1).padStart(2, '0') + '-01'
-                  const end = endDate.getFullYear() + '-' + 
-                             String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                  const end = endDate.getFullYear() + '-' +
+                             String(endDate.getMonth() + 1).padStart(2, '0') + '-' +
                              String(endDate.getDate()).padStart(2, '0')
-                  
+
                   setFilters(prev => ({
                     ...prev,
                     dateRange: { start, end }
@@ -993,7 +993,7 @@ function OverviewTab({
               </select>
             </div>
           </div>
-          
+
           {/* 第二行：月曆時間段選擇 */}
           <div className="flex items-center gap-2">
             <label className="text-sm text-text-secondary">時間段：</label>
@@ -1017,7 +1017,7 @@ function OverviewTab({
               className="px-3 py-2 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
             />
           </div>
-          
+
           <div className="mt-4 text-sm text-text-secondary">
             當前範圍：{filters.dateRange?.start || '未設定'} ~ {filters.dateRange?.end || '未設定'}
           </div>
@@ -1082,7 +1082,7 @@ function OverviewTab({
       <div className="card-apple border border-border-light fade-in-apple">
         <div className="p-6">
           <h3 className="text-apple-heading text-text-primary mb-6">項目分類統計</h3>
-          
+
           {categorySummary && categorySummary.length > 0 ? (
             <div className="space-y-4">
               {categorySummary.slice(0, 5).map((summary, index) => (
@@ -1106,7 +1106,7 @@ function OverviewTab({
                   </div>
                 </div>
               ))}
-              
+
               {categorySummary && categorySummary.length > 5 && (
                 <div className="text-center text-sm text-text-secondary">
                   還有 {categorySummary.length - 5} 個項目，請到詳細報表查看
@@ -1152,7 +1152,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
     const allSchedules = Object.values(localSchedules || {}).flat()
     console.log('計算社區券統計 - 本地排程:', localSchedules) // 調試日誌
     console.log('所有排程:', allSchedules) // 調試日誌
-    
+
     try {
       // 獲取 voucher_rate 費率表
       const voucherRatesResponse = await fetchVoucherRates()
@@ -1164,7 +1164,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
       const voucherRates = voucherRatesResponse.data
       const rateMap = new Map(voucherRates.map(rate => [rate.service_type, rate.service_rate]))
       console.log('社區券費率表:', rateMap) // 調試日誌
-      
+
       // 按服務類型分組統計
       const serviceTypeStats: Record<string, {
         count: number
@@ -1177,7 +1177,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
         const serviceType = schedule.service_type || '未分類'
         const rate = rateMap.get(serviceType) || 0
         const hours = schedule.service_hours || 0
-        
+
         if (!serviceTypeStats[serviceType]) {
           serviceTypeStats[serviceType] = {
             count: 0,
@@ -1186,7 +1186,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
             total_amount: 0
           }
         }
-        
+
         serviceTypeStats[serviceType].count += 1
         serviceTypeStats[serviceType].total_hours += hours
         serviceTypeStats[serviceType].total_amount += hours * rate
@@ -1199,7 +1199,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
         total_rate: stats.rate,
         total_amount: stats.total_amount
       }))
-      
+
       console.log('社區券統計結果:', result) // 調試日誌
       setVoucherSummary(result)
       return result
@@ -1242,7 +1242,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
       {voucherSummary.length > 0 ? (
         <div>
           <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
-          
+
           {/* 總計卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-purple-50 rounded-lg p-4">
@@ -1372,7 +1372,7 @@ function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
   return (
     <div>
       <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計</h3>
-      
+
       {/* 總計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
@@ -1427,7 +1427,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   const [selectedDates, setSelectedDates] = useState<string[]>([]) // 多日期選擇
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false) // 多選模式
   const [formSubmitting, setFormSubmitting] = useState(false)
-  
+
   // 本地排程狀態 - 新增的排程先存在這裡，不立即保存到 Supabase
   const [localSchedules, setLocalSchedules] = useState<Record<string, BillingSalaryFormData[]>>({})
 
@@ -1493,10 +1493,10 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
     if (selectedCustomerFilter === 'all') {
       return localSchedules
     }
-    
+
     const filtered: Record<string, BillingSalaryFormData[]> = {}
     Object.entries(localSchedules).forEach(([dateStr, daySchedules]) => {
-      const filteredSchedules = daySchedules.filter(schedule => 
+      const filteredSchedules = daySchedules.filter(schedule =>
         schedule.customer_name === selectedCustomerFilter
       )
       if (filteredSchedules.length > 0) {
@@ -1524,7 +1524,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   const handleSaveLocalSchedules = async () => {
     const filteredSchedules = getFilteredLocalSchedules()
     const filteredTotal = Object.values(filteredSchedules || {}).reduce((total, daySchedules) => total + (daySchedules?.length || 0), 0)
-    
+
     if (filteredTotal === 0) {
       if (selectedCustomerFilter === 'all') {
         alert('沒有待儲存的排程')
@@ -1540,7 +1540,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
     try {
       setFormSubmitting(true)
-      
+
       // 將篩選後的本地排程直接儲存到 Supabase
       for (const [dateStr, daySchedules] of Object.entries(filteredSchedules)) {
         for (const schedule of daySchedules) {
@@ -1572,7 +1572,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             console.error('Supabase 儲存錯誤:', error)
             throw new Error(`儲存排程失敗: ${error.message}`)
           }
-          
+
           console.log('成功儲存排程到 Supabase:', data)
         }
       }
@@ -1587,7 +1587,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
           const newSchedules = { ...prev }
           Object.keys(filteredSchedules).forEach(dateStr => {
             if (newSchedules[dateStr]) {
-              newSchedules[dateStr] = newSchedules[dateStr].filter(schedule => 
+              newSchedules[dateStr] = newSchedules[dateStr].filter(schedule =>
                 schedule.customer_name !== selectedCustomerFilter
               )
               // 如果該日期沒有排程了，刪除整個日期鍵
@@ -1599,9 +1599,9 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
           return newSchedules
         })
       }
-      
+
       alert(`成功儲存 ${customerInfo} 的 ${filteredTotal} 個排程到資料庫！`)
-      
+
     } catch (error) {
       console.error('儲存本地排程失敗:', error)
       alert('儲存排程時發生錯誤，請稍後再試')
@@ -1707,12 +1707,12 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
         // 編輯模式：更新現有的本地排程
         const { originalDateStr, originalIndex } = editingLocalSchedule
         const newDate = formData.service_date
-        
+
         console.log('編輯排程 - 原日期:', originalDateStr, '新日期:', newDate)
 
         setLocalSchedules(prev => {
           const newSchedules = { ...prev }
-          
+
           // 從原日期移除排程
           if (newSchedules[originalDateStr]) {
             newSchedules[originalDateStr] = newSchedules[originalDateStr].filter((_, index) => index !== originalIndex)
@@ -1721,10 +1721,10 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
               delete newSchedules[originalDateStr]
             }
           }
-          
+
           // 添加到新日期
           newSchedules[newDate] = [...(newSchedules[newDate] || []), formData]
-          
+
           console.log('更新後的本地排程:', newSchedules)
           return newSchedules
         })
@@ -1740,7 +1740,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
             [date]: [...(prev[date] || []), scheduleWithDate]
           }))
         })
-        
+
         alert(`成功添加 ${selectedDates.length} 筆排班記錄到月曆`)
       } else {
         // 單日排班
@@ -1749,7 +1749,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
           ...prev,
           [date]: [...(prev[date] || []), formData]
         }))
-        
+
         alert('成功添加排班記錄到月曆')
       }
 
@@ -1773,16 +1773,16 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
     const firstDay = new Date(year, month, 1)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay()) // 從週日開始
-    
+
     const days = []
     const current = new Date(startDate)
-    
+
     // 生成6週的日期（42天）
     for (let i = 0; i < 42; i++) {
       days.push(new Date(current))
       current.setDate(current.getDate() + 1)
     }
-    
+
     return days
   }
 
@@ -1796,7 +1796,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
   // 處理日期點擊 - 新增排班
   const handleDateClick = (date: Date) => {
     const dateStr = formatDateSafely(date)
-    
+
     if (isMultiSelectMode) {
       // 多選模式：切換日期選擇狀態
       if (selectedDates.includes(dateStr)) {
@@ -1823,7 +1823,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
               <h3 className="text-apple-heading text-text-primary">月曆排班</h3>
-              
+
               {/* 客戶篩選器 */}
               {getLocalCustomerNames().length > 0 && (
                 <div className="flex items-center space-x-2">
@@ -1843,7 +1843,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                 </div>
               )}
             </div>
-            
+
             {/* 多天排班控制 */}
             <div className="flex items-center gap-4">
               {isMultiSelectMode && selectedDates.length > 0 && (
@@ -1855,13 +1855,13 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
               {/* 顯示本地排程數量 */}
               {getTotalLocalSchedules() > 0 && (
                 <div className="text-sm text-orange-600 font-medium">
-                  {selectedCustomerFilter === 'all' 
-                    ? `待儲存 ${getTotalLocalSchedules()} 個排程` 
+                  {selectedCustomerFilter === 'all'
+                    ? `待儲存 ${getTotalLocalSchedules()} 個排程`
                     : `${selectedCustomerFilter}: ${Object.values(getFilteredLocalSchedules()).reduce((total, daySchedules) => total + daySchedules.length, 0)} 個排程`
                   }
                 </div>
               )}
-              
+
               <button
                 onClick={() => {
                   setIsMultiSelectMode(!isMultiSelectMode)
@@ -1876,7 +1876,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
               >
                 {isMultiSelectMode ? '取消多選' : '多天排班'}
               </button>
-              
+
               {isMultiSelectMode && selectedDates.length > 0 && (
                 <button
                   onClick={() => {
@@ -1899,14 +1899,14 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
-                  {formSubmitting ? '儲存中...' : 
+                  {formSubmitting ? '儲存中...' :
                     selectedCustomerFilter === 'all' ? '確認儲存全部' : `儲存 ${selectedCustomerFilter}`
                   }
                 </button>
               )}
             </div>
           </div>
-          
+
           {/* 月份導航 */}
           <div className="flex justify-between items-center mb-6">
             <button
@@ -1917,11 +1917,11 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            
+
             <h4 className="text-lg font-medium text-text-primary">
               {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月 排班表
             </h4>
-            
+
             <button
               onClick={() => navigateMonth('next')}
               className="p-2 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
@@ -1954,12 +1954,12 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
               const filteredLocalSchedules = getFilteredLocalSchedules()
               const localDaySchedules = filteredLocalSchedules[dateStr] || []
               const allSchedules = [...remoteSchedules, ...localDaySchedules]
-              
+
               // 根據排程數量動態調整高度 - 考慮文字換行需要更多空間
-              const minHeight = allSchedules.length > 0 
-                ? Math.max(140, 140 + (allSchedules.length - 1) * 90) 
+              const minHeight = allSchedules.length > 0
+                ? Math.max(140, 140 + (allSchedules.length - 1) * 90)
                 : 140
-              
+
               return (
                 <div
                   key={index}
@@ -1968,7 +1968,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                   className={`
                     p-2 border-2 rounded-lg cursor-pointer
                     transition-all duration-200 hover:shadow-md
-                    ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' : 
+                    ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' :
                       isSelected ? 'bg-green-100 border-green-500 border-2' :
                       isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
                     ${isToday ? 'ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
@@ -1977,7 +1977,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                 >
                   <div className={`
                     text-lg font-bold mb-3 flex justify-between items-center
-                    ${isToday ? 'text-mingcare-blue' : 
+                    ${isToday ? 'text-mingcare-blue' :
                       isCurrentMonth ? 'text-text-primary' : 'text-gray-300'}
                   `}>
                     <span>{date.getDate()}</span>
@@ -1987,7 +1987,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                       </span>
                     )}
                   </div>
-                  
+
                   {/* 排班內容 - 新格式 */}
                   {isCurrentMonth && (
                     <div className="space-y-2">
@@ -2001,19 +2001,19 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                           <div className="font-medium text-gray-800 mb-2 text-base break-words leading-tight">
                             {schedule.customer_name}/{schedule.care_staff_name}
                           </div>
-                          
+
                           {/* 第二行：服務類型 - 允許換行 */}
                           <div className="text-blue-600 mb-2 text-base break-words leading-tight">
                             {schedule.service_type}
                           </div>
-                          
+
                           {/* 第三行：開始時間-結束時間 */}
                           <div className="text-gray-600 text-base font-medium">
                             {schedule.start_time}-{schedule.end_time}
                           </div>
                         </div>
                       ))}
-                      
+
                       {/* 本地排程 - 可點擊編輯/刪除 */}
                       {(localDaySchedules || []).map((schedule, i) => (
                         <div
@@ -2028,17 +2028,17 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
                           <div className="absolute inset-0 bg-blue-500 bg-opacity-0 group-hover:bg-opacity-20 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                             <span className="text-blue-700 font-bold text-sm">點擊編輯</span>
                           </div>
-                          
+
                           {/* 第一行：客戶名稱/護理人員名稱 - 允許換行 */}
                           <div className="font-medium text-gray-800 mb-2 text-base break-words leading-tight">
                             {schedule.customer_name}/{schedule.care_staff_name}
                           </div>
-                          
+
                           {/* 第二行：服務類型 - 允許換行 */}
                           <div className="text-blue-600 mb-2 text-base break-words leading-tight">
                             {schedule.service_type}
                           </div>
-                          
+
                           {/* 第三行：開始時間-結束時間 */}
                           <div className="text-gray-600 text-base font-medium">
                             {schedule.start_time}-{schedule.end_time}
@@ -2140,7 +2140,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
-  
+
   // 客戶搜尋相關狀態
   const [customerSearchTerm, setCustomerSearchTerm] = useState('')
   const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
@@ -2203,7 +2203,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   // 客戶搜尋函數
   const handleCustomerSearch = async (searchTerm: string) => {
     console.log('客戶搜尋開始:', searchTerm) // 除錯輸出
-    
+
     if (searchTerm.length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
@@ -2213,7 +2213,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     try {
       setCustomerSearchLoading(true)
       console.log('使用 Supabase 直接進行客戶搜尋') // 調試日誌
-      
+
       // 直接使用 Supabase 客戶端查詢（正確的表名和欄位名）
       const { data, error } = await supabase
         .from('customer_personal_data')
@@ -2236,12 +2236,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         display_text: item.customer_name || '',
         type: 'customer' as const
       }))
-      
+
       console.log('客戶搜尋結果:', results) // 調試日誌
       setCustomerSuggestions(results)
       setShowCustomerSuggestions(true)
       console.log('設定建議列表:', results.length, '筆資料') // 除錯輸出
-      
+
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
       setCustomerSuggestions([])
@@ -2267,7 +2267,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
     setSelectedCustomers(prev => {
       const isSelected = prev.some(c => c.customer_id === customer.customer_id)
       let newSelection
-      
+
       if (isSelected) {
         newSelection = (prev || []).filter(c => c.customer_id !== customer.customer_id)
         console.log('移除客戶:', customer.customer_name) // 除錯輸出
@@ -2275,10 +2275,10 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         newSelection = [...(prev || []), customer]
         console.log('新增客戶:', customer.customer_name) // 除錯輸出
       }
-      
+
       return newSelection
     })
-    
+
     // 選擇客戶後不要立即隱藏下拉選單，讓用戶可以繼續選擇
     // setCustomerSearchTerm('')
     // setShowCustomerSuggestions(false)
@@ -2314,7 +2314,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   // 處理搜尋輸入變化
   const handleCustomerSearchChange = (value: string) => {
     setCustomerSearchTerm(value)
-    
+
     // 只在沒有選中客戶時才直接更新篩選條件
     if (!selectedCustomers || selectedCustomers.length === 0) {
       setFilters(prev => ({
@@ -2322,7 +2322,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         searchTerm: value
       }))
     }
-    
+
     // 觸發搜尋建議（降低門檻，輸入1個字符就開始搜尋）
     if (value.length >= 1) {
       updateDropdownPosition() // 更新位置
@@ -2340,7 +2340,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
       <div className="card-apple border border-border-light fade-in-apple" style={{ overflow: 'visible' }}>
         <div className="p-6" style={{ overflow: 'visible' }}>
           <h2 className="text-apple-heading text-text-primary mb-6">篩選條件</h2>
-          
+
           {/* 第一行：日期區間 + 快捷按鈕 - 移動端優化 */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
             <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-3 py-2 w-full sm:w-auto">
@@ -2367,7 +2367,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 className="border-none outline-none bg-transparent text-sm min-w-0 flex-1"
               />
             </div>
-            
+
             <div className="flex space-x-2 sm:space-x-3">
               <button
                 onClick={() => {
@@ -2381,7 +2381,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               >
                 今日記錄
               </button>
-              
+
               <button
                 onClick={() => updateDateRange('thisMonth')}
                 className="px-3 py-2 text-xs sm:text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap flex-1 sm:flex-none"
@@ -2425,12 +2425,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   }}
                   className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent text-xs sm:text-sm"
                 />
-                
+
                 {/* 客戶搜尋建議下拉選單 - 使用 Portal + 移動端優化 */}
                 {showCustomerSuggestions && typeof window !== 'undefined' && createPortal(
-                  <div 
-                    className="fixed bg-white border border-border-light rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[9999]" 
-                    style={{ 
+                  <div
+                    className="fixed bg-white border border-border-light rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[9999]"
+                    style={{
                       top: `${Math.min(dropdownPosition.top, window.innerHeight - 250)}px`,
                       left: `${Math.max(8, Math.min(dropdownPosition.left, window.innerWidth - dropdownPosition.width - 8))}px`,
                       width: `${Math.min(dropdownPosition.width, window.innerWidth - 16)}px`,
@@ -2481,7 +2481,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   document.body
                 )}
               </div>
-              
+
               {/* 選中客戶的 chips 顯示 - 移動端優化 */}
               {selectedCustomers && selectedCustomers.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1 sm:gap-2">
@@ -2547,7 +2547,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-                
+
                 {isProjectCategoryDropdownOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
                     {PROJECT_CATEGORY_OPTIONS.map(option => {
@@ -2563,7 +2563,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                             const newCategories = isSelected
                               ? currentCategories.filter(c => c !== option.value)
                               : [...currentCategories, option.value]
-                            
+
                             setFilters(prev => ({
                               ...prev,
                               projectCategory: newCategories
@@ -2628,7 +2628,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
-            
+
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               {/* 檢視模式切換 */}
               <div className="flex items-center border border-border-light rounded-lg p-1 w-full sm:w-auto">
@@ -2659,7 +2659,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   <span>月曆</span>
                 </button>
               </div>
-              
+
               {/* 導出按鈕 */}
               <button
                 onClick={handleExport}
@@ -2682,14 +2682,14 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </button>
             </div>
           </div>
-          
+
           {/* 服務記錄顯示 */}
           {reportsViewMode === 'list' ? (
             <DetailedRecordsList filters={filters} />
           ) : (
             <>
               <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
-              
+
               {/* 社區券機數統計 */}
               <div className="mt-8">
                 <div className="card-apple border border-border-light fade-in-apple">
@@ -2720,7 +2720,7 @@ export default function ServicesPage() {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    
+
     // 使用本地日期格式，避免時區轉換問題
     const formatLocalDate = (date: Date) => {
       const year = date.getFullYear()
@@ -2728,7 +2728,7 @@ export default function ServicesPage() {
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     }
-    
+
     return {
       dateRange: {
         start: formatLocalDate(startOfMonth),
@@ -2740,26 +2740,26 @@ export default function ServicesPage() {
 
   const [kpiData, setKpiData] = useState<BusinessKPI | null>(null)
   const [categorySummary, setCategorySummary] = useState<ProjectCategorySummary[]>([])
-  
+
   // 編輯相關狀態
   const [editingRecord, setEditingRecord] = useState<BillingSalaryRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  
+
   // 刷新觸發器
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  
+
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('pdf')
   const [exportMode, setExportMode] = useState<'accounting' | 'payroll'>('accounting')
   const [payrollExportType, setPayrollExportType] = useState<'separate' | 'combined'>('combined') // 工資模式的子選項
-  
+
   // 護理員分開PDF頁面狀態
   const [showStaffListPage, setShowStaffListPage] = useState(false)
   const [staffDownloadStatus, setStaffDownloadStatus] = useState<Record<string, string>>({}) // 記錄每個護理員的下載狀態 ('idle' | 'downloading' | 'downloaded' | 'error')
   const [staffList, setStaffList] = useState<string[]>([])
   const [loadingStaff, setLoadingStaff] = useState(true)
-  
+
   // 默認選中的欄位：1.服務日期 2.客戶姓名 3.服務地址 4.服務類型 5.開始時間-結束時間 6.時數 7.護理員姓名
   const [exportColumns, setExportColumns] = useState({
     service_date: true,      // 1. 服務日期 (默認)
@@ -2893,7 +2893,7 @@ export default function ServicesPage() {
                 .filter((record: BillingSalaryRecord) => record.care_staff_name && record.care_staff_name.trim() !== '')
                 .map((record: BillingSalaryRecord) => record.care_staff_name)
             )).sort() as string[]
-            
+
             setStaffList(uniqueStaff)
           }
         } catch (error) {
@@ -2902,7 +2902,7 @@ export default function ServicesPage() {
           setLoadingStaff(false)
         }
       }
-      
+
       loadStaffList()
     }
   }, [showStaffListPage, filters])
@@ -2991,17 +2991,17 @@ export default function ServicesPage() {
   const handleExportConfirm = async () => {
     setExportLoading(true)
     setShowExportModal(false)
-    
+
     try {
       // 獲取要導出的數據
       const response = await fetchBillingSalaryRecords(filters, 1, 10000) // 獲取所有記錄
-      
+
       if (!response.success || !response.data) {
         throw new Error('無法獲取數據')
       }
 
       let records = response.data.data || []
-      
+
       // 對數模式需要特殊排序：先按客戶名稱，再按日期
       if (exportMode === 'accounting') {
         records = records.sort((a, b) => {
@@ -3010,19 +3010,19 @@ export default function ServicesPage() {
           if (nameComparison !== 0) {
             return nameComparison
           }
-          
+
           // 2. 客戶名稱相同時，再按日期排序
           const dateA = new Date(a.service_date || '')
           const dateB = new Date(b.service_date || '')
           return dateA.getTime() - dateB.getTime()
         })
       }
-      
+
       // 根據選擇的欄位過濾數據
       const selectedColumns = Object.entries(exportColumns)
         .filter(([_, selected]) => selected)
         .map(([column, _]) => column)
-      
+
       if (exportFormat === 'pdf') {
         // 工資模式且選擇分開PDF的特殊處理
         if (exportMode === 'payroll' && payrollExportType === 'separate') {
@@ -3036,7 +3036,7 @@ export default function ServicesPage() {
       } else {
         await exportToCSVCustom(records, selectedColumns)
       }
-      
+
       alert('導出成功')
     } catch (error) {
       console.error('Export error:', error)
@@ -3049,10 +3049,10 @@ export default function ServicesPage() {
   const downloadSingleStaffPDF = async (staffName: string, records: any[], columns: string[]) => {
     try {
       // 篩選該護理員的記錄
-      const staffRecords = (records || []).filter(record => 
+      const staffRecords = (records || []).filter(record =>
         (record.care_staff_name || '未知護理人員') === staffName
       )
-      
+
       if (staffRecords.length === 0) {
         alert('該護理員沒有記錄')
         return
@@ -3060,15 +3060,15 @@ export default function ServicesPage() {
 
       // 按日期排序
       staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
-      
+
       await generateAndDownloadStaffPDF(staffRecords, columns, staffName)
-      
+
       // 更新下載狀態
       setStaffDownloadStatus(prev => ({
         ...prev,
         [staffName]: 'downloaded'
       }))
-      
+
     } catch (error) {
       console.error('下載護理員PDF時發生錯誤:', error)
       alert('下載護理員PDF時發生錯誤')
@@ -3084,7 +3084,7 @@ export default function ServicesPage() {
         .select('staff_id, name_chinese, name_english, hkid')
         .eq('name_chinese', staffName)
         .single()
-      
+
       if (!error && data) {
         staffData = data
       }
@@ -3132,7 +3132,7 @@ export default function ServicesPage() {
 
     const today = new Date()
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-    
+
     // 生成YYYY-MM格式（根據記錄的第一個日期）
     const firstRecord = records[0]
     const serviceDate = new Date(firstRecord?.service_date || today)
@@ -3331,7 +3331,7 @@ export default function ServicesPage() {
           </div>
           ` : ''}
         </div>
-        
+
         <table>
           <thead>
             <tr>
@@ -3410,7 +3410,7 @@ export default function ServicesPage() {
     if (printWindow) {
       printWindow.document.write(htmlContent)
       printWindow.document.close()
-      
+
       printWindow.addEventListener('load', () => {
         setTimeout(() => {
           printWindow.print()
@@ -3423,7 +3423,7 @@ export default function ServicesPage() {
   const generateAndDownloadSummaryPDF = async (summaryData: { staffName: string; totalAmount: number; recordCount: number }[]) => {
     const grandTotal = summaryData.reduce((sum, item) => sum + item.totalAmount, 0)
     const totalRecords = summaryData.reduce((sum, item) => sum + item.recordCount, 0)
-    
+
     const today = new Date()
     const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`
 
@@ -3581,15 +3581,15 @@ export default function ServicesPage() {
             </div>
           </div>
         </div>
-        
+
         <div class="summary">
           <div>總護理人員數: ${summaryData.length}人</div>
           <div>總記錄數: ${totalRecords}筆</div>
           <div>總金額: $${grandTotal.toFixed(2)}</div>
         </div>
-        
+
         <div class="section-title">各護理人員明細:</div>
-        
+
         <table>
           <thead>
             <tr>
@@ -3613,7 +3613,7 @@ export default function ServicesPage() {
             </tr>
           </tbody>
         </table>
-        
+
         <!-- 底部佈局：左邊統計，右邊印章 -->
         <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
           <!-- 左邊：統計資訊 -->
@@ -3636,7 +3636,7 @@ export default function ServicesPage() {
     if (printWindow) {
       printWindow.document.write(htmlContent)
       printWindow.document.close()
-      
+
       printWindow.addEventListener('load', () => {
         setTimeout(() => {
           printWindow.print()
@@ -3670,10 +3670,10 @@ export default function ServicesPage() {
 
       // 檢查是否為對數模式
       const isAccountingMode = exportMode === 'accounting'
-      
+
       let tableContent = ''
       let summaryContent = ''
-      
+
       if (isAccountingMode) {
         // 對數模式：按客戶分組並為每個客戶創建獨立表格
         const customerGroups: Record<string, any[]> = {}
@@ -3684,27 +3684,27 @@ export default function ServicesPage() {
           }
           customerGroups[customerName].push(record)
         })
-        
+
         // 大結統計
         let totalCustomers = Object.keys(customerGroups).length
         let totalServices = records.length
         let totalHours = 0
         let totalFees = 0
-        
+
         // 為每個客戶生成獨立的表格
         const customerTables = Object.keys(customerGroups).map((customerName, index) => {
           const customerRecords = customerGroups[customerName]
-          
+
           // 客戶小結計算
           let customerHours = 0
           let customerFees = 0
-          
+
           // 生成客戶記錄
           const customerRows = customerRecords.map(record => {
             // 累計小結數據
             customerHours += parseFloat(record.service_hours || '0')
             customerFees += parseFloat(record.service_fee || '0')
-            
+
             return `
               <tr>
                 ${columns.map(col => {
@@ -3715,7 +3715,7 @@ export default function ServicesPage() {
               </tr>
             `
           }).join('')
-          
+
           // 客戶小結行
           const subtotalRow = `
             <tr class="customer-subtotal">
@@ -3730,11 +3730,11 @@ export default function ServicesPage() {
               </td>
             </tr>
           `
-          
+
           // 累計大結數據
           totalHours += customerHours
           totalFees += customerFees
-          
+
           // 生成客戶獨立表格
           return `
             <div class="customer-group">
@@ -3755,30 +3755,30 @@ export default function ServicesPage() {
             </div>
           `
         }).join('')
-        
+
         tableContent = customerTables
-        
+
         // 計算服務類型統計
         const serviceTypeStats: Record<string, {
           count: number
           hours: number
           amount: number
         }> = {}
-        
+
         records.forEach(record => {
           const serviceType = record.service_type || '未知服務類型'
           const hours = parseFloat(record.service_hours || '0')
           const amount = parseFloat(record.service_fee || '0')
-          
+
           if (!serviceTypeStats[serviceType]) {
             serviceTypeStats[serviceType] = { count: 0, hours: 0, amount: 0 }
           }
-          
+
           serviceTypeStats[serviceType].count += 1
           serviceTypeStats[serviceType].hours += hours
           serviceTypeStats[serviceType].amount += amount
         })
-        
+
         // 生成服務類型統計表格
         const serviceTypeTable = Object.keys(serviceTypeStats)
           .sort()
@@ -3793,12 +3793,12 @@ export default function ServicesPage() {
               </tr>
             `
           }).join('')
-        
+
         // 大結內容
         summaryContent = `
           <div style="margin-top: 30px; padding: 20px; border: 2px solid #428bca; background-color: #f8f9fa; page-break-inside: avoid;">
             <h3 style="text-align: center; color: #428bca; margin-bottom: 15px;">總結報告</h3>
-            
+
             <!-- 總覽統計 -->
             <div style="display: flex; justify-content: space-around; font-size: 14px; margin-bottom: 20px;">
               <div style="text-align: center;">
@@ -3818,7 +3818,7 @@ export default function ServicesPage() {
                 <div style="font-size: 18px; font-weight: bold;">$${totalFees.toFixed(2)}</div>
               </div>
             </div>
-            
+
             <!-- 服務類型細分統計 -->
             <div style="margin-top: 20px;">
               <h4 style="color: #428bca; margin-bottom: 10px; text-align: center;">服務類型統計明細</h4>
@@ -3844,7 +3844,7 @@ export default function ServicesPage() {
             </div>
           </div>
         `
-        
+
       } else if (exportMode === 'payroll') {
         // 工資模式：按護理人員分組，每人一頁
         const staffGroups: Record<string, any[]> = {}
@@ -3855,44 +3855,44 @@ export default function ServicesPage() {
           }
           staffGroups[staffName].push(record)
         })
-        
+
         // 為每個護理人員排序（先按護理人員名稱，再按日期）
         const sortedStaffNames = Object.keys(staffGroups).sort()
-        
+
         // 總統計
         let totalStaff = Object.keys(staffGroups).length
         let totalServices = records.length
         let totalHours = 0
         let totalSalary = 0
-        
+
         // 為每個護理人員生成獨立的表格
         const staffTables = sortedStaffNames.map((staffName, index) => {
           const staffRecords = staffGroups[staffName]
-          
+
           // 按日期排序
           staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
-          
+
           // 計算該護理人員的統計
           let staffHours = 0
           let staffSalary = 0
-          
+
           staffRecords.forEach(record => {
             const hours = parseFloat(record.service_hours || record.duration_hours || '0')
             const salary = parseFloat(record.staff_salary || '0')
             staffHours += isNaN(hours) ? 0 : hours
             staffSalary += isNaN(salary) ? 0 : salary
           })
-          
+
           totalHours += staffHours
           totalSalary += staffSalary
-          
+
           return `
             <div class="staff-group">
               <div class="staff-header">
                 <h2>${staffName}</h2>
                 <div class="staff-info">記錄數: ${staffRecords.length}筆</div>
               </div>
-              
+
               <table class="data-table">
                 <thead>
                   <tr>
@@ -3906,7 +3906,7 @@ export default function ServicesPage() {
                         const value = record[col] || ''
                         const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'duration_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
                         let displayValue = String(value)
-                        
+
                         // 特殊格式化
                         if (col === 'service_date' && value) {
                           const date = new Date(value)
@@ -3923,14 +3923,14 @@ export default function ServicesPage() {
                           const num = parseFloat(value)
                           displayValue = isNaN(num) ? '0' : num.toFixed(2)
                         }
-                        
+
                         return `<td class="${isNumber ? 'number' : ''}">${displayValue}</td>`
                       }).join('')}
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
-              
+
               <div class="staff-summary">
                 <div class="summary-row">
                   <div class="summary-item">
@@ -3946,9 +3946,9 @@ export default function ServicesPage() {
             </div>
           `
         }).join('')
-        
+
         tableContent = staffTables
-        
+
         // 總結頁面
         summaryContent = `
           <div class="total-summary-page">
@@ -3971,7 +3971,7 @@ export default function ServicesPage() {
                 </div>
               </div>
             </div>
-            
+
             <div class="staff-summary-table">
               <h3>各護理人員明細</h3>
               <table class="summary-table">
@@ -3994,7 +3994,7 @@ export default function ServicesPage() {
                       const salary = parseFloat(record.staff_salary || '0')
                       return sum + (isNaN(salary) ? 0 : salary)
                     }, 0)
-                    
+
                     return `
                       <tr>
                         <td>${staffName}</td>
@@ -4015,7 +4015,7 @@ export default function ServicesPage() {
             </div>
           </div>
         `
-        
+
       } else {
         // 非對數模式：普通表格
         tableContent = records.map(record => `
@@ -4023,20 +4023,20 @@ export default function ServicesPage() {
             ${columns.map(col => {
               let value = record[col] || ''
               const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
-              
+
               // 特殊處理服務利潤
               if (col === 'service_profit') {
                 const serviceFee = parseFloat(record.service_fee || '0')
                 const staffSalary = parseFloat(record.staff_salary || '0')
                 value = (serviceFee - staffSalary).toFixed(2)
               }
-              
+
               return `<td class="${isNumber ? 'number' : ''}">${String(value)}</td>`
             }).join('')}
           </tr>
         `).join('')
       }
-      
+
       // 創建可打印的HTML內容
       const printContent = `
         <!DOCTYPE html>
@@ -4050,8 +4050,8 @@ export default function ServicesPage() {
                 size: A4 portrait;
                 margin: 12mm;
               }
-              body { 
-                margin: 0; 
+              body {
+                margin: 0;
                 font-size: 10px;
               }
               .customer-group {
@@ -4278,7 +4278,7 @@ export default function ServicesPage() {
         </head>
         <body>
           <button class="print-button" onclick="window.print()">列印 / 儲存為PDF</button>
-          
+
           <div class="header">
             <!-- Company Info and Logo Row -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
@@ -4290,24 +4290,24 @@ export default function ServicesPage() {
                 <div>電郵：info@mingcarehome.com</div>
                 <div>網址：www.mingcarehome.com</div>
               </div>
-              
+
               <!-- Right: Company Logo -->
               <div style="flex: 0 0 auto; text-align: right;">
                 <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" style="height: 180px; width: auto;">
               </div>
             </div>
-            
+
             <h1>明家居家護理服護有限公司</h1>
             <h2>護理服務記錄報表</h2>
             ${isAccountingMode ? '<div style="color: #428bca; font-weight: bold; margin-top: 5px;">對數模式</div>' : ''}
             ${exportMode === 'payroll' ? '<div style="color: #28a745; font-weight: bold; margin-top: 5px;">工資模式</div>' : ''}
           </div>
-          
+
           <div class="meta">
             日期範圍: ${filters.dateRange?.start || '未設定'} ~ ${filters.dateRange?.end || '未設定'}<br>
             生成時間: ${new Date().toLocaleDateString('zh-TW')} ${new Date().toLocaleTimeString('zh-TW')}
           </div>
-          
+
           ${isAccountingMode || exportMode === 'payroll' ? tableContent : `
           <table>
             <thead>
@@ -4320,9 +4320,9 @@ export default function ServicesPage() {
             </tbody>
           </table>
           `}
-          
+
           ${summaryContent}
-          
+
           <!-- 底部佈局：左邊統計，右邊印章 -->
           <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
             <!-- 左邊：報表統計 -->
@@ -4338,13 +4338,13 @@ export default function ServicesPage() {
         </body>
         </html>
       `
-      
+
       // 在新視窗中打開可打印的頁面
       const printWindow = window.open('', '_blank')
       if (printWindow) {
         printWindow.document.write(printContent)
         printWindow.document.close()
-        
+
         // 等待內容載入後自動打印
         printWindow.onload = () => {
           setTimeout(() => {
@@ -4363,10 +4363,10 @@ export default function ServicesPage() {
         link.click()
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
-        
+
         alert('已下載HTML文件，請在瀏覽器中打開後列印或儲存為PDF')
       }
-      
+
     } catch (error) {
       console.error('PDF導出錯誤:', error)
       alert('PDF導出失敗，請稍後再試或選擇CSV格式')
@@ -4394,22 +4394,22 @@ export default function ServicesPage() {
       project_category: '所屬項目',
       project_manager: '項目經理'
     }
-    
+
     // 創建CSV內容
     const headers = columns.map(col => columnLabels[col] || col)
     const csvContent = [
       headers.join(','),
-      ...records.map(record => 
+      ...records.map(record =>
         columns.map(col => {
           let value = record[col] || ''
-          
+
           // 特殊處理服務利潤
           if (col === 'service_profit') {
             const serviceFee = parseFloat(record.service_fee || '0')
             const staffSalary = parseFloat(record.staff_salary || '0')
             value = (serviceFee - staffSalary).toFixed(2)
           }
-          
+
           // 處理包含逗號、引號或換行的值
           const stringValue = String(value)
           if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
@@ -4419,13 +4419,13 @@ export default function ServicesPage() {
         }).join(',')
       )
     ].join('\n')
-    
+
     // 添加BOM以支持中文字符，確保Excel正確顯示
     const BOM = '\uFEFF'
-    const blob = new Blob([BOM + csvContent], { 
-      type: 'text/csv;charset=utf-8;' 
+    const blob = new Blob([BOM + csvContent], {
+      type: 'text/csv;charset=utf-8;'
     })
-    
+
     // 下載CSV
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
@@ -4435,7 +4435,7 @@ export default function ServicesPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     // 清理URL對象
     URL.revokeObjectURL(url)
   }
@@ -4460,11 +4460,11 @@ export default function ServicesPage() {
         recordId: editingRecord.id,
         formData
       })
-      
+
       const response = await updateBillingSalaryRecord(editingRecord.id, formData)
-      
+
       console.log('📝 第二個 handleEditSave 更新結果:', response)
-      
+
       if (response.success) {
         alert('記錄更新成功！頁面將自動重新載入。')
         setIsEditModalOpen(false)
@@ -4493,11 +4493,11 @@ export default function ServicesPage() {
     try {
       setLoading(true)
       console.log('🗑️ 第二個 handleDelete 開始刪除記錄:', recordId)
-      
+
       const response = await deleteBillingSalaryRecord(recordId)
-      
+
       console.log('🗑️ 第二個 handleDelete 刪除結果:', response)
-      
+
       if (response.success) {
         alert('記錄刪除成功！頁面將自動重新載入。')
         setIsEditModalOpen(false)
@@ -4543,10 +4543,10 @@ export default function ServicesPage() {
       for (const staffName of staffList) {
         try {
           // 篩選該護理員的記錄
-          const staffRecords = allRecords.filter(record => 
+          const staffRecords = allRecords.filter(record =>
             (record.care_staff_name || '未知護理人員') === staffName
           )
-          
+
           if (staffRecords.length === 0) {
             console.warn(`護理員 ${staffName} 沒有記錄`)
             setStaffDownloadStatus(prev => ({
@@ -4559,20 +4559,20 @@ export default function ServicesPage() {
 
           // 按日期排序
           staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
-          
+
           await generateAndDownloadStaffPDF(staffRecords, selectedColumns, staffName)
-          
+
           // 更新為成功狀態
           setStaffDownloadStatus(prev => ({
             ...prev,
             [staffName]: 'downloaded'
           }))
-          
+
           successCount++
-          
+
           // 短暫延遲避免瀏覽器阻擋彈窗
           await new Promise(resolve => setTimeout(resolve, 1000))
-          
+
         } catch (error) {
           console.error(`下載護理員 ${staffName} PDF失敗:`, error)
           setStaffDownloadStatus(prev => ({
@@ -4651,15 +4651,15 @@ export default function ServicesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>
-                      {Object.values(staffDownloadStatus).some(status => status === 'downloading') 
-                        ? '下載中...' 
+                      {Object.values(staffDownloadStatus).some(status => status === 'downloading')
+                        ? '下載中...'
                         : '一次過全部下載'
                       }
                     </span>
                   </button>
                 )}
               </div>
-              
+
               {loadingStaff ? (
                 <div className="text-center py-12">
                   <p className="text-text-secondary">載入中...</p>
@@ -4673,10 +4673,10 @@ export default function ServicesPage() {
                   {staffList && staffList.map((staffName: string) => {
                     const isDownloaded = staffDownloadStatus[staffName] === 'downloaded'
                     const isDownloading = staffDownloadStatus[staffName] === 'downloading'
-                    
+
                     // 生成文件名：護理員A YYYY-MM工資明細
                     const fileName = `${staffName} ${(filters.dateRange?.start || 'unknown').substring(0, 7)}工資明細`
-                    
+
                     return (
                       <div key={staffName} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
                         <div>
@@ -4685,7 +4685,7 @@ export default function ServicesPage() {
                             期間：{filters.dateRange?.start || '未設定'} 至 {filters.dateRange?.end || '未設定'}
                           </p>
                         </div>
-                        
+
                         <div className="flex items-center space-x-3">
                           {isDownloaded ? (
                             <>
@@ -4700,7 +4700,7 @@ export default function ServicesPage() {
                                     ...prev,
                                     [staffName]: 'downloading'
                                   }))
-                                  
+
                                   try {
                                     // 獲取該護理員的記錄
                                     const response = await fetchBillingSalaryRecords(filters, 1, 10000)
@@ -4708,7 +4708,7 @@ export default function ServicesPage() {
                                       const selectedColumns = Object.entries(exportColumns)
                                         .filter(([_, selected]) => selected)
                                         .map(([column, _]) => column)
-                                      
+
                                       await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
                                     }
                                   } catch (error) {
@@ -4730,12 +4730,12 @@ export default function ServicesPage() {
                             <button
                               onClick={async () => {
                                 if (isDownloading) return
-                                
+
                                 setStaffDownloadStatus(prev => ({
                                   ...prev,
                                   [staffName]: 'downloading'
                                 }))
-                                
+
                                 try {
                                   // 獲取該護理員的記錄
                                   const response = await fetchBillingSalaryRecords(filters, 1, 10000)
@@ -4743,7 +4743,7 @@ export default function ServicesPage() {
                                     const selectedColumns = Object.entries(exportColumns)
                                       .filter(([_, selected]) => selected)
                                       .map(([column, _]) => column)
-                                    
+
                                     await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
                                   }
                                 } catch (error) {
@@ -4819,7 +4819,7 @@ export default function ServicesPage() {
                   <span className="hidden sm:inline">詳細報表</span>
                   <span className="sm:hidden">報表</span>
                 </button>
-                
+
                 {/* 2. 排程管理 */}
                 <button
                   onClick={() => setActiveTab('schedule')}
@@ -4835,7 +4835,7 @@ export default function ServicesPage() {
                   <span className="hidden sm:inline">排程管理</span>
                   <span className="sm:hidden">排程</span>
                 </button>
-                
+
                 {/* 3. 業務概覽 */}
                 <button
                   onClick={() => setActiveTab('overview')}
@@ -4907,7 +4907,7 @@ export default function ServicesPage() {
             <div className="p-6 border-b border-gray-200 flex-shrink-0">
               <h3 className="text-lg font-medium text-text-primary">導出設定</h3>
             </div>
-            
+
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
               {/* 預設模式選擇 */}
@@ -5081,12 +5081,12 @@ interface ScheduleFormModalProps {
   existingRecord?: BillingSalaryRecord | null
 }
 
-function ScheduleFormModal({ 
-  isOpen, 
-  onClose, 
-  selectedDate, 
-  selectedDates = [], 
-  onSubmit, 
+function ScheduleFormModal({
+  isOpen,
+  onClose,
+  selectedDate,
+  selectedDates = [],
+  onSubmit,
   onDelete,
   isMultiDay = false,
   existingRecord = null
@@ -5153,16 +5153,16 @@ function ScheduleFormModal({
 
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  
+
   // 搜尋功能狀態
   const [customerSearchTerm, setCustomerSearchTerm] = useState(existingRecord ? existingRecord.customer_name : '')
   const [customerSuggestions, setCustomerSuggestions] = useState<CustomerSearchResult[]>([])
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false)
-  
+
   const [staffSearchTerm, setStaffSearchTerm] = useState(existingRecord ? existingRecord.care_staff_name : '')
   const [staffSuggestions, setStaffSuggestions] = useState<any[]>([])
   const [showStaffSuggestions, setShowStaffSuggestions] = useState(false)
-  
+
   // 搜尋防抖定時器
   const [customerSearchTimeout, setCustomerSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const [staffSearchTimeout, setStaffSearchTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -5212,14 +5212,14 @@ function ScheduleFormModal({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-  
+
   // 檢查是否為多日期排班（使用參數中的isMultiDay或根據selectedDates計算）
   const isMultipleDays = isMultiDay || selectedDates.length > 1
 
   // 表單驗證
   const validateForm = (data: BillingSalaryFormData): Record<string, string> => {
     const errors: Record<string, string> = {}
-    
+
     if (!data.customer_name.trim()) errors.customer_name = '客戶姓名不能為空'
     if (!data.phone.trim()) errors.phone = '聯絡電話不能為空'
     if (!data.service_address.trim()) errors.service_address = '服務地址不能為空'
@@ -5230,12 +5230,12 @@ function ScheduleFormModal({
     if (!data.service_type) errors.service_type = '請選擇服務類型'
     if (!data.project_category) errors.project_category = '請選擇項目分類'
     if (!data.project_manager) errors.project_manager = '請選擇項目負責人'
-    
+
     // 檢查時間邏輯
     if (data.start_time >= data.end_time) {
       errors.end_time = '結束時間必須晚於開始時間'
     }
-    
+
     return errors
   }
 
@@ -5243,10 +5243,10 @@ function ScheduleFormModal({
   const calculateServiceHours = (startTime: string, endTime: string): number => {
     const [startHour, startMin] = startTime.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
-    
+
     const startMinutes = startHour * 60 + startMin
     const endMinutes = endHour * 60 + endMin
-    
+
     return Math.max(0, (endMinutes - startMinutes) / 60)
   }
 
@@ -5254,17 +5254,17 @@ function ScheduleFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
-    
+
     try {
       const formErrors = validateForm(formData)
-      
+
       if (Object.keys(formErrors).length > 0) {
         setErrors(formErrors)
         return
       }
-      
+
       setErrors({})
-      
+
       // 準備提交的資料，讓資料庫自動計算 hourly_rate 和 hourly_salary
       const submitData: Omit<BillingSalaryFormData, 'hourly_rate' | 'hourly_salary'> = {
         service_date: formData.service_date,
@@ -5282,7 +5282,7 @@ function ScheduleFormModal({
         project_category: formData.project_category,
         project_manager: formData.project_manager
       }
-      
+
       await onSubmit(submitData as BillingSalaryFormData)
       onClose()
     } catch (error) {
@@ -5296,7 +5296,7 @@ function ScheduleFormModal({
   const updateField = (field: string, value: any) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value }
-      
+
       // 處理日期欄位，確保格式一致
       if (field === 'service_date' && value) {
         // 如果是日期字符串，確保格式正確
@@ -5304,7 +5304,7 @@ function ScheduleFormModal({
           updated.service_date = value // 已經是正確格式
         }
       }
-      
+
       // 自動計算服務時數（當開始或結束時間改變時）
       if (field === 'start_time' || field === 'end_time') {
         if (updated.start_time && updated.end_time) {
@@ -5313,7 +5313,7 @@ function ScheduleFormModal({
           updated.service_hours = roundedHours
         }
       }
-      
+
       // 自動計算每小時收費和時薪薪資（僅用於顯示）
       if (field === 'service_fee' || field === 'staff_salary' || field === 'service_hours') {
         if (updated.service_hours > 0) {
@@ -5321,10 +5321,10 @@ function ScheduleFormModal({
           updated.hourly_salary = (updated.staff_salary || 0) / updated.service_hours
         }
       }
-      
+
       return updated
     })
-    
+
     // 同步更新搜索項
     if (field === 'customer_name') {
       setCustomerSearchTerm(value)
@@ -5337,7 +5337,7 @@ function ScheduleFormModal({
   const handleFormCustomerSearch = async (searchTerm: string) => {
     console.log('表單客戶搜尋開始:', searchTerm) // 調試日誌
     setCustomerSearchTerm(searchTerm)
-    
+
     if (searchTerm.trim().length < 1) {
       setCustomerSuggestions([])
       setShowCustomerSuggestions(false)
@@ -5346,7 +5346,7 @@ function ScheduleFormModal({
 
     try {
       console.log('使用 Supabase 直接進行表單客戶搜尋') // 調試日誌
-      
+
       // 直接使用 Supabase 客戶端查詢（正確的表名和欄位名）
       const { data, error } = await supabase
         .from('customer_personal_data')
@@ -5370,11 +5370,11 @@ function ScheduleFormModal({
         display_text: item.customer_name || '',
         type: 'customer' as const
       }))
-      
+
       console.log('表單客戶搜尋結果:', suggestions) // 調試日誌
       setCustomerSuggestions(suggestions)
       setShowCustomerSuggestions(true)
-      
+
     } catch (error) {
       console.error('客戶搜尋失敗:', error)
       setCustomerSuggestions([])
@@ -5396,7 +5396,7 @@ function ScheduleFormModal({
   const handleStaffSearch = async (searchTerm: string) => {
     console.log('護理人員搜尋開始:', searchTerm) // 調試日誌
     setStaffSearchTerm(searchTerm)
-    
+
     if (searchTerm.trim().length < 1) {
       setStaffSuggestions([])
       setShowStaffSuggestions(false)
@@ -5405,7 +5405,7 @@ function ScheduleFormModal({
 
     try {
       console.log('使用 Supabase 直接進行護理人員搜尋') // 調試日誌
-      
+
       // 直接使用 Supabase 客戶端查詢
       const { data, error } = await supabase
         .from('care_staff_profiles')
@@ -5426,11 +5426,11 @@ function ScheduleFormModal({
         staff_id: item.staff_id || '',
         phone: item.phone || ''
       }))
-      
+
       console.log('護理人員搜尋結果:', results) // 調試日誌
       setStaffSuggestions(results)
       setShowStaffSuggestions(true)
-      
+
     } catch (error) {
       console.error('護理人員搜尋失敗:', error)
       setStaffSuggestions([])
@@ -5453,14 +5453,14 @@ function ScheduleFormModal({
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
-            {existingRecord 
-              ? `編輯排班 - ${existingRecord.service_date}` 
-              : isMultipleDays 
-                ? `批量新增排班 (${selectedDates.length} 天)` 
+            {existingRecord
+              ? `編輯排班 - ${existingRecord.service_date}`
+              : isMultipleDays
+                ? `批量新增排班 (${selectedDates.length} 天)`
                 : `新增排班 - ${selectedDate}`
             }
           </h3>
-          
+
           {isMultipleDays && (
             <div className="mt-2 text-sm text-text-secondary">
               選定日期：{selectedDates.sort().join(', ')}
@@ -5499,7 +5499,7 @@ function ScheduleFormModal({
             <div className="card-apple border border-border-light">
               <div className="p-6">
                 <h4 className="text-apple-heading text-text-primary mb-4">客戶基本資料</h4>
-                
+
                 <div className="space-y-4">
                   {/* 第一行：服務類型 + 項目分類 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -5588,12 +5588,12 @@ function ScheduleFormModal({
                           console.log('客戶搜尋輸入變化:', value) // 調試日誌
                           setCustomerSearchTerm(value)
                           updateField('customer_name', value) // 同步更新表單數據
-                          
+
                           // 清除之前的搜尋定時器
                           if (customerSearchTimeout) {
                             clearTimeout(customerSearchTimeout)
                           }
-                          
+
                           if (value.length >= 1) {
                             console.log('設置客戶搜尋定時器') // 調試日誌
                             // 設置新的搜尋定時器（300ms 防抖）
@@ -5618,7 +5618,7 @@ function ScheduleFormModal({
                         autoComplete="off"
                         required
                       />
-                      
+
                       {/* 客戶搜尋建議 */}
                       {showCustomerSuggestions && customerSuggestions.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -5705,7 +5705,7 @@ function ScheduleFormModal({
             <div className="card-apple border border-border-light">
               <div className="p-6">
                 <h4 className="text-apple-heading text-text-primary mb-4">服務詳情</h4>
-                
+
                 <div className="space-y-4">
                   {/* 第一行：護理人員搜尋（獨立一行） */}
                   <div className="relative staff-search-container">
@@ -5720,12 +5720,12 @@ function ScheduleFormModal({
                         console.log('護理人員搜尋輸入變化:', value) // 調試日誌
                         setStaffSearchTerm(value)
                         updateField('care_staff_name', value) // 同步更新表單數據
-                        
+
                         // 清除之前的搜尋定時器
                         if (staffSearchTimeout) {
                           clearTimeout(staffSearchTimeout)
                         }
-                        
+
                         if (value.length >= 1) {
                           console.log('設置護理人員搜尋定時器') // 調試日誌
                           // 設置新的搜尋定時器（300ms 防抖）
@@ -5749,7 +5749,7 @@ function ScheduleFormModal({
                       placeholder="輸入護理人員中文姓名或編號（≥1字元）"
                       autoComplete="off"
                     />
-                    
+
                     {/* 護理人員搜尋建議 */}
                     {showStaffSuggestions && staffSuggestions && staffSuggestions.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -5838,7 +5838,7 @@ function ScheduleFormModal({
             <div className="card-apple border border-border-light">
               <div className="p-6">
                 <h4 className="text-apple-heading text-text-primary mb-4">收費與工資</h4>
-                
+
                 <div className="space-y-4">
                   {/* 第一行：服務費用 + 員工薪資 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -5954,8 +5954,8 @@ function ScheduleFormModal({
                       <div className="text-center">
                         <div className="text-text-secondary">利潤率</div>
                         <div className="font-medium text-text-primary">
-                          {(formData.service_fee || 0) > 0 ? 
-                            `${((((formData.service_fee || 0) - (formData.staff_salary || 0)) / (formData.service_fee || 1)) * 100).toFixed(1)}%` : 
+                          {(formData.service_fee || 0) > 0 ?
+                            `${((((formData.service_fee || 0) - (formData.staff_salary || 0)) / (formData.service_fee || 1)) * 100).toFixed(1)}%` :
                             '0%'
                           }
                         </div>
@@ -5998,7 +5998,7 @@ function ScheduleFormModal({
                 </button>
               )}
             </div>
-            
+
             {/* 右側 - 取消和確認按鈕 */}
             <div className="flex gap-3">
               <button
@@ -6035,13 +6035,13 @@ interface LocalScheduleEditModalProps {
   onEdit: () => void
 }
 
-function LocalScheduleEditModal({ 
-  isOpen, 
-  schedule, 
-  onClose, 
-  onUpdate, 
+function LocalScheduleEditModal({
+  isOpen,
+  schedule,
+  onClose,
+  onUpdate,
   onDelete,
-  onEdit 
+  onEdit
 }: LocalScheduleEditModalProps) {
   if (!isOpen || !schedule) return null
 
@@ -6092,7 +6092,7 @@ function LocalScheduleEditModal({
                 編輯排程
               </div>
             </button>
-            
+
             <button
               onClick={() => {
                 if (confirm('確定要刪除這個排程嗎？')) {

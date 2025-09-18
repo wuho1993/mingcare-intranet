@@ -26,7 +26,7 @@ export interface CustomerListItem {
 }
 
 export interface CustomerFormStep1 {
-  customer_type: '社區券客戶' | '明家街客' | '家訪客戶';
+  customer_type: 'social區券客戶' | '明家街客';
   voucher_application_status?: '申請中' | '已經持有';
   voucher_number?: string;
   copay_level?: '5%' | '8%' | '12%' | '16%' | '25%' | '40%';
