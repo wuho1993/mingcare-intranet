@@ -17,10 +17,234 @@ interface User {
   email?: string
 }
 
+// Customer Summary Component
+interface CustomerSummaryProps {
+  customers: CustomerListItem[]
+  filters: CustomerFilters
+}
+
+function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
+  // Calculate statistics based on actual database fields
+  const totalCustomers = customers.length
+  
+  // Customer type stats (customer_type_enum: 社區券客戶, 明家街客, 家訪客戶)
+  const customerTypeStats = customers.reduce((acc, customer) => {
+    const type = customer.customer_type || '未分類'
+    acc[type] = (acc[type] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // District stats (district_enum from database)
+  const districtStats = customers.reduce((acc, customer) => {
+    const district = customer.district || '未分類'
+    acc[district] = (acc[district] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // Introducer stats (introducer_enum: Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰)
+  const introducerStats = customers.reduce((acc, customer) => {
+    const introducer = (customer as any).introducer || '無介紹人'
+    acc[introducer] = (acc[introducer] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // Voucher application status (voucher_application_status_enum: 已經持有, 申請中)
+  const voucherStats = customers.reduce((acc, customer) => {
+    const status = customer.voucher_application_status || '未申請'
+    acc[status] = (acc[status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // LDS Status stats (lds_status_enum: 已完成評估, 已經持有, 待社工評估)
+  const ldsStats = customers.reduce((acc, customer) => {
+    const status = (customer as any).lds_status || '未設定'
+    acc[status] = (acc[status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // Home visit status (home_visit_status_enum: 已完成, 未完成)
+  const homeVisitStats = customers.reduce((acc, customer) => {
+    const status = (customer as any).home_visit_status || '未設定'
+    acc[status] = (acc[status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  return (
+    <div className="space-y-6">
+      {/* Overview Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Customers */}
+        <div className="card-apple fade-in-apple">
+          <div className="card-apple-content text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-mingcare-blue mb-2">
+              {totalCustomers}
+            </div>
+            <div className="text-sm text-text-secondary">總客戶數</div>
+          </div>
+        </div>
+
+        {/* Active Customers */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.1s' }}>
+          <div className="card-apple-content text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-600 mb-2">
+              {Object.values(customerTypeStats).reduce((sum, count) => sum + count, 0)}
+            </div>
+            <div className="text-sm text-text-secondary">有服務類型</div>
+          </div>
+        </div>
+
+        {/* Voucher Holders */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.2s' }}>
+          <div className="card-apple-content text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+              {voucherStats['已經持有'] || 0}
+            </div>
+            <div className="text-sm text-text-secondary">持券客戶</div>
+          </div>
+        </div>
+
+        {/* Applicants */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
+          <div className="card-apple-content text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-orange-600 mb-2">
+              {voucherStats['申請中'] || 0}
+            </div>
+            <div className="text-sm text-text-secondary">申請中</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Customer Type Distribution */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.4s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">客戶類型分佈</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-3">
+              {Object.entries(customerTypeStats).map(([type, count]) => (
+                <div key={type} className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      type === '社區券客戶' ? 'bg-blue-500' :
+                      type === '明家街客' ? 'bg-emerald-500' :
+                      type === '家訪客戶' ? 'bg-purple-500' : 'bg-gray-400'
+                    }`}></div>
+                    <span className="text-sm text-text-primary">{type}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-semibold text-text-primary">{count}</span>
+                    <span className="text-xs text-text-secondary">
+                      ({((count / totalCustomers) * 100).toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* District Distribution */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.5s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">地區分佈</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-3">
+              {Object.entries(districtStats)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 8)
+                .map(([district, count]) => (
+                <div key={district} className="flex justify-between items-center">
+                  <span className="text-sm text-text-primary">{district}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-mingcare-blue h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(count / Math.max(...Object.values(districtStats))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-semibold text-text-primary w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Voucher Status and Top Referrers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Voucher Status */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.6s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">券狀態統計</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-4">
+              {Object.entries(voucherStats).map(([status, count]) => (
+                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      status === '已經持有' ? 'bg-emerald-500' :
+                      status === '申請中' ? 'bg-orange-500' : 'bg-gray-400'
+                    }`}></div>
+                    <span className="text-sm font-medium text-text-primary">{status}</span>
+                  </div>
+                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Top Referrers */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.7s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">主要介紹人</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-3">
+              {Object.entries(introducerStats)
+                .sort(([,a], [,b]) => (b as number) - (a as number))
+                .slice(0, 6)
+                .map(([introducer, count]) => (
+                <div key={introducer} className="flex justify-between items-center">
+                  <span className="text-sm text-text-primary truncate">{introducer}</span>
+                  <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Applied Filters Summary */}
+      {Object.keys(filters).length > 0 && (
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.8s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">目前篩選條件</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(filters).map(([key, value]) => (
+                <span key={key} className="px-3 py-1 bg-mingcare-blue text-white rounded-full text-xs">
+                  {key.replace('_', ' ')}: {value}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ClientsPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [customers, setCustomers] = useState<CustomerListItem[]>([])
+  const [activeTab, setActiveTab] = useState<'list' | 'summary'>('list')
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [filters, setFilters] = useState<CustomerFilters>({})
   const [searchQuery, setSearchQuery] = useState('')
@@ -371,6 +595,7 @@ export default function ClientsPage() {
                   <option value="余翠英">余翠英</option>
                   <option value="陳小姐MC01">陳小姐</option>
                   <option value="曾先生">曾先生</option>
+                  <option value="梁曉峰">梁曉峰</option>
                 </select>
               </div>
 
@@ -500,7 +725,47 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        {/* Enhanced View Controls Section - Compact */}
+        {/* Tab Navigation */}
+        <div className="card-apple mb-4 sm:mb-6 fade-in-apple" style={{ animationDelay: '0.2s' }}>
+          <div className="p-3 sm:p-4">
+            <nav className="flex space-x-1 sm:space-x-2">
+              {/* 客戶列表 Tab */}
+              <button
+                onClick={() => setActiveTab('list')}
+                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                  activeTab === 'list'
+                    ? 'bg-mingcare-blue text-white shadow-lg'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                }`}
+              >
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="hidden sm:inline">客戶列表</span>
+                <span className="sm:hidden">列表</span>
+              </button>
+
+              {/* 客戶總結 Tab */}
+              <button
+                onClick={() => setActiveTab('summary')}
+                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                  activeTab === 'summary'
+                    ? 'bg-mingcare-blue text-white shadow-lg'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                }`}
+              >
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span className="hidden sm:inline">客戶總結</span>
+                <span className="sm:hidden">總結</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Enhanced View Controls Section - Compact - Only show on list tab */}
+        {activeTab === 'list' && (
         <div className="card-apple mb-4 fade-in-apple" style={{ animationDelay: '0.2s' }}>
           <div className="px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
@@ -591,10 +856,14 @@ export default function ClientsPage() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Customer List/Cards Section */}
-        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
-          <div className="card-apple-content">
+        {/* Tab Content */}
+        {activeTab === 'list' && (
+          <>
+            {/* Customer List/Cards Section */}
+            <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
+              <div className="card-apple-content">
             {customers.length === 0 ? (
               /* Empty State */
               <div className="text-center py-16">
@@ -933,6 +1202,13 @@ export default function ClientsPage() {
               </div>
             </div>
           )}
+          </>
+        )}
+
+        {/* Customer Summary Tab */}
+        {activeTab === 'summary' && (
+          <CustomerSummary customers={customers} filters={filters} />
+        )}
       </main>
     </div>
   );
