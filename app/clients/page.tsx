@@ -244,6 +244,7 @@ export default function ClientsPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [customers, setCustomers] = useState<CustomerListItem[]>([])
+  const [allCustomers, setAllCustomers] = useState<CustomerListItem[]>([]) // Complete dataset for summary
   const [activeTab, setActiveTab] = useState<'list' | 'summary'>('list')
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [filters, setFilters] = useState<CustomerFilters>({})
@@ -263,6 +264,7 @@ export default function ClientsPage() {
       if (user) {
         setUser(user)
         await loadCustomers()
+        await loadAllCustomers() // Load complete dataset for summary
       } else {
         router.push('/')
       }
@@ -284,6 +286,20 @@ export default function ClientsPage() {
       setTotalCount(response.count)
     } catch (error) {
       console.error('載入客戶列表失敗:', error)
+    }
+  }
+
+  // 載入所有客戶數據用於總結 (不受篩選影響)
+  const loadAllCustomers = async () => {
+    try {
+      const response = await CustomerManagementService.getCustomers(
+        {}, // No filters for complete data
+        1,
+        10000 // Large page size to get all customers
+      )
+      setAllCustomers(response.data)
+    } catch (error) {
+      console.error('載入完整客戶數據失敗:', error)
     }
   }
 
@@ -583,17 +599,17 @@ export default function ClientsPage() {
                   className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
-                  <option value="Kanas Leung">Kanas</option>
-                  <option value="Joe Cheung">Joe</option>
-                  <option value="Candy Ho">Candy</option>
-                  <option value="Steven Kwok">Steven</option>
+                  <option value="Kanas Leung">Kanas Leung</option>
+                  <option value="Joe Cheung">Joe Cheung</option>
+                  <option value="Candy Ho">Candy Ho</option>
+                  <option value="Steven Kwok">Steven Kwok</option>
                   <option value="Dr.Lee">Dr.Lee</option>
                   <option value="Annie">Annie</option>
                   <option value="Janet">Janet</option>
                   <option value="陸sir">陸sir</option>
                   <option value="吳翹政">吳翹政</option>
                   <option value="余翠英">余翠英</option>
-                  <option value="陳小姐MC01">陳小姐</option>
+                  <option value="陳小姐MC01">陳小姐MC01</option>
                   <option value="曾先生">曾先生</option>
                   <option value="梁曉峰">梁曉峰</option>
                 </select>
@@ -622,9 +638,9 @@ export default function ClientsPage() {
                   className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
-                  <option value="Kanas Leung">Kanas</option>
-                  <option value="Joe Cheung">Joe</option>
-                  <option value="Candy Ho">Candy</option>
+                  <option value="Kanas Leung">Kanas Leung</option>
+                  <option value="Joe Cheung">Joe Cheung</option>
+                  <option value="Candy Ho">Candy Ho</option>
                 </select>
               </div>
 
@@ -651,9 +667,9 @@ export default function ClientsPage() {
                   className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
+                  <option value="待社工評估">待社工評估</option>
                   <option value="已完成評估">已完成評估</option>
                   <option value="已經持有">已經持有</option>
-                  <option value="待社工評估">待社工評估</option>
                 </select>
               </div>
 
@@ -680,8 +696,8 @@ export default function ClientsPage() {
                   className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
-                  <option value="已經持有">已經持有</option>
                   <option value="申請中">申請中</option>
+                  <option value="已經持有">已經持有</option>
                 </select>
               </div>
             </div>
@@ -1207,7 +1223,7 @@ export default function ClientsPage() {
 
         {/* Customer Summary Tab */}
         {activeTab === 'summary' && (
-          <CustomerSummary customers={customers} filters={filters} />
+          <CustomerSummary customers={allCustomers} filters={filters} />
         )}
       </main>
     </div>
