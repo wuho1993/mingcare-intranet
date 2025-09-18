@@ -116,13 +116,13 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
           </div>
         </div>
 
-        {/* Active Customers */}
+        {/* Monthly Voucher Service Usage Total */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.1s' }}>
           <div className="card-apple-content text-center">
             <div className="text-2xl sm:text-3xl font-bold text-emerald-600 mb-2">
-              {Object.values(customerTypeStats).reduce((sum, count) => sum + count, 0)}
+              {Object.values(monthlyServiceUsage).reduce((sum, count) => sum + count, 0)}
             </div>
-            <div className="text-sm text-text-secondary">有服務類型</div>
+            <div className="text-sm text-text-secondary">本月社區券服務人次</div>
           </div>
         </div>
 
