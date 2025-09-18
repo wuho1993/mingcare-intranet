@@ -260,8 +260,8 @@ export default function ClientsPage() {
               />
             </div>
 
-            {/* Enhanced Filter Controls - Compact Mobile Layout */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            {/* Enhanced Filter Controls - Expanded for more options */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
               {/* 客戶類型 */}
               <div className="min-w-0">
                 <label className="block text-xs font-medium text-text-primary mb-1 flex items-center">
@@ -275,7 +275,7 @@ export default function ClientsPage() {
                   onChange={(e) => {
                     const newFilters = { ...filters }
                     if (e.target.value) {
-                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客'
+                      newFilters.customer_type = e.target.value as '社區券客戶' | '明家街客' | '家訪客戶'
                     } else {
                       delete newFilters.customer_type
                     }
@@ -287,6 +287,7 @@ export default function ClientsPage() {
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
                   <option value="明家街客">明家街客</option>
+                  <option value="家訪客戶">家訪客戶</option>
                 </select>
               </div>
 
@@ -399,6 +400,63 @@ export default function ClientsPage() {
                   <option value="Kanas Leung">Kanas</option>
                   <option value="Joe Cheung">Joe</option>
                   <option value="Candy Ho">Candy</option>
+                </select>
+              </div>
+
+              {/* LDS 狀態 */}
+              <div className="min-w-0">
+                <label className="text-xs font-medium text-text-primary mb-1 flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="truncate">LDS狀態</span>
+                </label>
+                <select
+                  value={filters.lds_status || ''}
+                  onChange={(e) => {
+                    const newFilters = { ...filters }
+                    if (e.target.value) {
+                      newFilters.lds_status = e.target.value
+                    } else {
+                      delete newFilters.lds_status
+                    }
+                    setFilters(newFilters)
+                    setCurrentPage(1)
+                  }}
+                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  <option value="">全部</option>
+                  <option value="已完成評估">已完成評估</option>
+                  <option value="已經持有">已經持有</option>
+                  <option value="待社工評估">待社工評估</option>
+                </select>
+              </div>
+
+              {/* 社區券狀況 */}
+              <div className="min-w-0">
+                <label className="text-xs font-medium text-text-primary mb-1 flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span className="truncate">社區券狀況</span>
+                </label>
+                <select
+                  value={filters.voucher_application_status || ''}
+                  onChange={(e) => {
+                    const newFilters = { ...filters }
+                    if (e.target.value) {
+                      newFilters.voucher_application_status = e.target.value
+                    } else {
+                      delete newFilters.voucher_application_status
+                    }
+                    setFilters(newFilters)
+                    setCurrentPage(1)
+                  }}
+                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                >
+                  <option value="">全部</option>
+                  <option value="已經持有">已經持有</option>
+                  <option value="申請中">申請中</option>
                 </select>
               </div>
             </div>
@@ -580,6 +638,8 @@ export default function ClientsPage() {
                         <div className={`px-3 py-2 md:px-4 md:py-3 text-white font-medium text-xs md:text-sm rounded-t-2xl md:rounded-t-3xl ${
                           customer.customer_type === '社區券客戶'
                             ? 'bg-gradient-to-r from-green-500 to-green-600'
+                            : customer.customer_type === '家訪客戶'
+                            ? 'bg-gradient-to-r from-purple-500 to-purple-600'
                             : 'bg-gradient-to-r from-blue-500 to-blue-600'
                         }`}>
                           <div className="flex items-center justify-center">
@@ -717,6 +777,8 @@ export default function ClientsPage() {
                                 <div className={`w-1 h-8 rounded-full mr-3 ${
                                   customer.customer_type === '社區券客戶'
                                     ? 'bg-green-500'
+                                    : customer.customer_type === '家訪客戶'
+                                    ? 'bg-purple-500'
                                     : 'bg-blue-500'
                                 }`} />
                                 <div>
@@ -741,6 +803,8 @@ export default function ClientsPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 customer.customer_type === '社區券客戶'
                                   ? 'bg-green-100 text-green-800'
+                                  : customer.customer_type === '家訪客戶'
+                                  ? 'bg-purple-100 text-purple-800'
                                   : 'bg-blue-100 text-blue-800'
                               }`}>
                                 {customer.customer_type}

@@ -89,6 +89,16 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 /* Line Clamp Utility */
 .line-clamp-2 {
   display: -webkit-box;
@@ -560,6 +570,160 @@ body {
   
   .group-hover\:rotate-12 {
     transition: none;
+  }
+
+  /* Enhanced touch targets */
+  button, .btn-apple-primary, .btn-apple-secondary, .btn-apple-danger {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better tap feedback */
+  button:active, .btn-apple-primary:active, .btn-apple-secondary:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Additional mobile improvements */
+@media (max-width: 480px) {
+  /* Extra small mobile devices */
+  .card-apple {
+    border-radius: var(--radius-apple-sm);
+    margin: 0.5rem;
+  }
+  
+  .card-apple-content {
+    padding: 1rem;
+  }
+  
+  /* Improve form field spacing on very small screens */
+  .form-group-apple {
+    margin-bottom: 1rem;
+  }
+  
+  /* Better modal sizing */
+  .fixed.inset-0 .bg-white {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Ensure proper mobile scrolling */
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  
+  body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix iOS Safari viewport issues */
+  .mobile-friendly {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Remove any height restrictions that prevent scrolling */
+  main {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Ensure forms have adequate bottom spacing */
+  form {
+    padding-bottom: 6rem !important;
+  }
+  
+  /* Improve form inputs on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+  
+  /* Better button sizing for mobile */
+  .btn-apple-primary,
+  .btn-apple-secondary {
+    min-height: 44px; /* iOS recommended touch target */
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .btn-apple-primary,
+    .btn-apple-secondary {
+      width: auto;
+      margin-bottom: 0;
+    }
+    
+    form {
+      padding-bottom: 0 !important;
+    }
+  }
+  
+  /* Card improvements for mobile */
+  .card-apple {
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    width: 100%;
+  }
+  
+  .card-apple-content {
+    padding: 1rem;
+  }
+  
+  /* Force any fixed height containers to be flexible */
+  div[class*="min-h-screen"],
+  div[class*="h-screen"],
+  div[class*="max-h-"] {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* Specific fix for main page containers */
+  .bg-bg-primary {
+    min-height: 100vh;
+    height: auto;
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Reduce header sizes in landscape */
+  .text-apple-title {
+    font-size: 1.25rem;
+  }
+  
+  .text-apple-heading {
+    font-size: 1.125rem;
+  }
+  
+  /* Compact padding in landscape */
+  .card-apple-content {
+    padding: 1rem;
   }
 }
 

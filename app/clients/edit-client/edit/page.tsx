@@ -393,18 +393,18 @@ export default function EditClientPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>
       {/* Header */}
       <header className="card-apple border-b border-border-light fade-in-apple">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-8 gap-4 sm:gap-0">
+        <div className="w-full px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
             <div className="flex-1">
-              <h1 className="text-xl sm:text-apple-title text-text-primary mb-1 sm:mb-2">編輯客戶資料</h1>
-              <p className="text-sm sm:text-apple-body text-text-secondary">更新客戶的基本資料和服務資訊</p>
+              <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">編輯客戶資料</h1>
+              <p className="text-sm text-text-secondary">更新客戶的基本資料和服務資訊</p>
             </div>
             <button
               onClick={() => router.push('/clients')}
-              className="btn-apple-secondary w-full sm:w-auto text-sm sm:text-base"
+              className="btn-apple-secondary w-full sm:w-auto text-sm"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -416,7 +416,8 @@ export default function EditClientPage() {
       </header>
 
       {/* Form */}
-      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <main className="w-full py-4 sm:py-6 px-4 sm:px-6 pb-32 sm:pb-20">
+        <div className="w-full max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
 
           {/* 錯誤訊息 */}
@@ -953,6 +954,7 @@ export default function EditClientPage() {
             </div>
           </div>
         </form>
+        </div>
       </main>
     </div>
   )

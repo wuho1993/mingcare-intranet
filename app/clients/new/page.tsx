@@ -57,7 +57,7 @@ export default function NewCustomerPage() {
   // 生成客戶編號 - 使用 Supabase RPC（並發安全）
   const generateCustomerId = async () => {
     try {
-      // 僅在符合條件時生成編號
+      // 僅在符合條件時生成編號 - 家訪客戶不需要編號
       const shouldGenerate = formData.customer_type === '明家街客' ||
         (formData.customer_type === '社區券客戶' && formData.voucher_application_status === '已經持有')
 
@@ -131,7 +131,7 @@ export default function NewCustomerPage() {
 
       // 處理客戶類型變化
       if (field === 'customer_type') {
-        if (value === '明家街客') {
+        if (value === '明家街客' || value === '家訪客戶') {
           // 清除所有社區券相關欄位
           updated.voucher_application_status = undefined
           updated.voucher_number = ''
@@ -337,18 +337,18 @@ export default function NewCustomerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>
       {/* Header */}
       <header className="card-apple border-b border-border-light fade-in-apple">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-8 gap-4 sm:gap-0">
-            <div className="flex-1">
-              <h1 className="text-xl sm:text-apple-title text-text-primary mb-1 sm:mb-2">新增客戶</h1>
-              <p className="text-sm sm:text-apple-body text-text-secondary">建立新的客戶資料</p>
+        <div className="w-full px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">新增客戶</h1>
+              <p className="text-sm text-text-secondary">建立新的客戶資料</p>
             </div>
             <button
               onClick={() => router.push('/clients')}
-              className="btn-apple-secondary w-full sm:w-auto text-sm sm:text-base"
+              className="btn-apple-secondary w-full sm:w-auto text-sm"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -360,8 +360,9 @@ export default function NewCustomerPage() {
       </header>
 
       {/* Form */}
-      <main className="max-w-4xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+      <main className="w-full py-4 sm:py-6 px-4 sm:px-6 pb-32 sm:pb-20">
+        <div className="w-full max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
 
           {/* 錯誤訊息 */}
           {errors.general && (
@@ -396,6 +397,7 @@ export default function NewCustomerPage() {
                   >
                     <option value="社區券客戶">社區券客戶</option>
                     <option value="明家街客">明家街客</option>
+                    <option value="家訪客戶">家訪客戶</option>
                   </select>
                 </div>
 
@@ -606,7 +608,9 @@ export default function NewCustomerPage() {
                       <p className="text-apple-caption text-text-secondary">客戶編號</p>
                       <p className="text-apple-heading text-text-primary font-mono">
                         {generatedCustomerId || (
-                          formData.customer_type === '社區券客戶' && formData.voucher_application_status === '申請中'
+                          formData.customer_type === '家訪客戶'
+                            ? '不需要編號'
+                            : formData.customer_type === '社區券客戶' && formData.voucher_application_status === '申請中'
                             ? '申請中不生成編號'
                             : '生成中...'
                         )}
@@ -614,6 +618,11 @@ export default function NewCustomerPage() {
                       {formData.customer_type === '社區券客戶' && formData.voucher_application_status === '申請中' && (
                         <p className="text-apple-caption text-text-secondary mt-1">
                           客戶編號將在申請狀況變更為「已經持有」後生成
+                        </p>
+                      )}
+                      {formData.customer_type === '家訪客戶' && (
+                        <p className="text-apple-caption text-text-secondary mt-1">
+                          家訪客戶無需客戶編號
                         </p>
                       )}
                     </div>
@@ -831,6 +840,7 @@ export default function NewCustomerPage() {
             </div>
           </div>
         </form>
+        </div>
       </main>
     </div>
   )
