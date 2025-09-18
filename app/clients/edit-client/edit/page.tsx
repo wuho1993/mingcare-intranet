@@ -247,51 +247,16 @@ export default function EditClientPage() {
     }
   }
 
-  // 表單驗證
+  // 表單驗證 (更寬鬆的驗證，僅檢查必要欄位)
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    // 必填基本資料驗證
+    // 僅驗證客戶姓名為必填
     if (!formData.customer_name?.trim()) {
       newErrors.customer_name = '請輸入客戶姓名'
     }
 
-    if (!formData.service_address?.trim()) {
-      newErrors.service_address = '請輸入服務地址'
-    }
-
-    // 僅在生成新編號模式下進行條件式驗證
-    if (useNewCustomerId && formData.customer_type === '社區券客戶') {
-      if (!formData.voucher_application_status) {
-        newErrors.voucher_application_status = '請選擇社區券申請狀況'
-      }
-
-      // 申請狀況為「已經持有」時的必填驗證
-      if (formData.voucher_application_status === '已經持有') {
-        if (!formData.voucher_number?.trim()) {
-          newErrors.voucher_number = '請輸入社區券號碼'
-        }
-
-        if (!formData.copay_level) {
-          newErrors.copay_level = '請選擇自付比例等級'
-        }
-
-        if (formData.copay_level === '5%' && formData.charity_support === undefined) {
-          newErrors.charity_support = '請選擇是否需要慈善機構贊助'
-        }
-      }
-
-      // 有選擇申請狀況時的 LDS 和家訪驗證
-      if (formData.voucher_application_status === '申請中' || formData.voucher_application_status === '已經持有') {
-        if (!formData.lds_status) {
-          newErrors.lds_status = '請選擇LDS狀況'
-        }
-
-        if (!formData.home_visit_status) {
-          newErrors.home_visit_status = '請選擇家訪狀況'
-        }
-      }
-    }
+    // 其他欄位都允許為空，系統會自動處理
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -305,6 +270,7 @@ export default function EditClientPage() {
       return
     }
 
+    // 只做基本驗證
     if (!validateForm()) {
       return
     }
@@ -312,7 +278,7 @@ export default function EditClientPage() {
     setSubmitting(true)
 
     try {
-      // 計算年齡
+      // 計算年齡 (如果有提供出生日期)
       let calculatedAge: number | undefined
       if (formData.dob) {
         const birthDate = new Date(formData.dob)
@@ -324,23 +290,29 @@ export default function EditClientPage() {
         }
       }
 
-      // 準備更新資料
-      const updateData = {
-        ...formData,
-        age: calculatedAge || formData.age,
-        customer_id: useNewCustomerId ? generatedCustomerId : originalCustomerId
-      }
+      // 準備更新資料，過濾掉空值
+      const updateData = Object.fromEntries(
+        Object.entries({
+          ...formData,
+          age: calculatedAge || formData.age,
+          customer_id: useNewCustomerId ? generatedCustomerId : originalCustomerId
+        }).filter(([key, value]) => value !== '' && value !== null && value !== undefined)
+      )
 
+      console.log('Updating customer with data:', updateData)
+      
       const response = await CustomerManagementService.updateCustomer(clientId, updateData as any)
 
       if (response.error) {
-        setErrors({ general: response.error })
+        console.error('Update error:', response.error, response.message)
+        setErrors({ general: response.error + (response.message ? ': ' + response.message : '') })
       } else {
+        console.log('Update successful:', response.data)
         router.push('/clients')
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
-      setErrors({ general: error.message || '更新客戶資料失敗' })
+      setErrors({ general: '更新客戶資料失敗: ' + (error.message || '未知錯誤') })
     } finally {
       setSubmitting(false)
     }

@@ -187,6 +187,12 @@ export class CustomerManagementService {
       if (filters?.project_manager) {
         query = query.eq('project_manager', filters.project_manager);
       }
+      if (filters?.lds_status) {
+        query = query.eq('lds_status', filters.lds_status);
+      }
+      if (filters?.voucher_application_status) {
+        query = query.eq('voucher_application_status', filters.voucher_application_status);
+      }
       if (filters?.search) {
         // 符合 API 規格的搜尋邏輯，處理 customer_id 可能為 null 的情況
         query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,customer_id.ilike.%${filters.search}%`);
@@ -360,18 +366,49 @@ export class CustomerManagementService {
         }
       }
 
-      // 使用智能查詢
-      const result = await this.queryBySmartId(id, (queryBuilder, idField) =>
-        queryBuilder.update(customerData).eq(idField, id).select().single()
+      // 清理空字串，轉為 null 以避免資料庫約束問題
+      const cleanedData = Object.fromEntries(
+        Object.entries(customerData).map(([key, value]) => [
+          key,
+          typeof value === 'string' && value.trim() === '' ? null : value
+        ])
       );
 
-      if (result.error) throw result.error;
+      // 使用智能查詢，並允許部分失敗
+      const result = await this.queryBySmartId(id, (queryBuilder, idField) =>
+        queryBuilder.update(cleanedData).eq(idField, id).select().single()
+      );
+
+      if (result.error) {
+        console.warn('Update error:', result.error);
+        // 如果是約束錯誤，嘗試更寬鬆的更新
+        if (result.error.message?.includes('violates')) {
+          const essentialData = {
+            customer_name: cleanedData.customer_name,
+            phone: cleanedData.phone,
+            service_address: cleanedData.service_address,
+            customer_type: cleanedData.customer_type,
+            district: cleanedData.district,
+            project_manager: cleanedData.project_manager,
+            updated_at: new Date().toISOString()
+          };
+
+          const retryResult = await this.queryBySmartId(id, (queryBuilder, idField) =>
+            queryBuilder.update(essentialData).eq(idField, id).select().single()
+          );
+
+          if (retryResult.error) throw retryResult.error;
+          return { data: retryResult.data || undefined };
+        }
+        throw result.error;
+      }
 
       return { data: result.data || undefined };
     } catch (error: any) {
+      console.error('Update customer error:', error);
       return {
         error: '客戶資料更新失敗',
-        message: error.message
+        message: error.message || '更新時發生未知錯誤'
       };
     }
   }

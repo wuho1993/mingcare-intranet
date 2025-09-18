@@ -43,29 +43,41 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
 
   // Introducer stats (introducer_enum: Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰)
   const introducerStats = customers.reduce((acc, customer) => {
-    const introducer = (customer as any).introducer || '無介紹人'
-    acc[introducer] = (acc[introducer] || 0) + 1
+    const introducer = (customer as any).introducer
+    // Only count customers who have an introducer (exclude null/undefined/empty)
+    if (introducer && introducer.trim()) {
+      acc[introducer] = (acc[introducer] || 0) + 1
+    }
     return acc
   }, {} as Record<string, number>)
 
   // Voucher application status (voucher_application_status_enum: 已經持有, 申請中)
   const voucherStats = customers.reduce((acc, customer) => {
-    const status = customer.voucher_application_status || '未申請'
-    acc[status] = (acc[status] || 0) + 1
+    const status = customer.voucher_application_status
+    // Only count customers who have a voucher status (exclude null/undefined/empty)
+    if (status && status.trim()) {
+      acc[status] = (acc[status] || 0) + 1
+    }
     return acc
   }, {} as Record<string, number>)
 
   // LDS Status stats (lds_status_enum: 已完成評估, 已經持有, 待社工評估)
   const ldsStats = customers.reduce((acc, customer) => {
-    const status = (customer as any).lds_status || '未設定'
-    acc[status] = (acc[status] || 0) + 1
+    const status = (customer as any).lds_status
+    // Only count customers who have an LDS status (exclude null/undefined/empty)
+    if (status && status.trim()) {
+      acc[status] = (acc[status] || 0) + 1
+    }
     return acc
   }, {} as Record<string, number>)
 
   // Home visit status (home_visit_status_enum: 已完成, 未完成)
   const homeVisitStats = customers.reduce((acc, customer) => {
-    const status = (customer as any).home_visit_status || '未設定'
-    acc[status] = (acc[status] || 0) + 1
+    const status = (customer as any).home_visit_status
+    // Only count customers who have a home visit status (exclude null/undefined/empty)
+    if (status && status.trim()) {
+      acc[status] = (acc[status] || 0) + 1
+    }
     return acc
   }, {} as Record<string, number>)
 
@@ -178,7 +190,7 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
         {/* Voucher Status */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.6s' }}>
           <div className="card-apple-header">
-            <h3 className="text-lg font-semibold text-text-primary">券狀態統計</h3>
+            <h3 className="text-lg font-semibold text-text-primary">社區券狀態統計</h3>
           </div>
           <div className="card-apple-content">
             <div className="space-y-4">
@@ -212,6 +224,60 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
                 <div key={introducer} className="flex justify-between items-center">
                   <span className="text-sm text-text-primary truncate">{introducer}</span>
                   <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* LDS Status and Home Visit Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LDS Status */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.8s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">LDS狀態統計</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-4">
+              {Object.entries(ldsStats)
+                .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
+                .map(([status, count]) => (
+                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      status === '已經持有' ? 'bg-emerald-500' :
+                      status === '已完成評估' ? 'bg-blue-500' :
+                      status === '待社工評估' ? 'bg-orange-500' : 'bg-gray-400'
+                    }`}></div>
+                    <span className="text-sm font-medium text-text-primary">{status}</span>
+                  </div>
+                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Home Visit Status */}
+        <div className="card-apple fade-in-apple" style={{ animationDelay: '0.9s' }}>
+          <div className="card-apple-header">
+            <h3 className="text-lg font-semibold text-text-primary">家訪狀態統計</h3>
+          </div>
+          <div className="card-apple-content">
+            <div className="space-y-4">
+              {Object.entries(homeVisitStats)
+                .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
+                .map(([status, count]) => (
+                <div key={status} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      status === '已完成' ? 'bg-emerald-500' :
+                      status === '未完成' ? 'bg-red-500' : 'bg-gray-400'
+                    }`}></div>
+                    <span className="text-sm font-medium text-text-primary">{status}</span>
+                  </div>
+                  <span className="text-lg font-bold text-mingcare-blue">{count}</span>
                 </div>
               ))}
             </div>
