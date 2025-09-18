@@ -493,8 +493,8 @@ export class CustomerManagementService {
   }
 
   /**
-   * 獲取本月社區券客戶服務使用情況，按介紹人分組
-   * @returns 本月服務使用統計，按介紹人分組
+   * 獲取本月社區券客戶服務使用情況，按所屬項目分組
+   * @returns 本月服務使用統計，按所屬項目分組
    */
   static async getMonthlyVoucherServiceUsage(): Promise<Record<string, number>> {
     try {
@@ -511,13 +511,13 @@ export class CustomerManagementService {
       console.log('Current month (0-indexed):', currentMonth);
       console.log('Current month (display):', currentMonth + 1);
       console.log('Date range:', { startOfMonth, endOfMonth });
-      console.log('Filtering by project_category: MC社區券(醫點）');
+      console.log('Grouping by project_category instead of introducer');
 
-      // Step 1: 首先獲取所有社區券客戶及其介紹人信息
+      // Step 1: 首先獲取所有社區券客戶
       console.log('Step 1: Fetching 社區券客戶 from customer_personal_data...');
       const { data: voucherCustomers, error: customerError } = await supabase
         .from('customer_personal_data')
-        .select('customer_name, introducer')
+        .select('customer_name')
         .eq('customer_type', '社區券客戶');
 
       if (customerError) {
@@ -541,15 +541,14 @@ export class CustomerManagementService {
         return {};
       }
 
-      // Step 2: 查詢 billing_salary_data 表中本月這些客戶的服務記錄
+      // Step 2: 查詢 billing_salary_data 表中本月這些客戶的服務記錄（所有project_category）
       console.log('Step 2: Querying billing_salary_data for current month...');
       const { data: billingData, error: billingError } = await supabase
         .from('billing_salary_data')
         .select('customer_name, service_date, project_category')
         .gte('service_date', startOfMonth)
         .lte('service_date', endOfMonth)
-        .in('customer_name', voucherCustomerNames)
-        .eq('project_category', 'MC社區券(醫點）');
+        .in('customer_name', voucherCustomerNames);
 
       if (billingError) {
         console.error('Error querying billing_salary_data:', billingError);
@@ -563,35 +562,27 @@ export class CustomerManagementService {
 
       console.log(`Found ${billingData.length} billing records for current month`);
 
-      // Step 3: 創建客戶姓名到介紹人的映射
-      const customerIntroducerMap = new Map();
-      voucherCustomers.forEach(customer => {
-        if (customer.customer_name) {
-          customerIntroducerMap.set(customer.customer_name, customer.introducer || '未知');
-        }
-      });
-
-      // Step 4: 按介紹人分組計算服務人數
-      const introducerServiceCount = new Map<string, Set<string>>();
+      // Step 3: 按所屬項目(project_category)分組計算服務人數
+      const projectCategoryServiceCount = new Map<string, Set<string>>();
       
       billingData.forEach(record => {
-        const introducer = customerIntroducerMap.get(record.customer_name) || '未知';
+        const projectCategory = record.project_category || '未知';
         
-        if (!introducerServiceCount.has(introducer)) {
-          introducerServiceCount.set(introducer, new Set());
+        if (!projectCategoryServiceCount.has(projectCategory)) {
+          projectCategoryServiceCount.set(projectCategory, new Set());
         }
         
-        // 使用 Set 確保同一個客戶在同一介紹人下只被計算一次
-        introducerServiceCount.get(introducer)!.add(record.customer_name);
+        // 使用 Set 確保同一個客戶在同一項目下只被計算一次
+        projectCategoryServiceCount.get(projectCategory)!.add(record.customer_name);
       });
 
-      // Step 5: 轉換為最終結果格式
+      // Step 4: 轉換為最終結果格式
       const result: Record<string, number> = {};
-      introducerServiceCount.forEach((customerSet, introducer) => {
-        result[introducer] = customerSet.size;
+      projectCategoryServiceCount.forEach((customerSet, projectCategory) => {
+        result[projectCategory] = customerSet.size;
       });
 
-      console.log('Monthly voucher service usage by introducer:', result);
+      console.log('Monthly voucher service usage by project_category:', result);
       console.log('Total customers served:', Object.values(result).reduce((sum, count) => sum + count, 0));
       
       return result;

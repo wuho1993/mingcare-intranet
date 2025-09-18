@@ -251,11 +251,11 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
           </div>
         </div>
 
-        {/* Monthly Voucher Service Usage by Introducer */}
+        {/* Monthly Voucher Service Usage by Project Category */}
         <div className="card-apple fade-in-apple" style={{ animationDelay: '0.75s' }}>
           <div className="card-apple-header">
             <h3 className="text-lg font-semibold text-text-primary">
-              本月社區券服務使用情況（按介紹人）
+              本月社區券服務使用情況（按所屬項目）
             </h3>
             <div className="text-sm text-text-secondary">
               {new Date().getFullYear()}年{new Date().getMonth() + 1}月
@@ -274,9 +274,9 @@ function CustomerSummary({ customers, filters }: CustomerSummaryProps) {
               <div className="space-y-3">
                 {Object.entries(monthlyServiceUsage)
                   .sort(([,a], [,b]) => (b as number) - (a as number))
-                  .map(([introducer, count]) => (
-                  <div key={introducer} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
-                    <span className="text-sm text-text-primary font-medium">{introducer}</span>
+                  .map(([projectCategory, count]) => (
+                  <div key={projectCategory} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                    <span className="text-sm text-text-primary font-medium">{projectCategory}</span>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
                       <span className="text-xs text-text-secondary">人次</span>
