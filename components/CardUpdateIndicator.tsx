@@ -14,7 +14,8 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
   console.log('🔥 CardUpdateIndicator 渲染:', { 
     lastUpdateTime: lastUpdateTime?.toISOString() || null, 
     isVisible, 
-    timeAgo 
+    timeAgo,
+    willRender: !(!isVisible)
   })
 
   useEffect(() => {
@@ -69,7 +70,12 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
     return () => clearInterval(interval)
   }, [lastUpdateTime])
 
-  if (!isVisible) return null
+  if (!isVisible) {
+    console.log('⚠️ CardUpdateIndicator 不渲染: isVisible =', isVisible)
+    return null
+  }
+
+  console.log('✅ CardUpdateIndicator 即將渲染 DOM，內容:', `更新 ${timeAgo || '剛剛'}`)
 
   return (
     <div
