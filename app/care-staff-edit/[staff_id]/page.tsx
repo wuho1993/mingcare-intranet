@@ -1,7 +1,7 @@
 import CareStaffEditClient from './CareStaffEditClient'
 
 // Required for static export - generates empty params since this is a dynamic page
-export function generateStaticParams() {
+export async function generateStaticParams() {
   return []
 }
 
