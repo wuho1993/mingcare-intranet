@@ -308,6 +308,8 @@ export default function EditClientPage() {
         setErrors({ general: response.error + (response.message ? ': ' + response.message : '') })
       } else {
         console.log('Update successful:', response.data)
+        // Show success message
+        alert('客戶資料更新成功！將返回客戶列表。')
         // Use window.history.back() to maintain search filters and pagination
         window.history.back()
       }
@@ -343,6 +345,8 @@ export default function EditClientPage() {
       if (response.error) {
         setErrors({ general: response.error })
       } else {
+        // Show success message
+        alert('客戶資料刪除成功！將返回客戶列表。')
         // 刪除成功，返回客戶列表 - 保持搜尋狀態
         window.history.back()
       }
