@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// 創建服務端 Supabase 客戶端
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 // 添加 GET 方法用於調試
 export async function GET() {
@@ -18,6 +12,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createSupabaseServerClient()
     const { searchTerm } = await req.json()
     
     if (!searchTerm || typeof searchTerm !== 'string') {

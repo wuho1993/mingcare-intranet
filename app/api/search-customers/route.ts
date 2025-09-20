@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// 創建服務端 Supabase 客戶端
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createSupabaseServerClient()
     const { searchTerm } = await req.json()
     
     if (!searchTerm || typeof searchTerm !== 'string') {
@@ -25,26 +20,26 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // 直接查詢 customer_personal_data 資料表
     const { data, error } = await supabase
-      .from('customer_personal_data')
-      .select('customer_id, customer_name, phone, service_address')
-      .or(`customer_name.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%,customer_id.ilike.%${searchTerm.trim()}%`)
+      .from('customers')
+      .select('customer_id, name_chinese, name_english, phone')
+      .or(`customer_id.ilike.%${searchTerm.trim()}%,name_chinese.ilike.%${searchTerm.trim()}%,name_english.ilike.%${searchTerm.trim()}%,phone.ilike.%${searchTerm.trim()}%`)
       .limit(10)
 
     if (error) {
-      console.error('搜尋客戶錯誤:', error)
+      console.error('搜尋客戶時發生錯誤:', error)
       return NextResponse.json(
-        { success: false, error: `資料庫錯誤: ${error.message}` },
+        { success: false, error: '搜尋失敗: ' + error.message },
         { status: 500 }
       )
     }
 
-    const results = (data || []).map(item => ({
-      customer_id: item.customer_id || '',
-      customer_name: item.customer_name || '',
+    const results = (data || []).map((item: any) => ({
+      customer_id: item.customer_id,
+      name_chinese: item.name_chinese || '',
+      name_english: item.name_english || '',
       phone: item.phone || '',
-      service_address: item.service_address || ''
+      display: `${item.customer_id} - ${item.name_chinese || item.name_english || '未命名'}`
     }))
 
     return NextResponse.json({
@@ -53,9 +48,9 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('客戶搜尋 API 錯誤:', error)
+    console.error('API 錯誤:', error)
     return NextResponse.json(
-      { success: false, error: '伺服器錯誤' },
+      { success: false, error: '伺服器內部錯誤' },
       { status: 500 }
     )
   }
