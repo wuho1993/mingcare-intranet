@@ -2889,12 +2889,19 @@ export default function ServicesPage() {
       if (event?.detail?.recordId) {
         // 處理自定義事件
         const recordId = event.detail.recordId
-        const updateTime = localStorage.getItem(`record_update_${recordId}`)
+        const updateTime = localStorage.getItem(`service_update_${recordId}`)
         if (updateTime) {
-          setRecordUpdateTimes(prev => ({
-            ...prev,
-            [recordId]: new Date(updateTime)
-          }))
+          const timeNum = parseInt(updateTime, 10)
+          if (!isNaN(timeNum)) {
+            setRecordUpdateTimes(prev => ({
+              ...prev,
+              [recordId]: new Date(timeNum)
+            }))
+            console.log('🔔 事件處理器更新記錄時間:', {
+              recordId,
+              updateTime: new Date(timeNum).toISOString()
+            })
+          }
         }
       }
     }
