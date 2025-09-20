@@ -317,15 +317,23 @@ export default function EditClientPage() {
         // Set last update time for notification
         setLastUpdateTime(new Date())
         
-        // 通知客戶列表頁面更新時間
+        // 通知客戶列表頁面更新時間 - 使用新的持久化格式
         const updateTime = new Date()
+        const updateTimeStr = updateTime.toISOString()
+        
+        // 設置具體客戶的更新時間（持久化30分鐘）
+        localStorage.setItem(`customer_update_${clientId}`, updateTimeStr)
+        
+        // 保留舊格式以兼容現有邏輯
         localStorage.setItem('customerUpdated', JSON.stringify({
           customerId: clientId,
-          updateTime: updateTime.toISOString()
+          updateTime: updateTimeStr
         }))
         
         // 觸發自定義事件
-        window.dispatchEvent(new CustomEvent('customerUpdated'))
+        window.dispatchEvent(new CustomEvent('customerUpdated', {
+          detail: { customerId: clientId }
+        }))
         
         // Optionally refresh the form data to show updated values
         // window.location.reload() // Uncomment if you want to reload the page

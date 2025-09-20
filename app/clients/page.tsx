@@ -417,6 +417,39 @@ export default function ClientsPage() {
   // 追蹤每個客戶的更新時間
   const [customerUpdateTimes, setCustomerUpdateTimes] = useState<Record<string, Date>>({})
 
+  // 從 localStorage 載入所有客戶的更新時間（頁面載入時）
+  useEffect(() => {
+    const loadCustomerUpdateTimes = () => {
+      const times: Record<string, Date> = {}
+      const now = new Date()
+      
+      // 遍歷所有 localStorage 項目，找出客戶更新時間
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('customer_update_')) {
+          const customerId = key.replace('customer_update_', '')
+          const timeStr = localStorage.getItem(key)
+          if (timeStr) {
+            const updateTime = new Date(timeStr)
+            const diffInMinutes = (now.getTime() - updateTime.getTime()) / (1000 * 60)
+            
+            // 只加載30分鐘內的更新時間
+            if (diffInMinutes < 30) {
+              times[customerId] = updateTime
+            } else {
+              // 清除超過30分鐘的舊記錄
+              localStorage.removeItem(key)
+            }
+          }
+        }
+      }
+      
+      setCustomerUpdateTimes(times)
+    }
+
+    loadCustomerUpdateTimes()
+  }, [])
+
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
@@ -1157,7 +1190,7 @@ export default function ClientsPage() {
                     {customers.map((customer, index) => (
                       <div
                         key={customer.id}
-                        className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
+                        className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative overflow-visible transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                         onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                       >

@@ -50,6 +50,39 @@ export default function CareStaffPage() {
   // 追蹤每個護理人員的更新時間
   const [staffUpdateTimes, setStaffUpdateTimes] = useState<Record<string, Date>>({})
 
+  // 從 localStorage 載入所有護理人員的更新時間（頁面載入時）
+  useEffect(() => {
+    const loadStaffUpdateTimes = () => {
+      const times: Record<string, Date> = {}
+      const now = new Date()
+      
+      // 遍歷所有 localStorage 項目，找出護理人員更新時間
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('staff_update_')) {
+          const staffId = key.replace('staff_update_', '')
+          const timeStr = localStorage.getItem(key)
+          if (timeStr) {
+            const updateTime = new Date(timeStr)
+            const diffInMinutes = (now.getTime() - updateTime.getTime()) / (1000 * 60)
+            
+            // 只加載30分鐘內的更新時間
+            if (diffInMinutes < 30) {
+              times[staffId] = updateTime
+            } else {
+              // 清除超過30分鐘的舊記錄
+              localStorage.removeItem(key)
+            }
+          }
+        }
+      }
+      
+      setStaffUpdateTimes(times)
+    }
+
+    loadStaffUpdateTimes()
+  }, [])
+
   // Drawer 編輯狀態
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<CareStaff | null>(null)
@@ -158,7 +191,22 @@ export default function CareStaffPage() {
 
   // 監聽護理人員更新事件
   useEffect(() => {
-    const handleStaffUpdate = () => {
+    const handleStaffUpdate = (event: any) => {
+      if (event?.detail?.staffId) {
+        // 處理自定義事件
+        const staffId = event.detail.staffId
+        const updateTime = localStorage.getItem(`staff_update_${staffId}`)
+        if (updateTime) {
+          setStaffUpdateTimes(prev => ({
+            ...prev,
+            [staffId]: new Date(updateTime)
+          }))
+        }
+      }
+    }
+
+    const handleStorageUpdate = () => {
+      // 處理 storage 事件或頁面載入時的檢查
       const updatedStaffInfo = localStorage.getItem('staffUpdated')
       if (updatedStaffInfo) {
         const { staffId, updateTime } = JSON.parse(updatedStaffInfo)
@@ -171,16 +219,16 @@ export default function CareStaffPage() {
     }
 
     // 檢查頁面載入時是否有更新
-    handleStaffUpdate()
+    handleStorageUpdate()
 
     // 監聽 storage 事件
-    window.addEventListener('storage', handleStaffUpdate)
+    window.addEventListener('storage', handleStorageUpdate)
     
     // 監聽自定義事件（同頁面內的更新）
     window.addEventListener('staffUpdated', handleStaffUpdate)
 
     return () => {
-      window.removeEventListener('storage', handleStaffUpdate)
+      window.removeEventListener('storage', handleStorageUpdate)
       window.removeEventListener('staffUpdated', handleStaffUpdate)
     }
   }, [])

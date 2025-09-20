@@ -136,15 +136,23 @@ export default function CareStaffEditPage() {
       alert('護理員資料更新成功！')
       setLastUpdateTime(new Date())
       
-      // 通知護理人員列表頁面更新時間
+      // 通知護理人員列表頁面更新時間 - 使用新的持久化格式
       const updateTime = new Date()
+      const updateTimeStr = updateTime.toISOString()
+      
+      // 設置具體護理人員的更新時間（持久化30分鐘）
+      localStorage.setItem(`staff_update_${staffId}`, updateTimeStr)
+      
+      // 保留舊格式以兼容現有邏輯
       localStorage.setItem('staffUpdated', JSON.stringify({
         staffId: staffId,
-        updateTime: updateTime.toISOString()
+        updateTime: updateTimeStr
       }))
       
       // 觸發自定義事件
-      window.dispatchEvent(new CustomEvent('staffUpdated'))
+      window.dispatchEvent(new CustomEvent('staffUpdated', {
+        detail: { staffId: staffId }
+      }))
       
       router.back()
     } catch (error) {

@@ -291,12 +291,11 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative"
+                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible"
                       >
                         {/* 30分鐘更新提示 */}
                         <CardUpdateIndicator 
                           lastUpdateTime={recordUpdateTimes?.[record.id] || null}
-                          className="!absolute !-top-1 !-right-1 !text-xs !px-1 !py-0.5" 
                         />
                         
                         <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
@@ -2789,6 +2788,82 @@ export default function ServicesPage() {
   // 追蹤每個記錄的更新時間
   const [recordUpdateTimes, setRecordUpdateTimes] = useState<Record<string, Date>>({})
 
+  // 從 localStorage 載入所有服務記錄的更新時間（頁面載入時）
+  useEffect(() => {
+    const loadRecordUpdateTimes = () => {
+      const times: Record<string, Date> = {}
+      const now = new Date()
+      
+      // 遍歷所有 localStorage 項目，找出服務記錄更新時間
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('record_update_')) {
+          const recordId = key.replace('record_update_', '')
+          const timeStr = localStorage.getItem(key)
+          if (timeStr) {
+            const updateTime = new Date(timeStr)
+            const diffInMinutes = (now.getTime() - updateTime.getTime()) / (1000 * 60)
+            
+            // 只加載30分鐘內的更新時間
+            if (diffInMinutes < 30) {
+              times[recordId] = updateTime
+            } else {
+              // 清除超過30分鐘的舊記錄
+              localStorage.removeItem(key)
+            }
+          }
+        }
+      }
+      
+      setRecordUpdateTimes(times)
+    }
+
+    loadRecordUpdateTimes()
+  }, [])
+
+  // 監聽服務記錄更新事件
+  useEffect(() => {
+    const handleRecordUpdate = (event: any) => {
+      if (event?.detail?.recordId) {
+        // 處理自定義事件
+        const recordId = event.detail.recordId
+        const updateTime = localStorage.getItem(`record_update_${recordId}`)
+        if (updateTime) {
+          setRecordUpdateTimes(prev => ({
+            ...prev,
+            [recordId]: new Date(updateTime)
+          }))
+        }
+      }
+    }
+
+    const handleStorageUpdate = () => {
+      // 處理 storage 事件或頁面載入時的檢查
+      const updatedRecordInfo = localStorage.getItem('recordUpdated')
+      if (updatedRecordInfo) {
+        const { recordId, updateTime } = JSON.parse(updatedRecordInfo)
+        setRecordUpdateTimes(prev => ({
+          ...prev,
+          [recordId]: new Date(updateTime)
+        }))
+        localStorage.removeItem('recordUpdated')
+      }
+    }
+
+    // 檢查頁面載入時是否有更新
+    handleStorageUpdate()
+
+    // 監聽 storage 事件
+    window.addEventListener('storage', handleStorageUpdate)
+    
+    // 監聽自定義事件（同頁面內的更新）
+    window.addEventListener('recordUpdated', handleRecordUpdate)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageUpdate)
+      window.removeEventListener('recordUpdated', handleRecordUpdate)
+    }
+  }, [])
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('pdf')
@@ -2908,9 +2983,21 @@ export default function ServicesPage() {
         setLastUpdateTime(new Date())
         // 設置特定記錄的更新時間
         if (editingRecord) {
+          const updateTime = new Date()
+          const updateTimeStr = updateTime.toISOString()
+          
+          // 更新狀態
           setRecordUpdateTimes(prev => ({
             ...prev,
-            [editingRecord.id]: new Date()
+            [editingRecord.id]: updateTime
+          }))
+          
+          // 持久化到 localStorage（30分鐘）
+          localStorage.setItem(`record_update_${editingRecord.id}`, updateTimeStr)
+          
+          // 觸發自定義事件
+          window.dispatchEvent(new CustomEvent('recordUpdated', {
+            detail: { recordId: editingRecord.id }
           }))
         }
       } else {
