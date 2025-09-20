@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { ResponsiveLogo } from '../../components/Logo'
+import LastUpdateIndicator from '../../components/LastUpdateIndicator'
 
 export default function CareStaffApply() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -51,7 +53,12 @@ export default function CareStaffApply() {
       }
 
       alert('護理人員申請已提交！')
-      router.push('/care-staff')
+      // Set last update time for notification
+      setLastUpdateTime(new Date())
+      // Navigate after a brief delay to show notification
+      setTimeout(() => {
+        router.push('/care-staff')
+      }, 1500)
     } catch (error) {
       console.error('提交錯誤:', error)
       alert('提交失敗，請稍後再試')
@@ -69,7 +76,10 @@ export default function CareStaffApply() {
             <div className="flex items-center space-x-4">
               <ResponsiveLogo />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">護理人員申請</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-gray-900">護理人員申請</h1>
+                  <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
+                </div>
                 <p className="text-sm text-gray-600">新增護理人員資料</p>
               </div>
             </div>

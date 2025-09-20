@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../../../lib/supabase'
 import { CustomerManagementService } from '../../../../services/customer-management'
+import LastUpdateIndicator from '../../../../components/LastUpdateIndicator'
 import type {
   CustomerFormData,
   CustomerType,
@@ -28,6 +29,7 @@ export default function EditClientPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
 
   // 客戶編號管理
   const [originalCustomerId, setOriginalCustomerId] = useState<string>('')
@@ -312,6 +314,8 @@ export default function EditClientPage() {
         alert('客戶資料更新成功！')
         // Clear any previous errors
         setErrors({})
+        // Set last update time for notification
+        setLastUpdateTime(new Date())
         // Optionally refresh the form data to show updated values
         // window.location.reload() // Uncomment if you want to reload the page
       }
@@ -378,7 +382,10 @@ export default function EditClientPage() {
         <div className="w-full px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
             <div className="flex-1">
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">編輯客戶資料</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">編輯客戶資料</h1>
+                <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
+              </div>
               <p className="text-sm text-text-secondary">更新客戶的基本資料和服務資訊</p>
             </div>
             <button

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { ResponsiveLogo } from '../../components/Logo'
+import LastUpdateIndicator from '../../components/LastUpdateIndicator'
 
 interface CareStaffMember {
   id: number
@@ -29,6 +30,7 @@ export default function CareStaffEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [staffMember, setStaffMember] = useState<CareStaffMember | null>(null)
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -132,6 +134,7 @@ export default function CareStaffEditPage() {
       }
 
       alert('護理員資料更新成功！')
+      setLastUpdateTime(new Date())
       router.back()
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -193,6 +196,7 @@ export default function CareStaffEditPage() {
               <ResponsiveLogo />
               <div className="hidden sm:block h-6 w-px bg-apple-border"></div>
               <h1 className="hidden sm:block text-lg font-medium text-text-primary">編輯護理員</h1>
+              <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
             </div>
             <button
               onClick={() => router.back()}

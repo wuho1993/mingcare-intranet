@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { CustomerManagementService } from '../../../services/customer-management'
+import LastUpdateIndicator from '../../../components/LastUpdateIndicator'
 import type {
   CustomerFormData,
   CustomerType,
@@ -27,6 +28,7 @@ export default function NewCustomerPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [generatedCustomerId, setGeneratedCustomerId] = useState<string>('')
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
 
   // 兩階段表單狀態
   const [formStage, setFormStage] = useState<'initial' | 'expanded'>('initial')
@@ -313,7 +315,12 @@ export default function NewCustomerPage() {
       const result = await CustomerManagementService.createCustomer(submissionData)
 
       if (result.success) {
-        router.push('/clients')
+        // Set last update time for notification
+        setLastUpdateTime(new Date())
+        // Navigate after a brief delay to show notification
+        setTimeout(() => {
+          router.push('/clients')
+        }, 1500)
       } else {
         setErrors({ general: result.error || '新增客戶失敗' })
       }
@@ -343,7 +350,10 @@ export default function NewCustomerPage() {
         <div className="w-full px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">新增客戶</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg sm:text-xl font-bold text-text-primary mb-1">新增客戶</h1>
+                <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
+              </div>
               <p className="text-sm text-text-secondary">建立新的客戶資料</p>
             </div>
             <button
