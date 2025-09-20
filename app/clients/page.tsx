@@ -1156,7 +1156,7 @@ export default function ClientsPage() {
                     {customers.map((customer, index) => (
                       <div
                         key={customer.id}
-                        className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative overflow-hidden transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
+                        className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                         onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                       >

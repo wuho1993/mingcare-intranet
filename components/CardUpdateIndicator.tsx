@@ -51,9 +51,9 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
   if (!isVisible) return null
 
   return (
-    <div className={`absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 bg-green-500/90 text-white text-xs rounded-full shadow-sm backdrop-blur-sm z-10 ${className}`}>
+    <div className={`absolute -top-1 -right-1 inline-flex items-center gap-1 px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full shadow-lg border-2 border-white z-50 animate-bounce ${className}`}>
       <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-      <span className="font-medium">{timeAgo}</span>
+      <span className="font-medium">更新 {timeAgo}</span>
     </div>
   )
 }
