@@ -578,7 +578,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         })
         
         // 🔔 觸發事件通知其他組件
-        const event = new CustomEvent('recordUpdate', {
+        const event = new CustomEvent('recordUpdated', {
           detail: {
             recordId: editingRecord.id,
             type: 'service',
