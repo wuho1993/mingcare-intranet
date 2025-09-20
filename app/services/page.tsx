@@ -566,6 +566,28 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
       if (response.success) {
         // 顯示成功提示
         alert('記錄更新成功！')
+        
+        // 🔔 設置更新時間到 localStorage
+        const updateTime = Date.now()
+        const storageKey = `service_update_${editingRecord.id}`
+        localStorage.setItem(storageKey, updateTime.toString())
+        console.log('💾 設置更新時間到 localStorage:', {
+          recordId: editingRecord.id,
+          storageKey,
+          updateTime
+        })
+        
+        // 🔔 觸發事件通知其他組件
+        const event = new CustomEvent('recordUpdate', {
+          detail: {
+            recordId: editingRecord.id,
+            type: 'service',
+            updateTime
+          }
+        })
+        window.dispatchEvent(event)
+        console.log('📢 觸發更新事件:', event.detail)
+        
         setIsEditModalOpen(false)
         setEditingRecord(null)
         // 觸發資料刷新
