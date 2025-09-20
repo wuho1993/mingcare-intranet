@@ -41,15 +41,17 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
         return
       }
 
+      let newTimeAgo = ''
       if (diffInMinutes < 1) {
-        setTimeAgo('剛剛')
+        newTimeAgo = '剛剛'
       } else if (diffInMinutes === 1) {
-        setTimeAgo('1分鐘前')
+        newTimeAgo = '1分鐘前'
       } else {
-        setTimeAgo(`${diffInMinutes}分鐘前`)
+        newTimeAgo = `${diffInMinutes}分鐘前`
       }
       
-      console.log('📝 設置時間顯示:', timeAgo)
+      console.log('📝 設置時間顯示:', newTimeAgo)
+      setTimeAgo(newTimeAgo)
     }
 
     // 立即更新一次
