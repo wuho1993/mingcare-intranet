@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { ResponsiveLogo } from '../../../components/Logo'
 
+// Required for static export - generates empty params since this is a dynamic page
+export function generateStaticParams() {
+  return []
+}
+
 interface CareStaffMember {
   id: number
   name: string
