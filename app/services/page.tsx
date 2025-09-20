@@ -114,6 +114,12 @@ function ReportsCalendarView({
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isMobile, setIsMobile] = useState(false)
 
+  // 調試：監控 recordUpdateTimes props 的變化
+  useEffect(() => {
+    console.log('📅 ReportsCalendarView 收到 recordUpdateTimes:', recordUpdateTimes)
+    console.log('📅 recordUpdateTimes 鍵數量:', recordUpdateTimes ? Object.keys(recordUpdateTimes).length : 0)
+  }, [recordUpdateTimes])
+
   // 監聽螢幕尺寸變化
   useEffect(() => {
     const handleResize = () => {
@@ -295,7 +301,15 @@ function ReportsCalendarView({
                       >
                         {/* 30分鐘更新提示 */}
                         <CardUpdateIndicator 
-                          lastUpdateTime={recordUpdateTimes?.[record.id] || null}
+                          lastUpdateTime={(() => {
+                            const time = recordUpdateTimes?.[record.id] || null
+                            console.log('🎯 CardUpdateIndicator for record:', {
+                              recordId: record.id,
+                              lastUpdateTime: time?.toISOString() || 'null',
+                              recordUpdateTimes: recordUpdateTimes
+                            })
+                            return time
+                          })()}
                         />
                         
                         <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
@@ -2794,6 +2808,8 @@ export default function ServicesPage() {
       const times: Record<string, Date> = {}
       const now = new Date()
       
+      console.log('🔍 開始掃描 localStorage 中的記錄更新時間...')
+      
       // 遍歷所有 localStorage 項目，找出服務記錄更新時間
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -2804,18 +2820,27 @@ export default function ServicesPage() {
             const updateTime = new Date(timeStr)
             const diffInMinutes = (now.getTime() - updateTime.getTime()) / (1000 * 60)
             
+            console.log('📝 找到記錄更新時間:', {
+              recordId,
+              updateTime: updateTime.toISOString(),
+              diffInMinutes: Math.round(diffInMinutes * 100) / 100
+            })
+            
             // 只加載30分鐘內的更新時間
             if (diffInMinutes < 30) {
               times[recordId] = updateTime
+              console.log('✅ 記錄在30分鐘內，已加載')
             } else {
               // 清除超過30分鐘的舊記錄
               localStorage.removeItem(key)
+              console.log('🗑️ 記錄超過30分鐘，已清除')
             }
           }
         }
       }
       
-      console.log('🔄 載入記錄更新時間:', times)
+      console.log('🔄 載入記錄更新時間完成，總共載入:', Object.keys(times).length, '筆記錄')
+      console.log('📊 載入的記錄更新時間:', times)
       setRecordUpdateTimes(times)
     }
 
