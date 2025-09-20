@@ -316,6 +316,17 @@ export default function EditClientPage() {
         setErrors({})
         // Set last update time for notification
         setLastUpdateTime(new Date())
+        
+        // 通知客戶列表頁面更新時間
+        const updateTime = new Date()
+        localStorage.setItem('customerUpdated', JSON.stringify({
+          customerId: clientId,
+          updateTime: updateTime.toISOString()
+        }))
+        
+        // 觸發自定義事件
+        window.dispatchEvent(new CustomEvent('customerUpdated'))
+        
         // Optionally refresh the form data to show updated values
         // window.location.reload() // Uncomment if you want to reload the page
       }

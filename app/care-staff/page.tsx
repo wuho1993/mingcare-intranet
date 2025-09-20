@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { CareStaffManagementService } from '../../services/care-staff-management'
 import { FileUploadCard } from '../../components/FileUploadCard'
 import { FileUploadService } from '../../services/file-upload'
+import CardUpdateIndicator from '../../components/CardUpdateIndicator'
 import type {
   CareStaff,
   CareStaffListItem,
@@ -44,6 +45,9 @@ export default function CareStaffPage() {
   const [sort, setSort] = useState<CareStaffSort>({ field: 'created_at', direction: 'desc' })
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  
+  // 追蹤每個護理人員的更新時間
+  const [staffUpdateTimes, setStaffUpdateTimes] = useState<Record<string, Date>>({})
 
   // Drawer 編輯狀態
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -150,6 +154,35 @@ export default function CareStaffPage() {
       window.removeEventListener('resize', handleResize)
     }
   }, [showSuggestions])
+
+  // 監聽護理人員更新事件
+  useEffect(() => {
+    const handleStaffUpdate = () => {
+      const updatedStaffInfo = localStorage.getItem('staffUpdated')
+      if (updatedStaffInfo) {
+        const { staffId, updateTime } = JSON.parse(updatedStaffInfo)
+        setStaffUpdateTimes(prev => ({
+          ...prev,
+          [staffId]: new Date(updateTime)
+        }))
+        localStorage.removeItem('staffUpdated')
+      }
+    }
+
+    // 檢查頁面載入時是否有更新
+    handleStaffUpdate()
+
+    // 監聽 storage 事件
+    window.addEventListener('storage', handleStaffUpdate)
+    
+    // 監聽自定義事件（同頁面內的更新）
+    window.addEventListener('staffUpdated', handleStaffUpdate)
+
+    return () => {
+      window.removeEventListener('storage', handleStaffUpdate)
+      window.removeEventListener('staffUpdated', handleStaffUpdate)
+    }
+  }, [])
 
   // 載入選項數據
   const loadOptions = async () => {
@@ -1078,10 +1111,15 @@ export default function CareStaffPage() {
                     {careStaff.map((staff, index) => (
                       <div
                         key={staff.id}
-                        className="card-apple group cursor-pointer transition-all duration-200 hover:shadow-apple-card"
+                        className="card-apple group cursor-pointer transition-all duration-200 hover:shadow-apple-card relative"
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                         onClick={() => handleEditStaff(staff)}
                       >
+                        {/* 30分鐘更新提示 */}
+                        <CardUpdateIndicator 
+                          lastUpdateTime={staffUpdateTimes[staff.staff_id || staff.id] || null} 
+                        />
+                        
                         <div className="card-apple-content">
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">

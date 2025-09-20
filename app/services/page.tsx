@@ -8,6 +8,7 @@ import { getAssetPath } from '../../utils/asset-path'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { CareStaffSearchableSelect } from '../../components/CareStaffSearchableSelect'
 import LastUpdateIndicator from '../../components/LastUpdateIndicator'
+import CardUpdateIndicator from '../../components/CardUpdateIndicator'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -98,12 +99,14 @@ function ReportsCalendarView({
   filters,
   onEdit,
   onDelete,
-  refreshTrigger
+  refreshTrigger,
+  recordUpdateTimes
 }: {
   filters: BillingSalaryFilters;
   onEdit: (record: BillingSalaryRecord) => void;
   onDelete: (recordId: string) => void;
   refreshTrigger?: number;
+  recordUpdateTimes?: Record<string, Date>;
 }) {
   const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecord[]>>({})
   const [loading, setLoading] = useState(true)
@@ -287,8 +290,14 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200"
+                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative"
                       >
+                        {/* 30分鐘更新提示 */}
+                        <CardUpdateIndicator 
+                          lastUpdateTime={recordUpdateTimes?.[record.id] || null}
+                          className="!absolute !-top-1 !-right-1 !text-xs !px-1 !py-0.5" 
+                        />
+                        
                         <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
                           <span className="hidden sm:inline">{record.customer_name}/{record.care_staff_name}</span>
                           <span className="sm:hidden">{record.customer_name.substring(0, 6)}/{record.care_staff_name.substring(0, 6)}</span>
@@ -879,6 +888,7 @@ interface ReportsTabProps {
   onDelete: (recordId: string) => void
   refreshTrigger: number
   onRefresh?: () => void  // 添加刷新函數
+  recordUpdateTimes?: Record<string, Date> // 添加記錄更新時間
 }
 
 // 概覽頁面組件
@@ -2152,7 +2162,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger, onRefresh }: ReportsTabProps) {
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger, onRefresh, recordUpdateTimes }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
 
@@ -2706,7 +2716,13 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             <DetailedRecordsList filters={filters} onRefresh={onRefresh} />
           ) : (
             <>
-              <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
+              <ReportsCalendarView 
+                filters={filters} 
+                onEdit={onEdit} 
+                onDelete={onDelete} 
+                refreshTrigger={refreshTrigger} 
+                recordUpdateTimes={recordUpdateTimes}
+              />
 
               {/* 社區券機數統計 */}
               <div className="mt-8">
@@ -2768,6 +2784,9 @@ export default function ServicesPage() {
 
   // 最後更新時間狀態
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+  
+  // 追蹤每個記錄的更新時間
+  const [recordUpdateTimes, setRecordUpdateTimes] = useState<Record<string, Date>>({})
 
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
@@ -2886,6 +2905,13 @@ export default function ServicesPage() {
         handleRefresh()
         // 設置最後更新時間
         setLastUpdateTime(new Date())
+        // 設置特定記錄的更新時間
+        if (editingRecord) {
+          setRecordUpdateTimes(prev => ({
+            ...prev,
+            [editingRecord.id]: new Date()
+          }))
+        }
       } else {
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
       }
@@ -2919,6 +2945,11 @@ export default function ServicesPage() {
         handleRefresh()
         // 設置最後更新時間
         setLastUpdateTime(new Date())
+        // 設置特定記錄的更新時間（刪除後會被清除，但先設置以防其他組件需要）
+        setRecordUpdateTimes(prev => ({
+          ...prev,
+          [recordId]: new Date()
+        }))
       } else {
         alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
       }
@@ -4914,6 +4945,7 @@ export default function ServicesPage() {
             onDelete={handleDelete}
             refreshTrigger={refreshTrigger}
             onRefresh={handleRefresh}
+            recordUpdateTimes={recordUpdateTimes}
           />
         )}
       </main>

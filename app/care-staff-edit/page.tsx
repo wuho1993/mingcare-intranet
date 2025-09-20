@@ -135,6 +135,17 @@ export default function CareStaffEditPage() {
 
       alert('護理員資料更新成功！')
       setLastUpdateTime(new Date())
+      
+      // 通知護理人員列表頁面更新時間
+      const updateTime = new Date()
+      localStorage.setItem('staffUpdated', JSON.stringify({
+        staffId: staffId,
+        updateTime: updateTime.toISOString()
+      }))
+      
+      // 觸發自定義事件
+      window.dispatchEvent(new CustomEvent('staffUpdated'))
+      
       router.back()
     } catch (error) {
       console.error('Unexpected error:', error)

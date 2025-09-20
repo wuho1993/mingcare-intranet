@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
+import CardUpdateIndicator from '../../components/CardUpdateIndicator'
 import { generateCustomerPDF } from '../../services/pdf-export'
 import type {
   CustomerListItem,
@@ -411,6 +412,9 @@ export default function ClientsPage() {
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  
+  // 追蹤每個客戶的更新時間
+  const [customerUpdateTimes, setCustomerUpdateTimes] = useState<Record<string, Date>>({})
 
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
@@ -602,6 +606,35 @@ export default function ClientsPage() {
       loadCustomers()
     }
   }, [filters, currentPage])
+
+  // 監聽客戶更新事件
+  useEffect(() => {
+    const handleCustomerUpdate = () => {
+      const updatedCustomerInfo = localStorage.getItem('customerUpdated')
+      if (updatedCustomerInfo) {
+        const { customerId, updateTime } = JSON.parse(updatedCustomerInfo)
+        setCustomerUpdateTimes(prev => ({
+          ...prev,
+          [customerId]: new Date(updateTime)
+        }))
+        localStorage.removeItem('customerUpdated')
+      }
+    }
+
+    // 檢查頁面載入時是否有更新
+    handleCustomerUpdate()
+
+    // 監聽 storage 事件
+    window.addEventListener('storage', handleCustomerUpdate)
+    
+    // 監聽自定義事件（同頁面內的更新）
+    window.addEventListener('customerUpdated', handleCustomerUpdate)
+
+    return () => {
+      window.removeEventListener('storage', handleCustomerUpdate)
+      window.removeEventListener('customerUpdated', handleCustomerUpdate)
+    }
+  }, [])
 
   // 分頁處理
   const handlePageChange = (page: number) => {
@@ -1127,6 +1160,11 @@ export default function ClientsPage() {
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                         onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
                       >
+                        {/* 30分鐘更新提示 */}
+                        <CardUpdateIndicator 
+                          lastUpdateTime={customerUpdateTimes[customer.customer_id || customer.id] || null} 
+                        />
+                        
                         {/* Enhanced Customer Type Header Bar */}
                         <div className={`px-3 py-2 md:px-4 md:py-3 text-white font-medium text-xs md:text-sm rounded-t-2xl md:rounded-t-3xl ${
                           customer.customer_type === '社區券客戶'
