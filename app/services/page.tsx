@@ -4476,8 +4476,6 @@ export default function ServicesPage() {
         alert('記錄更新成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // Clear any existing errors
-        setError(null)
       } else {
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
       }
