@@ -2878,6 +2878,7 @@ export default function ServicesPage() {
       console.log('🔄 載入記錄更新時間完成，總共載入:', Object.keys(times).length, '筆記錄')
       console.log('📊 載入的記錄更新時間:', times)
       setRecordUpdateTimes(times)
+      console.log('✅ setRecordUpdateTimes 已調用，期望觸發重新渲染')
     }
 
     loadRecordUpdateTimes()
@@ -2901,6 +2902,7 @@ export default function ServicesPage() {
               recordId,
               updateTime: new Date(timeNum).toISOString()
             })
+            console.log('🔄 事件處理器 setRecordUpdateTimes 已調用，期望觸發重新渲染')
           }
         }
       }
