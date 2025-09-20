@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { getAssetPath } from '../../utils/asset-path'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { CareStaffSearchableSelect } from '../../components/CareStaffSearchableSelect'
 import type {
@@ -3308,7 +3309,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <div class="company-logo">
-              <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" onerror="this.style.display='none'">
+              <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" onerror="this.style.display='none'">
             </div>
           </div>
 
@@ -3583,7 +3584,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <div class="company-logo">
-              <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" onerror="this.style.display='none'">
+              <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" onerror="this.style.display='none'">
             </div>
           </div>
         </div>
@@ -4299,7 +4300,7 @@ export default function ServicesPage() {
 
               <!-- Right: Company Logo -->
               <div style="flex: 0 0 auto; text-align: right;">
-                <img src="/images/mingcare-logo.png" alt="明家居家護理標誌" style="height: 180px; width: auto;">
+                <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" style="height: 180px; width: auto;">
               </div>
             </div>
 

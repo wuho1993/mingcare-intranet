@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '../../lib/supabase'
+import { getAssetPath } from '../../utils/asset-path'
 
 interface User {
   id: string
@@ -196,7 +197,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="w-40 h-40 sm:w-40 sm:h-40 lg:w-48 lg:h-48 -my-10 sm:-my-10 lg:-my-14">
                 <Image 
-                  src="/images/mingcare-logo.png"
+                  src={getAssetPath("images/mingcare-logo.png")}
                   alt="明家護理服務" 
                   width={1024}
                   height={1024}

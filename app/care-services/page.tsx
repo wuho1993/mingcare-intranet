@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { getAssetPath } from '../../utils/asset-path'
 import type { User } from '@supabase/supabase-js'
 
 export default function CareServicesPage() {
@@ -69,7 +70,7 @@ export default function CareServicesPage() {
               <div className="flex-shrink-0">
                 <img 
                   className="h-8 w-auto" 
-                  src="/images/mingcare-logo.png" 
+                  src={getAssetPath("images/mingcare-logo.png")} 
                   alt="MingCare" 
                 />
               </div>

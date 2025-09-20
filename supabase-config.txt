@@ -1,5 +1,6 @@
-明家居家護理服務 Intranet - Supabase 配置信息
-==============================================
+明家居家護理服務 Intranet (數據項目)
+================================================
+用途: 儲存業務數據（客戶管理、護理服務、護理人員、工資計算等）
 
 數據庫連接信息：
 - Host: db.cvkxlvdicympakfecgvv.supabase.co
@@ -16,25 +17,4 @@ API Keys：
 
 - Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2a3hsdmRpY3ltcGFrZmVjZ3Z2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTQyOTE4MSwiZXhwIjoyMDY3MDA1MTgxfQ.ZAix35wqh5s7ZIC_L1sDQorpDarTzYo9PWRAsiBAaXI
 
-項目需求：
-==========
-
-目標：建立 Intranet 主頁（Dashboard）
-
-主要導航（5項）：
-1. 客戶管理中心 → /clients
-2. 護理服務管理 → /services  
-3. 護理人員管理 → /care-staff
-4. 護理人員工資計算 → /payroll
-5. 佣金計算 → /commissions
-
-技術要求：
-- 使用 VS Code 開發
-- 所有數據來自 Supabase（嚴禁硬編碼）
-- 護理人員模組已有既定規範：
-  - 新增：/care-staff-apply
-  - 編輯：/care-staff-edit/:staff_id
-  - 主頁只提供入口，不處理新增/編輯功能
-
-注意事項：
-- 等待數據庫結構信息以進行下一步開發
+項目 URL: https://cvkxlvdicympakfecgvv.supabase.co
