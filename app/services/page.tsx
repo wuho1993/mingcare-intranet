@@ -319,11 +319,27 @@ function ReportsCalendarView({
                             return time
                           })()}
                         />
+                        {recordUpdateTimes?.[record.id] && (
+                          <span className="ml-1 text-[10px] text-red-600 font-bold select-none">DEBUG: UPDATED</span>
+                        )}
                         
                         <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
                           <span className="hidden sm:inline">{record.customer_name}/{record.care_staff_name}</span>
                           <span className="sm:hidden">{record.customer_name.substring(0, 6)}/{record.care_staff_name.substring(0, 6)}</span>
                         </div>
+                        {/* Fallback inline badge: ensure visibility even if absolute badge is clipped */}
+                        {(() => {
+                          const last = recordUpdateTimes?.[record.id]
+                          if (!last) return null
+                          const diff = Math.floor((Date.now() - last.getTime()) / 60000)
+                          const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
+                          return (
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full shadow-sm border border-white mb-0.5">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                              <span className="leading-none">更新 {label}</span>
+                            </div>
+                          )
+                        })()}
                         <div className="text-blue-600 mb-0.5 sm:mb-1 leading-tight text-xs">
                           {record.service_type}
                         </div>
