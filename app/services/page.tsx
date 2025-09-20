@@ -2835,8 +2835,8 @@ export default function ServicesPage() {
       // 遍歷所有 localStorage 項目，找出服務記錄更新時間
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
-        if (key?.startsWith('record_update_')) {
-          const recordId = key.replace('record_update_', '')
+        if (key?.startsWith('service_update_')) {
+          const recordId = key.replace('service_update_', '')
           const timeStr = localStorage.getItem(key)
           if (timeStr) {
             const updateTime = new Date(timeStr)
