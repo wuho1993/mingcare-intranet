@@ -2903,6 +2903,10 @@ export default function ServicesPage() {
               updateTime: new Date(timeNum).toISOString()
             })
             console.log('🔄 事件處理器 setRecordUpdateTimes 已調用，期望觸發重新渲染')
+            
+            // 強制觸發 ReportsCalendarView 重新渲染
+            setRefreshTrigger(prev => prev + 1)
+            console.log('🔃 觸發 refreshTrigger 以強制重新渲染組件')
           }
         }
       }
