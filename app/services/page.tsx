@@ -80,6 +80,7 @@ const formatDateSafely = (date: Date): string => {
 // 詳細記錄列表組件
 interface DetailedRecordsListProps {
   filters: BillingSalaryFilters
+  onRefresh?: () => void  // 添加刷新回調函數
 }
 
 // 排序類型
@@ -397,7 +398,7 @@ function ReportsCalendarView({
   )
 }
 
-function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
+function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
   const [records, setRecords] = useState<BillingSalaryRecord[]>([])
   const [originalRecords, setOriginalRecords] = useState<BillingSalaryRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -543,6 +544,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
         alert('記錄更新成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
+        // 觸發資料刷新
+        if (onRefresh) {
+          onRefresh()
+        }
+        // 重新載入本地記錄列表
+        loadRecords()
       } else {
         setError(response.error || '更新記錄失敗')
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
@@ -574,6 +581,12 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
       if (response.success) {
         alert('記錄刪除成功！')
+        // 觸發資料刷新
+        if (onRefresh) {
+          onRefresh()
+        }
+        // 重新載入本地記錄列表
+        loadRecords()
       } else {
         setError(response.error || '刪除記錄失敗')
         alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
@@ -864,6 +877,7 @@ interface ReportsTabProps {
   onEdit: (record: BillingSalaryRecord) => void
   onDelete: (recordId: string) => void
   refreshTrigger: number
+  onRefresh?: () => void  // 添加刷新函數
 }
 
 // 概覽頁面組件
@@ -2137,7 +2151,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger }: ReportsTabProps) {
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger, onRefresh }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
 
@@ -2688,7 +2702,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
           {/* 服務記錄顯示 */}
           {reportsViewMode === 'list' ? (
-            <DetailedRecordsList filters={filters} />
+            <DetailedRecordsList filters={filters} onRefresh={onRefresh} />
           ) : (
             <>
               <ReportsCalendarView filters={filters} onEdit={onEdit} onDelete={onDelete} refreshTrigger={refreshTrigger} />
@@ -2831,6 +2845,80 @@ export default function ServicesPage() {
         project_category: false,
         project_manager: false,
       }
+    }
+  }
+
+  // 觸發資料刷新的函數
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1)
+  }
+
+  // 主要組件的編輯和刪除處理函數
+  const handleEdit = (record: BillingSalaryRecord) => {
+    console.log('🖊️ 主要組件 handleEdit - 點擊編輯按鈕，記錄:', record)
+    setEditingRecord(record)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditSave = async (formData: BillingSalaryFormData) => {
+    if (!editingRecord) return
+
+    try {
+      setExportLoading(true)
+      console.log('🔄 主要組件 handleEditSave 開始更新記錄:', {
+        recordId: editingRecord.id,
+        formData
+      })
+
+      const response = await updateBillingSalaryRecord(editingRecord.id, formData)
+
+      console.log('📝 主要組件 handleEditSave 更新結果:', response)
+
+      if (response.success) {
+        alert('記錄更新成功！')
+        setIsEditModalOpen(false)
+        setEditingRecord(null)
+        // 觸發資料刷新
+        handleRefresh()
+      } else {
+        alert('更新記錄失敗：' + (response.error || '未知錯誤'))
+      }
+    } catch (error) {
+      console.error('更新記錄失敗:', error)
+      alert('更新失敗')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false)
+    setEditingRecord(null)
+  }
+
+  const handleDelete = async (recordId: string) => {
+    if (!confirm('確定要刪除這筆記錄嗎？此操作無法撤銷。')) return
+
+    try {
+      setExportLoading(true)
+      console.log('🗑️ 主要組件 handleDelete 開始刪除記錄:', recordId)
+
+      const response = await deleteBillingSalaryRecord(recordId)
+
+      console.log('🗑️ 主要組件 handleDelete 刪除結果:', response)
+
+      if (response.success) {
+        alert('記錄刪除成功！')
+        // 觸發資料刷新
+        handleRefresh()
+      } else {
+        alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
+      }
+    } catch (error) {
+      console.error('刪除記錄失敗:', error)
+      alert('刪除記錄失敗，請重試')
+    } finally {
+      setExportLoading(false)
     }
   }
 
@@ -4443,76 +4531,7 @@ export default function ServicesPage() {
     URL.revokeObjectURL(url)
   }
 
-  // 編輯功能
-  const handleEdit = (record: BillingSalaryRecord) => {
-    console.log('🖊️ 第二個 handleEdit - 點擊編輯按鈕，記錄:', record)
-    setEditingRecord(record)
-    setIsEditModalOpen(true)
-    console.log('🖊️ 第二個 handleEdit - 模態框狀態已更新:', {
-      isEditModalOpen: true,
-      editingRecordId: record.id
-    })
-  }
-
-  const handleEditSave = async (formData: BillingSalaryFormData) => {
-    if (!editingRecord) return
-
-    try {
-      setLoading(true)
-      console.log('🔄 第二個 handleEditSave 開始更新記錄:', {
-        recordId: editingRecord.id,
-        formData
-      })
-
-      const response = await updateBillingSalaryRecord(editingRecord.id, formData)
-
-      console.log('📝 第二個 handleEditSave 更新結果:', response)
-
-      if (response.success) {
-        alert('記錄更新成功！')
-        setIsEditModalOpen(false)
-        setEditingRecord(null)
-      } else {
-        alert('更新記錄失敗：' + (response.error || '未知錯誤'))
-      }
-    } catch (error) {
-      console.error('更新記錄失敗:', error)
-      alert('更新失敗')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false)
-    setEditingRecord(null)
-  }
-
-  const handleDelete = async (recordId: string) => {
-    if (!confirm('確定要刪除這筆記錄嗎？此操作無法撤銷。')) return
-
-    try {
-      setLoading(true)
-      console.log('🗑️ 第二個 handleDelete 開始刪除記錄:', recordId)
-
-      const response = await deleteBillingSalaryRecord(recordId)
-
-      console.log('🗑️ 第二個 handleDelete 刪除結果:', response)
-
-      if (response.success) {
-        alert('記錄刪除成功！')
-        setIsEditModalOpen(false)
-        setEditingRecord(null)
-      } else {
-        alert('刪除記錄失敗: ' + (response.error || '未知錯誤'))
-      }
-    } catch (error) {
-      console.error('刪除記錄失敗:', error)
-      alert('刪除記錄失敗，請重試')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // 使用傳遞下來的 onEdit 和 onDelete props，而不是自己定義編輯邏輯
 
   const downloadAllStaffPDFs = async () => {
     try {
@@ -4883,6 +4902,7 @@ export default function ServicesPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             refreshTrigger={refreshTrigger}
+            onRefresh={handleRefresh}
           />
         )}
       </main>
