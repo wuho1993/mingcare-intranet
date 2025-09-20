@@ -2788,7 +2788,7 @@ export default function ServicesPage() {
   // 追蹤每個記錄的更新時間
   const [recordUpdateTimes, setRecordUpdateTimes] = useState<Record<string, Date>>({})
 
-  // 從 localStorage 載入所有服務記錄的更新時間（頁面載入時）
+  // 從 localStorage 載入所有服務記錄的更新時間（頁面載入時和刷新時）
   useEffect(() => {
     const loadRecordUpdateTimes = () => {
       const times: Record<string, Date> = {}
@@ -2815,11 +2815,12 @@ export default function ServicesPage() {
         }
       }
       
+      console.log('🔄 載入記錄更新時間:', times)
       setRecordUpdateTimes(times)
     }
 
     loadRecordUpdateTimes()
-  }, [])
+  }, [refreshTrigger]) // 添加 refreshTrigger 作為依賴
 
   // 監聽服務記錄更新事件
   useEffect(() => {
@@ -2986,6 +2987,11 @@ export default function ServicesPage() {
           const updateTime = new Date()
           const updateTimeStr = updateTime.toISOString()
           
+          console.log('🕐 設置記錄更新時間:', {
+            recordId: editingRecord.id,
+            updateTime: updateTimeStr
+          })
+          
           // 更新狀態
           setRecordUpdateTimes(prev => ({
             ...prev,
@@ -2995,10 +3001,14 @@ export default function ServicesPage() {
           // 持久化到 localStorage（30分鐘）
           localStorage.setItem(`record_update_${editingRecord.id}`, updateTimeStr)
           
+          console.log('💾 localStorage 已設置:', `record_update_${editingRecord.id}`, updateTimeStr)
+          
           // 觸發自定義事件
           window.dispatchEvent(new CustomEvent('recordUpdated', {
             detail: { recordId: editingRecord.id }
           }))
+          
+          console.log('📡 recordUpdated 事件已觸發:', editingRecord.id)
         }
       } else {
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))

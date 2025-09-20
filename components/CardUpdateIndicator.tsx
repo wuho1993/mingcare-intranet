@@ -12,11 +12,15 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    console.log('🏷️ CardUpdateIndicator 接收到 lastUpdateTime:', lastUpdateTime)
+    
     if (!lastUpdateTime) {
+      console.log('❌ lastUpdateTime 為空，隱藏提示')
       setIsVisible(false)
       return
     }
 
+    console.log('✅ lastUpdateTime 有值，顯示提示')
     setIsVisible(true)
 
     const updateTimeAgo = () => {
@@ -24,8 +28,15 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
       const diffInMs = now.getTime() - lastUpdateTime.getTime()
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
 
+      console.log('⏰ 時間計算:', {
+        now: now.toISOString(),
+        lastUpdateTime: lastUpdateTime.toISOString(),
+        diffInMinutes
+      })
+
       // 30分鐘後隱藏提示
       if (diffInMinutes >= 30) {
+        console.log('⌛ 超過30分鐘，隱藏提示')
         setIsVisible(false)
         return
       }
@@ -37,6 +48,8 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
       } else {
         setTimeAgo(`${diffInMinutes}分鐘前`)
       }
+      
+      console.log('📝 設置時間顯示:', timeAgo)
     }
 
     // 立即更新一次
