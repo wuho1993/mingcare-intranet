@@ -540,11 +540,9 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
 
       if (response.success) {
         // 顯示成功提示
-        alert('記錄更新成功！頁面將自動重新載入。')
+        alert('記錄更新成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 強制刷新頁面
-        window.location.reload()
       } else {
         setError(response.error || '更新記錄失敗')
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
@@ -575,9 +573,7 @@ function DetailedRecordsList({ filters }: DetailedRecordsListProps) {
       console.log('🗑️ 刪除結果:', response)
 
       if (response.success) {
-        alert('記錄刪除成功！頁面將自動重新載入。')
-        // 強制刷新頁面
-        window.location.reload()
+        alert('記錄刪除成功！')
       } else {
         setError(response.error || '刪除記錄失敗')
         alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
@@ -4504,11 +4500,9 @@ export default function ServicesPage() {
       console.log('🗑️ 第二個 handleDelete 刪除結果:', response)
 
       if (response.success) {
-        alert('記錄刪除成功！頁面將自動重新載入。')
+        alert('記錄刪除成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 強制刷新頁面
-        window.location.reload()
       } else {
         alert('刪除記錄失敗: ' + (response.error || '未知錯誤'))
       }
