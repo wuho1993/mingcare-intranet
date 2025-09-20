@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '../../../lib/supabase'
-import { ResponsiveLogo } from '../../../components/Logo'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '../../lib/supabase'
+import { ResponsiveLogo } from '../../components/Logo'
 
 interface CareStaffMember {
   id: number
@@ -21,8 +21,11 @@ interface CareStaffMember {
   status: string
 }
 
-export default function CareStaffEditClient({ params }: { params: { staff_id: string } }) {
+export default function CareStaffEditPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const staffId = searchParams.get('id')
+  
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [staffMember, setStaffMember] = useState<CareStaffMember | null>(null)
@@ -42,17 +45,21 @@ export default function CareStaffEditClient({ params }: { params: { staff_id: st
   })
 
   useEffect(() => {
-    if (params.staff_id) {
+    if (staffId) {
       fetchStaffMember()
+    } else {
+      setLoading(false)
     }
-  }, [params.staff_id])
+  }, [staffId])
 
   const fetchStaffMember = async () => {
+    if (!staffId) return
+    
     try {
       const { data, error } = await supabase
         .from('care_staff')
         .select('*')
-        .eq('id', params.staff_id)
+        .eq('id', staffId)
         .single()
 
       if (error) {
@@ -95,6 +102,8 @@ export default function CareStaffEditClient({ params }: { params: { staff_id: st
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!staffId) return
+    
     setSaving(true)
 
     try {
@@ -114,7 +123,7 @@ export default function CareStaffEditClient({ params }: { params: { staff_id: st
           notes: formData.notes || null,
           status: formData.status
         })
-        .eq('id', params.staff_id)
+        .eq('id', staffId)
 
       if (error) {
         console.error('Error updating staff member:', error)
@@ -130,6 +139,22 @@ export default function CareStaffEditClient({ params }: { params: { staff_id: st
     } finally {
       setSaving(false)
     }
+  }
+
+  if (!staffId) {
+    return (
+      <div className="min-h-screen bg-apple-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-text-primary text-lg mb-4">缺少護理員ID參數</p>
+          <button 
+            onClick={() => router.back()}
+            className="btn-apple-primary"
+          >
+            返回護理員列表
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {

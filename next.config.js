@@ -1,59 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove static export for API routes to work
-  // output: 'export',  // Commented out to enable API routes
-  // trailingSlash: true,  // Commented out to fix API routing
+  // GitHub Pages static export configuration
+  output: 'export',
+  trailingSlash: true,
   images: {
-    unoptimized: true,
-    domains: ['www.mingcarehome.net', 'mingcarehome.net']
+    unoptimized: true
   },
-  // IMPORTANT: NO basePath or assetPrefix for custom domain deployment
-  // Only use basePath for GitHub Pages static deployment
-  // ...(process.env.NODE_ENV === 'production' && {
-  //   basePath: '/mingcare-intranet',
-  //   assetPrefix: '/mingcare-intranet/',
-  // }),
+  // GitHub Pages configuration
+  basePath: '/mingcare-intranet',
+  assetPrefix: '/mingcare-intranet/',
   experimental: {
     missingSuspenseWithCSRBailout: false,
-  },
-  // Remove assetPrefix for custom domain - assets should load from root
-  // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://www.mingcarehome.net' : '',
-  
-  // Webpack configuration for Tesseract.js
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        child_process: false,
-      }
-    }
-    return config
-  },
-  
-  // Add security headers
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-        ],
-      },
-    ]
-  },
+  }
 }
 
 module.exports = nextConfig
