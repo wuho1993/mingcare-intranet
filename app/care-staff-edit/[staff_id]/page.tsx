@@ -1,6 +1,7 @@
 import CareStaffEditClient from './CareStaffEditClient'
 
 // Required for static export - generates empty params since this is a dynamic page
+// This function must be async for Next.js static export to work properly
 export async function generateStaticParams() {
   return []
 }
