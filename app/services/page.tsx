@@ -246,7 +246,7 @@ function ReportsCalendarView({
       </div>
 
       {/* 月曆網格 - 移動端優化 */}
-      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1" style={{overflow: 'visible'}}>
         {calendarDays && calendarDays.map((date, index) => {
           const dateStr = formatDateSafely(date)
           const isCurrentMonth = date.getMonth() === currentMonth
@@ -264,7 +264,7 @@ function ReportsCalendarView({
           return (
             <div
               key={index}
-              style={{ minHeight: `${minHeight}px` }}
+              style={{ minHeight: `${minHeight}px`, overflow: 'visible' }}
               className={`
                 p-1 sm:p-2 border rounded-lg
                 ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' :
@@ -282,7 +282,7 @@ function ReportsCalendarView({
 
               {/* 服務記錄 - 移動端優化 */}
               {isCurrentMonth && dayRecords.length > 0 && (
-                <div className="space-y-0.5 sm:space-y-1">
+                <div className="space-y-0.5 sm:space-y-1" style={{overflow: 'visible'}}>
                   {/* 決定要顯示多少筆記錄 - 移動端顯示較少 */}
                   {(() => {
                     const dateKey = formatDateSafely(date)
