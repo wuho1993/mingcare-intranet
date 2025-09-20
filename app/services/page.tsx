@@ -2839,7 +2839,21 @@ export default function ServicesPage() {
           const recordId = key.replace('service_update_', '')
           const timeStr = localStorage.getItem(key)
           if (timeStr) {
-            const updateTime = new Date(timeStr)
+            // 將時間字符串轉換為數字，然後創建 Date 對象
+            const timeNum = parseInt(timeStr, 10)
+            if (isNaN(timeNum)) {
+              console.warn('⚠️ 無效的時間格式，跳過記錄:', { key, timeStr })
+              continue
+            }
+            
+            const updateTime = new Date(timeNum)
+            
+            // 檢查 Date 對象是否有效
+            if (isNaN(updateTime.getTime())) {
+              console.warn('⚠️ 無效的Date對象，跳過記錄:', { key, timeStr, timeNum })
+              continue
+            }
+            
             const diffInMinutes = (now.getTime() - updateTime.getTime()) / (1000 * 60)
             
             console.log('📝 找到記錄更新時間:', {
