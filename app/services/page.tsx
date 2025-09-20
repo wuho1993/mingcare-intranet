@@ -304,21 +304,18 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className={`text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}
+                        className={`text-xs sm:text-sm border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'bg-white'}`}
                         data-updated={recordUpdateTimes?.[record.id] ? 'true' : 'false'}
                       >
-                        {/* Simple inline update notification - no complex positioning */}
+                        {/* 方案1: 大字體更新標題 - 保證能看到 */}
                         {(() => {
                           const last = recordUpdateTimes?.[record.id]
                           if (!last) return null
                           const diff = Math.floor((Date.now() - last.getTime()) / 60000)
                           const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
                           return (
-                            <div className="flex justify-end mb-1">
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm animate-pulse">
-                                <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
-                                <span className="leading-none">更新{label}</span>
-                              </div>
+                            <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
+                              🔥 {label}更新 🔥
                             </div>
                           )
                         })()}
