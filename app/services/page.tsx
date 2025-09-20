@@ -288,7 +288,14 @@ function ReportsCalendarView({
                     const dateKey = formatDateSafely(date)
                     const isExpanded = expandedDates.has(dateKey)
                     const maxRecords = isMobile ? 2 : 3
-                    const recordsToShow = isExpanded ? dayRecords : dayRecords.slice(0, maxRecords)
+                    // 排序：最近30分鐘有更新的記錄優先顯示
+                    const sortedDayRecords = [...dayRecords].sort((a, b) => {
+                      const aUpdated = recordUpdateTimes?.[a.id]?.getTime() ?? 0
+                      const bUpdated = recordUpdateTimes?.[b.id]?.getTime() ?? 0
+                      return bUpdated - aUpdated
+                    })
+
+                    const recordsToShow = isExpanded ? sortedDayRecords : sortedDayRecords.slice(0, maxRecords)
 
                     return (recordsToShow || []).map((record, i) => (
                       <div
@@ -297,7 +304,8 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className="text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible"
+                        className={`text-xs sm:text-sm bg-white border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}
+                        data-updated={recordUpdateTimes?.[record.id] ? 'true' : 'false'}
                       >
                         {/* 30分鐘更新提示 */}
                         <CardUpdateIndicator 
