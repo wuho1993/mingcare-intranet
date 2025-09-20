@@ -9,6 +9,7 @@ import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { CareStaffSearchableSelect } from '../../components/CareStaffSearchableSelect'
 import LastUpdateIndicator from '../../components/LastUpdateIndicator'
 import CardUpdateIndicator from '../../components/CardUpdateIndicator'
+import TestUpdateButton from '../../components/TestUpdateButton'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -6183,6 +6184,20 @@ function LocalScheduleEditModal({
           </button>
         </div>
       </div>
+      
+      {/* 測試更新通知按鈕 */}
+      <TestUpdateButton
+        label="服務記錄更新"
+        onTriggerUpdate={() => {
+          // 使用測試 ID 觸發服務記錄的更新通知
+          const testRecordId = 'test-record-1'
+          const updateTime = new Date().toISOString()
+          localStorage.setItem(`record_update_${testRecordId}`, updateTime)
+          window.dispatchEvent(new CustomEvent('recordUpdated', {
+            detail: { recordId: testRecordId }
+          }))
+        }}
+      />
     </div>
   )
 }

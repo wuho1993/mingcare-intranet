@@ -8,6 +8,7 @@ import { CareStaffManagementService } from '../../services/care-staff-management
 import { FileUploadCard } from '../../components/FileUploadCard'
 import { FileUploadService } from '../../services/file-upload'
 import CardUpdateIndicator from '../../components/CardUpdateIndicator'
+import TestUpdateButton from '../../components/TestUpdateButton'
 import type {
   CareStaff,
   CareStaffListItem,
@@ -1729,6 +1730,23 @@ export default function CareStaffPage() {
           </div>
         )}
       </main>
+      
+      {/* 測試更新通知按鈕 */}
+      <TestUpdateButton
+        label="護理人員更新"
+        onTriggerUpdate={() => {
+          // 觸發第一個護理人員的更新通知
+          if (careStaff.length > 0) {
+            const firstStaff = careStaff[0]
+            const staffId = firstStaff.staff_id || firstStaff.id
+            const updateTime = new Date().toISOString()
+            localStorage.setItem(`staff_update_${staffId}`, updateTime)
+            window.dispatchEvent(new CustomEvent('staffUpdated', {
+              detail: { staffId }
+            }))
+          }
+        }}
+      />
     </div>
   )
 }
