@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { getAssetPath } from '../../utils/asset-path'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
 import { CareStaffSearchableSelect } from '../../components/CareStaffSearchableSelect'
+import LastUpdateIndicator from '../../components/LastUpdateIndicator'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
@@ -2765,6 +2766,9 @@ export default function ServicesPage() {
   // 刷新觸發器
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
+  // 最後更新時間狀態
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+
   // 導出相關狀態
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('pdf')
@@ -2880,6 +2884,8 @@ export default function ServicesPage() {
         setEditingRecord(null)
         // 觸發資料刷新
         handleRefresh()
+        // 設置最後更新時間
+        setLastUpdateTime(new Date())
       } else {
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
       }
@@ -2911,6 +2917,8 @@ export default function ServicesPage() {
         alert('記錄刪除成功！')
         // 觸發資料刷新
         handleRefresh()
+        // 設置最後更新時間
+        setLastUpdateTime(new Date())
       } else {
         alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
       }
@@ -4802,9 +4810,12 @@ export default function ServicesPage() {
       <header className="card-apple border-b border-border-light fade-in-apple">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-0">
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-1 sm:mb-2">護理服務管理</h1>
-              <p className="text-sm sm:text-base text-text-secondary">安排護理服務、管理服務排程及記錄</p>
+            <div className="flex items-start gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary mb-1 sm:mb-2">護理服務管理</h1>
+                <p className="text-sm sm:text-base text-text-secondary">安排護理服務、管理服務排程及記錄</p>
+              </div>
+              <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
             </div>
             <button
               onClick={() => router.push('/dashboard')}
