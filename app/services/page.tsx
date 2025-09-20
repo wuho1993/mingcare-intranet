@@ -4473,11 +4473,11 @@ export default function ServicesPage() {
       console.log('📝 第二個 handleEditSave 更新結果:', response)
 
       if (response.success) {
-        alert('記錄更新成功！頁面將自動重新載入。')
+        alert('記錄更新成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 強制刷新頁面
-        window.location.reload()
+        // Clear any existing errors
+        setError(null)
       } else {
         alert('更新記錄失敗：' + (response.error || '未知錯誤'))
       }

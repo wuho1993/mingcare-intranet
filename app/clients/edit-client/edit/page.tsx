@@ -308,10 +308,12 @@ export default function EditClientPage() {
         setErrors({ general: response.error + (response.message ? ': ' + response.message : '') })
       } else {
         console.log('Update successful:', response.data)
-        // Show success message
-        alert('客戶資料更新成功！將返回客戶列表。')
-        // Use window.history.back() to maintain search filters and pagination
-        window.history.back()
+        // Show success message and stay on current page
+        alert('客戶資料更新成功！')
+        // Clear any previous errors
+        setErrors({})
+        // Optionally refresh the form data to show updated values
+        // window.location.reload() // Uncomment if you want to reload the page
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
