@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { getAssetPath } from '@/utils/asset-path'
 
 interface LogoProps {
   className?: string
@@ -27,7 +28,7 @@ export default function Logo({
   return (
     <div className={`flex items-center ${className}`}>
       <Image
-        src="/images/mingcare-logo.png"
+        src={getAssetPath("images/mingcare-logo.png")}
         alt="明家居家護理服務"
         width={200}
         height={200}
@@ -60,7 +61,7 @@ export function ResponsiveLogo({
   return (
     <div className={`flex items-center ${className}`}>
       <Image
-        src="/images/mingcare-logo.png"
+        src={getAssetPath("images/mingcare-logo.png")}
         alt="明家居家護理服務"
         width={200}
         height={200}

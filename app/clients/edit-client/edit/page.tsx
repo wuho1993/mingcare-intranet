@@ -308,7 +308,8 @@ export default function EditClientPage() {
         setErrors({ general: response.error + (response.message ? ': ' + response.message : '') })
       } else {
         console.log('Update successful:', response.data)
-        router.push('/clients')
+        // Use router.back() to maintain search filters and pagination
+        router.back()
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
@@ -342,8 +343,8 @@ export default function EditClientPage() {
       if (response.error) {
         setErrors({ general: response.error })
       } else {
-        // 刪除成功，返回客戶列表
-        router.push('/clients')
+        // 刪除成功，返回客戶列表 - 保持搜尋狀態
+        router.back()
       }
     } catch (error: any) {
       console.error('Failed to delete customer:', error)
@@ -375,7 +376,7 @@ export default function EditClientPage() {
               <p className="text-sm text-text-secondary">更新客戶的基本資料和服務資訊</p>
             </div>
             <button
-              onClick={() => router.push('/clients')}
+              onClick={() => router.back()}
               className="btn-apple-secondary w-full sm:w-auto text-sm"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

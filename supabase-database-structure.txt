@@ -119,7 +119,7 @@ TABLES（表結構）
 [public.customer_personal_data]
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - customer_id (text) = 項目編號
-- customer_type (customer_type_enum, NOT NULL) = 分類
+- customer_type (customer_type_enum, NOT NULL) = 客戶分類
 - voucher_number (text) = 社區券號碼
 - charity_support (boolean) = 是否需要慈善機構贊助
 - customer_name (text, NOT NULL) = 客戶姓名
@@ -156,7 +156,7 @@ ENUM TYPES（列舉型別）
 contract_status_enum = { 同意, 不同意 }
 copay_level_enum = { 5%, 8%, 12%, 16%, 25%, 40% }
 covid_vaccine_enum = { 1針, 2針, 3針, 4針, 無接種, Other }
-customer_type_enum = { 社區券客戶, 明家街客 }
+customer_type_enum = { 社區券客戶, 明家街客, 家訪客戶 }
 district_enum = { 中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區, 屯門區, 東區, 沙田區, 油尖旺區, 深水埗區, 灣仔區, 荃灣區, 葵青區, 西貢區, 觀塘區, 離島區, 黃大仙區, 未分類（醫院,院舍) }
 gender_enum = { 男, 女 }
 health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
@@ -174,7 +174,7 @@ service_type_enum = {
   RA-復康運動(輔助⼈員),
   RT-復康運動(OTA輔助⼈員),
   RT-復康運動(專業⼈員),
-  上門評估服務, 傷口護理, 免費服務體驗, 社區活動
+  上門評估服務, 傷口護理, 免費服務體驗
 }
 voucher_application_status_enum = { 已經持有, 申請中 }
 staff_owner_enum = { Kanas Leung, Joe Cheung, Candy Ho }
@@ -182,11 +182,11 @@ staff_owner_enum = { Kanas Leung, Joe Cheung, Candy Ho }
 ------------------------------------------------------------------------
 RLS POLICIES（行級安全性）— 建議生產環境配置
 
-[public.billing_salary_data]
+[public.billing_salary_data] 
 🔒 建議權限配置：
 - SELECT: 僅限已認證用戶 (auth.role() = 'authenticated')
 - INSERT: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin')
-- UPDATE: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin')
+- UPDATE: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin') 
 - DELETE: 僅限超級管理員 (auth.jwt() ->> 'role' = 'super_admin')
 
 ⚠️ 當前設定：對 public 過寬，需收斂至上述建議
@@ -213,7 +213,7 @@ RLS POLICIES（行級安全性）— 建議生產環境配置
 - DELETE: 僅限超級管理員 + 軟刪除機制
 
 🔧 生產環境實施步驟：
-1. 建立用戶角色表 (user_roles)
+1. 建立用戶角色表 (user_roles) 
 2. 實作 JWT Claims 更新
 3. 段階式收斂權限 (先記錄，再限制)
 4. 實作審計日誌 (audit_logs)
