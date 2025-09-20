@@ -11,8 +11,14 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
   const [timeAgo, setTimeAgo] = useState<string>('')
   const [isVisible, setIsVisible] = useState(false)
 
+  console.log('🔥 CardUpdateIndicator 渲染:', { 
+    lastUpdateTime: lastUpdateTime?.toISOString() || null, 
+    isVisible, 
+    timeAgo 
+  })
+
   useEffect(() => {
-    console.log('🏷️ CardUpdateIndicator 接收到 lastUpdateTime:', lastUpdateTime)
+    console.log('🏷️ CardUpdateIndicator useEffect 觸發, lastUpdateTime:', lastUpdateTime)
     
     if (!lastUpdateTime) {
       console.log('❌ lastUpdateTime 為空，隱藏提示')
@@ -20,7 +26,7 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
       return
     }
 
-    console.log('✅ lastUpdateTime 有值，顯示提示')
+    console.log('✅ lastUpdateTime 有值，設置為顯示')
     setIsVisible(true)
 
     const updateTimeAgo = () => {
@@ -66,9 +72,14 @@ export default function CardUpdateIndicator({ lastUpdateTime, className = '' }: 
   if (!isVisible) return null
 
   return (
-    <div className={`absolute -top-3 -right-3 inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-sm font-bold rounded-full shadow-xl border-2 border-white z-50 animate-pulse ${className}`} style={{zIndex: 9999, position: 'absolute', top: '-12px', right: '-12px', overflow: 'visible'}}>
-      <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
-      <span className="font-bold">更新 {timeAgo}</span>
+    <div
+      className={`absolute top-1 right-1 inline-flex items-center gap-1 px-2.5 py-1 bg-red-500 text-white text-[11px] sm:text-sm font-bold rounded-full shadow-xl border border-white z-[9999] animate-pulse pointer-events-none ${className}`}
+      style={{ position: 'absolute' }}
+      aria-label={timeAgo ? `更新 ${timeAgo}` : '最近已更新'}
+      role="status"
+    >
+      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-bounce" />
+      <span className="font-bold leading-none">更新 {timeAgo || '剛剛'}</span>
     </div>
   )
 }
