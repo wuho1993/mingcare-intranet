@@ -3209,11 +3209,9 @@ export default function ServicesPage() {
           }))
           
           // 持久化到 localStorage（30分鐘）
-          localStorage.setItem(`record_update_${editingRecord.id}`, updateTimeStr)
-          
-          console.log('💾 localStorage 已設置:', `record_update_${editingRecord.id}`, updateTimeStr)
-          
-          // 觸發自定義事件
+          localStorage.setItem(`service_update_${editingRecord.id}`, updateTimeStr)
+
+          console.log('💾 localStorage 已設置:', `service_update_${editingRecord.id}`, updateTimeStr)          // 觸發自定義事件
           window.dispatchEvent(new CustomEvent('recordUpdated', {
             detail: { recordId: editingRecord.id }
           }))
@@ -6497,7 +6495,7 @@ function LocalScheduleEditModal({
           // 使用測試 ID 觸發服務記錄的更新通知
           const testRecordId = 'test-record-1'
           const updateTime = new Date().toISOString()
-          localStorage.setItem(`record_update_${testRecordId}`, updateTime)
+          localStorage.setItem(`service_update_${testRecordId}`, updateTime)
           window.dispatchEvent(new CustomEvent('recordUpdated', {
             detail: { recordId: testRecordId }
           }))
