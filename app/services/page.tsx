@@ -3188,8 +3188,6 @@ export default function ServicesPage() {
         alert('記錄更新成功！')
         setIsEditModalOpen(false)
         setEditingRecord(null)
-        // 觸發資料刷新
-        handleRefresh()
         // 設置最後更新時間
         setLastUpdateTime(new Date())
         // 設置特定記錄的更新時間
