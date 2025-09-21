@@ -113,6 +113,8 @@ function ReportsCalendarView({
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isMobile, setIsMobile] = useState(false)
+  const [viewMode, setViewMode] = useState<'calendar' | 'cards'>('calendar') // 新增視圖模式狀態
+  const [allRecords, setAllRecords] = useState<BillingSalaryRecord[]>([]) // 存儲所有記錄用於卡片視圖
 
   // 調試：監控 recordUpdateTimes props 的變化
   useEffect(() => {
@@ -148,9 +150,12 @@ function ReportsCalendarView({
         const response = await fetchBillingSalaryRecords(filters, 1, 1000) // 獲取更多記錄用於月曆顯示
 
         if (response.success && response.data) {
+          const records = response.data.data || []
+          setAllRecords(records) // 存儲所有記錄
+
           // 將記錄按日期分組
           const groupedByDate: Record<string, BillingSalaryRecord[]> = {}
-          ;(response.data.data || []).forEach((record: BillingSalaryRecord) => {
+          records.forEach((record: BillingSalaryRecord) => {
             const dateKey = record.service_date
             if (!groupedByDate[dateKey]) {
               groupedByDate[dateKey] = []
@@ -211,39 +216,73 @@ function ReportsCalendarView({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* 月份導航 - 移動端優化 */}
+      {/* 月份導航和視圖切換 - 移動端優化 */}
       <div className="flex justify-between items-center px-2 sm:px-0">
-        <button
-          onClick={() => navigateMonth('prev')}
-          className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
-        >
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+        {/* 月份導航 */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigateMonth('prev')}
+            className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
 
-        <h4 className="text-base sm:text-lg font-medium text-text-primary">
-          {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
-        </h4>
+          <h4 className="text-base sm:text-lg font-medium text-text-primary">
+            {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
+          </h4>
 
-        <button
-          onClick={() => navigateMonth('next')}
-          className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
-        >
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+          <button
+            onClick={() => navigateMonth('next')}
+            className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 視圖切換按鈕 */}
+        <div className="flex rounded-lg border border-border-light overflow-hidden">
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`px-3 py-2 text-sm transition-colors ${
+              viewMode === 'calendar'
+                ? 'bg-mingcare-blue text-white'
+                : 'bg-white text-text-secondary hover:bg-bg-secondary'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-3 py-2 text-sm transition-colors ${
+              viewMode === 'cards'
+                ? 'bg-mingcare-blue text-white'
+                : 'bg-white text-text-secondary hover:bg-bg-secondary'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* 星期標題 - 移動端優化 */}
-      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
-        {['日', '一', '二', '三', '四', '五', '六'].map(day => (
-          <div key={day} className="p-1 sm:p-2 text-center font-medium text-text-secondary bg-bg-secondary rounded text-xs sm:text-sm">
-            {day}
+      {/* 條件渲染不同視圖 */}
+      {viewMode === 'calendar' ? (
+        <>
+          {/* 星期標題 - 移動端優化 */}
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+            {['日', '一', '二', '三', '四', '五', '六'].map(day => (
+              <div key={day} className="p-1 sm:p-2 text-center font-medium text-text-secondary bg-bg-secondary rounded text-xs sm:text-sm">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
       {/* 月曆網格 - 移動端優化 */}
       <div className="grid grid-cols-7 gap-0.5 sm:gap-1" style={{overflow: 'visible'}}>
@@ -365,7 +404,133 @@ function ReportsCalendarView({
         })}
       </div>
 
-      {/* 記錄操作模態框 */}
+        {/* 記錄操作模態框 */}
+        {showRecordMenu && selectedRecord && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
+              <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
+
+              {/* 記錄詳情 */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <div className="text-sm text-text-secondary mb-1">
+                  {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
+                </div>
+                <div className="font-medium text-text-primary">
+                  {selectedRecord.customer_name}
+                </div>
+                <div className="text-sm text-text-secondary">
+                  護理員：{selectedRecord.care_staff_name}
+                </div>
+                <div className="text-sm text-blue-600">
+                  {selectedRecord.service_type}
+                </div>
+              </div>
+
+              {/* 操作按鈕 */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    console.log('📝 編輯按鈕被點擊:', selectedRecord)
+                    onEdit(selectedRecord)
+                    setShowRecordMenu(false)
+                    setSelectedRecord(null)
+                  }}
+                  className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  編輯
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
+                    onDelete(selectedRecord.id)
+                    setShowRecordMenu(false)
+                    setSelectedRecord(null)
+                  }}
+                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  刪除
+                </button>
+              </div>
+
+              {/* 取消按鈕 */}
+              <button
+                onClick={() => {
+                  setShowRecordMenu(false)
+                  setSelectedRecord(null)
+                }}
+                className="w-full mt-3 bg-gray-200 text-text-secondary py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        )}
+        </>
+      ) : (
+        /* 卡片視圖 */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allRecords.map((record, index) => (
+            <div
+              key={record.id}
+              onClick={() => {
+                setSelectedRecord(record)
+                setShowRecordMenu(true)
+              }}
+              className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'border-gray-200'}`}
+            >
+              {/* 30分鐘更新提示 */}
+              {(() => {
+                const last = recordUpdateTimes?.[record.id]
+                if (!last) return null
+                const diff = Math.floor((Date.now() - last.getTime()) / 60000)
+                const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
+                return (
+                  <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
+                    🔥 {label}更新 🔥
+                  </div>
+                )
+              })()}
+
+              {/* 卡片內容 */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold text-gray-800 truncate">
+                    {record.customer_name}
+                  </h3>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {record.service_date}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {record.care_staff_name}
+                  </div>
+
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {record.start_time} - {record.end_time}
+                  </div>
+
+                  <div className="flex items-center text-sm text-blue-600">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {record.service_type}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 記錄操作模態框 - 共用 */}
       {showRecordMenu && selectedRecord && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
