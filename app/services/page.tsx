@@ -345,7 +345,7 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className={`text-xs sm:text-sm border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'bg-white'}`}
+                        className={`text-xs sm:text-sm border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'bg-white'}`}
                         data-updated={recordUpdateTimes?.[record.id] ? 'true' : 'false'}
                       >
                         {/* 方案1: 大字體更新標題 - 保證能看到 */}
@@ -355,8 +355,8 @@ function ReportsCalendarView({
                           const diff = Math.floor((Date.now() - last.getTime()) / 60000)
                           const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
                           return (
-                            <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
-                              🔥 {label}更新 🔥
+                            <div className="text-center mb-2 bg-green-600 text-white font-bold text-sm py-1 rounded">
+                              {label}更新
                             </div>
                           )
                         })()}
@@ -490,7 +490,7 @@ function ReportsCalendarView({
                   setSelectedRecord(record)
                   setShowRecordMenu(true)
                 }}
-                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'border-gray-200'}`}
+                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'border-gray-200'}`}
               >
                 {/* 30分鐘更新提示 */}
                 {(() => {
@@ -500,8 +500,8 @@ function ReportsCalendarView({
                   const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
                   console.log('🎯 渲染30分鐘提示:', { recordId: record.id, diff, label })
                   return (
-                    <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
-                      🔥 {label}更新 🔥
+                    <div className="text-center mb-2 bg-green-600 text-white font-bold text-sm py-1 rounded">
+                      {label}更新
                     </div>
                   )
                 })()}
