@@ -471,27 +471,40 @@ function ReportsCalendarView({
       ) : (
         /* 卡片視圖 */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {allRecords.map((record, index) => (
-            <div
-              key={record.id}
-              onClick={() => {
-                setSelectedRecord(record)
-                setShowRecordMenu(true)
-              }}
-              className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'border-gray-200'}`}
-            >
-              {/* 30分鐘更新提示 */}
-              {(() => {
-                const last = recordUpdateTimes?.[record.id]
-                if (!last) return null
-                const diff = Math.floor((Date.now() - last.getTime()) / 60000)
-                const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
-                return (
-                  <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
-                    🔥 {label}更新 🔥
-                  </div>
-                )
-              })()}
+          {allRecords.map((record, index) => {
+            // 🐛 調試：檢查每個記錄的更新時間
+            const updateTime = recordUpdateTimes?.[record.id]
+            if (updateTime) {
+              console.log('🎯 卡片渲染 - 找到記錄更新時間:', {
+                recordId: record.id,
+                customerName: record.customer_name,
+                updateTime: updateTime.toISOString(),
+                diffInMinutes: Math.floor((Date.now() - updateTime.getTime()) / 60000)
+              })
+            }
+            
+            return (
+              <div
+                key={record.id}
+                onClick={() => {
+                  setSelectedRecord(record)
+                  setShowRecordMenu(true)
+                }}
+                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-red-50 border-red-300 ring-1 ring-red-400' : 'border-gray-200'}`}
+              >
+                {/* 30分鐘更新提示 */}
+                {(() => {
+                  const last = recordUpdateTimes?.[record.id]
+                  if (!last) return null
+                  const diff = Math.floor((Date.now() - last.getTime()) / 60000)
+                  const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
+                  console.log('🎯 渲染30分鐘提示:', { recordId: record.id, diff, label })
+                  return (
+                    <div className="text-center mb-2 bg-red-600 text-white font-bold text-sm py-1 rounded animate-pulse">
+                      🔥 {label}更新 🔥
+                    </div>
+                  )
+                })()}
 
               {/* 卡片內容 */}
               <div className="space-y-3">
@@ -528,7 +541,8 @@ function ReportsCalendarView({
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -769,8 +783,9 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
           console.log('✅ 記錄更新成功！')
         }, 100)
         
-        // 觸發資料刷新
+        // 觸發資料刷新 - 確保狀態更新
         if (onRefresh) {
+          console.log('📤 調用 onRefresh 以刷新數據和狀態')
           onRefresh()
         }
         // 重新載入本地記錄列表
