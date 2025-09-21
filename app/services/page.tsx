@@ -468,7 +468,7 @@ function ReportsCalendarView({
         </>
       ) : (
         /* 卡片視圖 */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {allRecords.map((record, index) => (
             <div
               key={record.id}
@@ -1091,8 +1091,6 @@ interface ReportsTabProps {
   updateDateRange: (preset: DateRangePreset) => void
   exportLoading: boolean
   handleExport: () => void
-  reportsViewMode: 'list' | 'calendar'
-  setReportsViewMode: (mode: 'list' | 'calendar') => void
   onEdit: (record: BillingSalaryRecord) => void
   onDelete: (recordId: string) => void
   refreshTrigger: number
@@ -2371,7 +2369,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, reportsViewMode, setReportsViewMode, onEdit, onDelete, refreshTrigger, onRefresh, recordUpdateTimes }: ReportsTabProps) {
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, onEdit, onDelete, refreshTrigger, onRefresh, recordUpdateTimes }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
 
@@ -2867,36 +2865,6 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
 
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              {/* 檢視模式切換 */}
-              <div className="flex items-center border border-border-light rounded-lg p-1 w-full sm:w-auto">
-                <button
-                  onClick={() => setReportsViewMode('list')}
-                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 flex-1 sm:flex-none ${
-                    reportsViewMode === 'list'
-                      ? 'bg-mingcare-blue text-white'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
-                  }`}
-                >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  <span>列表</span>
-                </button>
-                <button
-                  onClick={() => setReportsViewMode('calendar')}
-                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 flex-1 sm:flex-none ${
-                    reportsViewMode === 'calendar'
-                      ? 'bg-mingcare-blue text-white'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
-                  }`}
-                >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>月曆</span>
-                </button>
-              </div>
-
               {/* 導出按鈕 */}
               <button
                 onClick={handleExport}
@@ -2921,28 +2889,22 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           </div>
 
           {/* 服務記錄顯示 */}
-          {reportsViewMode === 'list' ? (
-            <DetailedRecordsList filters={filters} onRefresh={onRefresh} />
-          ) : (
-            <>
-              <ReportsCalendarView 
-                filters={filters} 
-                onEdit={onEdit} 
-                onDelete={onDelete} 
-                refreshTrigger={refreshTrigger} 
-                recordUpdateTimes={recordUpdateTimes}
-              />
+          <ReportsCalendarView 
+            filters={filters} 
+            onEdit={onEdit} 
+            onDelete={onDelete} 
+            refreshTrigger={refreshTrigger} 
+            recordUpdateTimes={recordUpdateTimes}
+          />
 
-              {/* 社區券機數統計 */}
-              <div className="mt-8">
-                <div className="card-apple border border-border-light fade-in-apple">
-                  <div className="p-6">
-                    <VoucherSummaryView filters={filters} />
-                  </div>
-                </div>
+          {/* 社區券機數統計 */}
+          <div className="mt-8">
+            <div className="card-apple border border-border-light fade-in-apple">
+              <div className="p-6">
+                <VoucherSummaryView filters={filters} />
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2955,7 +2917,6 @@ export default function ServicesPage() {
   const [kpiLoading, setKpiLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
-  const [reportsViewMode, setReportsViewMode] = useState<'list' | 'calendar'>('list') // 報表檢視模式
   const router = useRouter()
 
   // 狀態管理
@@ -5284,8 +5245,6 @@ export default function ServicesPage() {
             updateDateRange={updateDateRange}
             exportLoading={exportLoading}
             handleExport={handleExport}
-            reportsViewMode={reportsViewMode}
-            setReportsViewMode={setReportsViewMode}
             onEdit={handleEdit}
             onDelete={handleDelete}
             refreshTrigger={refreshTrigger}
