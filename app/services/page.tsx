@@ -2994,18 +2994,25 @@ export default function ServicesPage() {
           const recordId = key.replace('service_update_', '')
           const timeStr = localStorage.getItem(key)
           if (timeStr) {
-            // 將時間字符串轉換為數字，然後創建 Date 對象
-            const timeNum = parseInt(timeStr, 10)
-            if (isNaN(timeNum)) {
-              console.warn('⚠️ 無效的時間格式，跳過記錄:', { key, timeStr })
-              continue
-            }
+            let updateTime: Date
             
-            const updateTime = new Date(timeNum)
+            // 🔧 支持兩種時間格式：數字時間戳和ISO字符串
+            if (timeStr.includes('T') && timeStr.includes('Z')) {
+              // ISO字符串格式 (如: 2025-09-21T06:18:03.798Z)
+              updateTime = new Date(timeStr)
+            } else {
+              // 數字時間戳格式 (如: "1726898283798")
+              const timeNum = parseInt(timeStr, 10)
+              if (isNaN(timeNum)) {
+                console.warn('⚠️ 無效的時間格式，跳過記錄:', { key, timeStr })
+                continue
+              }
+              updateTime = new Date(timeNum)
+            }
             
             // 檢查 Date 對象是否有效
             if (isNaN(updateTime.getTime())) {
-              console.warn('⚠️ 無效的Date對象，跳過記錄:', { key, timeStr, timeNum })
+              console.warn('⚠️ 無效的Date對象，跳過記錄:', { key, timeStr })
               continue
             }
             
@@ -3045,17 +3052,32 @@ export default function ServicesPage() {
       if (event?.detail?.recordId) {
         // 處理自定義事件
         const recordId = event.detail.recordId
-        const updateTime = localStorage.getItem(`service_update_${recordId}`)
-        if (updateTime) {
-          const timeNum = parseInt(updateTime, 10)
-          if (!isNaN(timeNum)) {
+        const timeStr = localStorage.getItem(`service_update_${recordId}`)
+        if (timeStr) {
+          let updateTime: Date
+          
+          // 🔧 支持兩種時間格式：數字時間戳和ISO字符串
+          if (timeStr.includes('T') && timeStr.includes('Z')) {
+            // ISO字符串格式
+            updateTime = new Date(timeStr)
+          } else {
+            // 數字時間戳格式
+            const timeNum = parseInt(timeStr, 10)
+            if (isNaN(timeNum)) {
+              console.warn('⚠️ 事件處理器: 無效的時間格式', { recordId, timeStr })
+              return
+            }
+            updateTime = new Date(timeNum)
+          }
+          
+          if (!isNaN(updateTime.getTime())) {
             setRecordUpdateTimes(prev => ({
               ...prev,
-              [recordId]: new Date(timeNum)
+              [recordId]: updateTime
             }))
             console.log('🔔 事件處理器更新記錄時間:', {
               recordId,
-              updateTime: new Date(timeNum).toISOString()
+              updateTime: updateTime.toISOString()
             })
             console.log('🔄 事件處理器 setRecordUpdateTimes 已調用，期望觸發重新渲染')
             
