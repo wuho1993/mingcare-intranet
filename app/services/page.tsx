@@ -113,7 +113,7 @@ function ReportsCalendarView({
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isMobile, setIsMobile] = useState(false)
-  const [viewMode, setViewMode] = useState<'calendar' | 'cards'>('calendar') // 新增視圖模式狀態
+  const [viewMode, setViewMode] = useState<'calendar' | 'cards'>('cards') // 新增視圖模式狀態，默認為卡片
   const [allRecords, setAllRecords] = useState<BillingSalaryRecord[]>([]) // 存儲所有記錄用於卡片視圖
 
   // 調試：監控 recordUpdateTimes props 的變化
@@ -246,19 +246,6 @@ function ReportsCalendarView({
         {/* 視圖切換按鈕 */}
         <div className="flex rounded-lg border border-border-light overflow-hidden">
           <button
-            onClick={() => setViewMode('calendar')}
-            className={`px-3 py-2 text-sm transition-colors flex items-center space-x-1 ${
-              viewMode === 'calendar'
-                ? 'bg-mingcare-blue text-white'
-                : 'bg-white text-text-secondary hover:bg-bg-secondary'
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>日曆</span>
-          </button>
-          <button
             onClick={() => setViewMode('cards')}
             className={`px-3 py-2 text-sm transition-colors flex items-center space-x-1 ${
               viewMode === 'cards'
@@ -270,6 +257,19 @@ function ReportsCalendarView({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
             <span>卡片</span>
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`px-3 py-2 text-sm transition-colors flex items-center space-x-1 ${
+              viewMode === 'calendar'
+                ? 'bg-mingcare-blue text-white'
+                : 'bg-white text-text-secondary hover:bg-bg-secondary'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>日曆</span>
           </button>
         </div>
       </div>
@@ -739,10 +739,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
       console.log('📝 更新結果:', response)
 
       if (response.success) {
-        // 顯示成功提示
-        alert('記錄更新成功！')
-        
-        // 🔔 設置更新時間到 localStorage
+        // 🔔 設置更新時間到 localStorage (在任何其他操作之前)
         const updateTime = Date.now()
         const storageKey = `service_update_${editingRecord.id}`
         localStorage.setItem(storageKey, updateTime.toString())
@@ -763,8 +760,15 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         window.dispatchEvent(event)
         console.log('📢 觸發更新事件:', event.detail)
         
+        // 關閉模態框
         setIsEditModalOpen(false)
         setEditingRecord(null)
+        
+        // 顯示成功提示 (延遲一點點，確保localStorage已設置)
+        setTimeout(() => {
+          console.log('✅ 記錄更新成功！')
+        }, 100)
+        
         // 觸發資料刷新
         if (onRefresh) {
           onRefresh()
@@ -773,12 +777,12 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         loadRecords()
       } else {
         setError(response.error || '更新記錄失敗')
-        alert('更新記錄失敗：' + (response.error || '未知錯誤'))
+        console.error('❌ 更新記錄失敗:', response.error || '未知錯誤')
       }
     } catch (err) {
       console.error('更新記錄失敗:', err)
       setError('更新記錄失敗，請重試')
-      alert('更新記錄失敗，請重試')
+      console.error('❌ 更新記錄失敗:', err)
     } finally {
       setLoading(false)
     }
@@ -801,7 +805,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
       console.log('🗑️ 刪除結果:', response)
 
       if (response.success) {
-        alert('記錄刪除成功！')
+        console.log('✅ 記錄刪除成功！')
         // 觸發資料刷新
         if (onRefresh) {
           onRefresh()
@@ -810,12 +814,12 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         loadRecords()
       } else {
         setError(response.error || '刪除記錄失敗')
-        alert('刪除記錄失敗：' + (response.error || '未知錯誤'))
+        console.error('❌ 刪除記錄失敗:', response.error || '未知錯誤')
       }
     } catch (err) {
       console.error('刪除記錄失敗:', err)
       setError('刪除記錄失敗，請重試')
-      alert('刪除記錄失敗，請重試')
+      console.error('❌ 刪除記錄失敗:', err)
     } finally {
       setLoading(false)
     }
@@ -3185,43 +3189,49 @@ export default function ServicesPage() {
       console.log('📝 主要組件 handleEditSave 更新結果:', response)
 
       if (response.success) {
-        alert('記錄更新成功！')
+        // 🔔 設置更新時間到 localStorage (在任何其他操作之前)
+        const updateTime = new Date()
+        const updateTimeStr = updateTime.toISOString()
+        
+        console.log('🕐 設置記錄更新時間:', {
+          recordId: editingRecord.id,
+          updateTime: updateTimeStr
+        })
+        
+        // 更新狀態
+        setRecordUpdateTimes(prev => ({
+          ...prev,
+          [editingRecord.id]: updateTime
+        }))
+        
+        // 持久化到 localStorage（30分鐘）
+        localStorage.setItem(`service_update_${editingRecord.id}`, updateTimeStr)
+
+        console.log('💾 localStorage 已設置:', `service_update_${editingRecord.id}`, updateTimeStr)
+        
+        // 觸發自定義事件
+        window.dispatchEvent(new CustomEvent('recordUpdated', {
+          detail: { recordId: editingRecord.id }
+        }))
+        
+        console.log('📡 recordUpdated 事件已觸發:', editingRecord.id)
+        
         setIsEditModalOpen(false)
         setEditingRecord(null)
         // 設置最後更新時間
         setLastUpdateTime(new Date())
-        // 設置特定記錄的更新時間
-        if (editingRecord) {
-          const updateTime = new Date()
-          const updateTimeStr = updateTime.toISOString()
-          
-          console.log('🕐 設置記錄更新時間:', {
-            recordId: editingRecord.id,
-            updateTime: updateTimeStr
-          })
-          
-          // 更新狀態
-          setRecordUpdateTimes(prev => ({
-            ...prev,
-            [editingRecord.id]: updateTime
-          }))
-          
-          // 持久化到 localStorage（30分鐘）
-          localStorage.setItem(`service_update_${editingRecord.id}`, updateTimeStr)
-
-          console.log('💾 localStorage 已設置:', `service_update_${editingRecord.id}`, updateTimeStr)          // 觸發自定義事件
-          window.dispatchEvent(new CustomEvent('recordUpdated', {
-            detail: { recordId: editingRecord.id }
-          }))
-          
-          console.log('📡 recordUpdated 事件已觸發:', editingRecord.id)
-        }
+        
+        // 顯示成功提示 (延遲一點點，確保localStorage已設置)
+        setTimeout(() => {
+          console.log('✅ 記錄更新成功！')
+        }, 100)
+        
       } else {
-        alert('更新記錄失敗：' + (response.error || '未知錯誤'))
+        console.error('❌ 更新記錄失敗:', response.error || '未知錯誤')
       }
     } catch (error) {
       console.error('更新記錄失敗:', error)
-      alert('更新失敗')
+      console.error('❌ 更新失敗:', error)
     } finally {
       setExportLoading(false)
     }
