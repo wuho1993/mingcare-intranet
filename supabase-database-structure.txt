@@ -1,9 +1,88 @@
 ========================================================================
-MingCare Supabase — Structure / RLS / Triggers / Enums  (EN ↔ 中文參考)
-Updated: 2025-08-13
+明護 Supabase 數據庫架構文檔 — 雙項目系統
+更新日期: 2025-01-22
 ========================================================================
 
-# 命名一致性（關鍵對照）
+本系統採用雙 Supabase 項目架構：
+1. 認證橋接項目 (MingCare WorkEz) - 負責身份驗證和用戶管理
+2. 數據項目 (Data Project) - 負責業務數據存儲和處理
+
+========================================================================
+項目一：認證橋接項目 (MingCare WorkEz)
+項目網址: https://rsixbgncuaijekuvhofg.supabase.co
+項目參考ID: rsixbgncuaijekuvhofg
+用途: 員工身份驗證和橋接系統
+更新日期: 2025-01-22
+========================================================================
+
+🔐 項目 1: mingcare-workez (身份驗證項目)
+================================================
+用途: 專門處理用戶身份驗證和登錄
+
+數據庫連接信息：
+- Host: db.rsixbgncuaijekuvhofg.supabase.co
+- Port: 5432
+- Database: postgres
+- User: postgres
+- Password: Stw1856aSSS
+
+連接字串：
+postgresql://postgres:Stw1856aSSS@db.rsixbgncuaijekuvhofg.supabase.co:5432/postgres
+
+API Keys：
+- Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzaXhiZ25jdWFpamVrdXZob2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0Mzc3MTYsImV4cCI6MjA2OTAxMzcxNn0.6q3gW_yP1H-Ag2DBDtF709ZUbq5LjDJfHr3jayh6y4U
+
+- Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzaXhiZ25jdWFpamVrdXZob2ZnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzQzNzcxNiwiZXhwIjoyMDY5MDEzNzE2fQ.zXII7VwOC1XbvJO33ztFYzJ8HVo4bm9EYK5sWOC3TfY
+
+項目 URL: https://rsixbgncuaijekuvhofg.supabase.co
+
+## 認證橋接項目 - 表結構（已簡化）
+
+### ❌ [DELETED] staff_user_mapping — 員工用戶映射表
+**已於2025-01-22刪除** - 表為空，功能已被 Data Project 的 auth_user_bridge 替代
+**原用途**: 橋接員工身份與認證用戶的映射關係
+
+### ❌ [DELETED] admin_auth_bridge_credentials — 管理員認證憑證表  
+**已於2025-01-22刪除** - 表為空，僅為手動記錄用途，無實際系統依賴
+**原用途**: 存儲管理員認證橋接的憑證和狀態信息
+
+## 認證橋接項目 - 簡化狀態
+✅ **系統已成功簡化**
+✅ **冗餘表已清理完畢**  
+✅ **認證功能現由 Data Project 的 auth_user_bridge 統一處理**
+🟢 **項目結構更加精簡，維護成本降低**
+
+ℹ️ **架構變更**: 認證橋接項目現專注於 auth.users 管理，業務邏輯橋接由數據項目處理
+
+========================================================================
+項目二：數據項目 (Data Project) 
+項目網址: https://cvkxlvdicympakfecgvv.supabase.co
+用途: 業務數據存儲、客戶管理、員工資料、服務記錄
+更新日期: 2025-01-22
+========================================================================
+
+🏥 項目 2: 明家居家護理服務 Intranet (數據項目)
+================================================
+用途: 儲存業務數據（客戶管理、護理服務、護理人員、工資計算等）
+
+數據庫連接信息：
+- Host: db.cvkxlvdicympakfecgvv.supabase.co
+- Port: 5432
+- Database: postgres
+- User: postgres
+- Password: Stw1856aSSS
+
+連接字串：
+postgresql://postgres:Stw1856aSSS@db.cvkxlvdicympakfecgvv.supabase.co:5432/postgres
+
+API Keys：
+- Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2a3hsdmRpY3ltcGFrZmVjZ3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjkxODEsImV4cCI6MjA2NzAwNTE4MX0.jp2fPKcBcG4-042UoN3OieR553WAgABhJIujiDJAt-I
+
+- Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2a3hsdmRpY3ltcGFrZmVjZ3Z2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTQyOTE4MSwiZXhwIjoyMDY3MDA1MTgxfQ.ZAix35wqh5s7ZIC_L1sDQorpDarTzYo9PWRAsiBAaXI
+
+項目 URL: https://cvkxlvdicympakfecgvv.supabase.co
+
+# 數據項目 - 命名對照表
 id = 系統 ID
 created_at = 建立時間
 updated_at = 更新時間
@@ -62,10 +141,23 @@ lds_status = LDS 號碼狀況
 home_visit_status = 公司家訪狀況
 copay_level = 自付比例等級
 
-------------------------------------------------------------------------
-TABLES（表結構）
+## 數據項目 - 表結構詳情
 
-[public.billing_salary_data]
+### [public.auth_user_bridge] — 認證用戶橋接表 (2條記錄)
+- id (integer, NOT NULL, auto-increment) = 系統 ID
+- mingcare_workez_user_id (uuid, NOT NULL) = MingCare WorkEz 用戶 ID
+- data_project_user_id (uuid) = 數據項目用戶 ID  
+- employee_code (varchar) = 員工編號
+- display_name (varchar) = 顯示姓名
+- email (varchar) = 電郵地址
+- role (varchar, default 'user') = 角色權限
+- department (varchar) = 部門
+- permissions (jsonb, default '{}') = 權限設定（JSON格式）
+- is_active (boolean, default true) = 是否啟用
+- created_at (timestamptz, default now()) = 建立時間
+- updated_at (timestamptz, default now()) = 更新時間
+
+### [public.billing_salary_data] — 客戶收費及護理人員工資表 (2,225條記錄)
 - id (uuid, NOT NULL, default uuid_generate_v4()) = 系統 ID
 - service_date (date) = 服務日期
 - customer_id (text) = 項目編號
@@ -86,7 +178,7 @@ TABLES（表結構）
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
 
-[public.care_staff_profiles]
+### [public.care_staff_profiles] — 護理人員檔案表 (191條記錄)
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - staff_id (text) = 員工編號
 - name_chinese (text) = 中文姓名
@@ -116,7 +208,39 @@ TABLES（表結構）
 - contract_status (contract_status_enum) = 合約狀態
 - created_at (timestamptz, default now()) = 建立時間
 
-[public.customer_personal_data]
+### [public.clock_records] — 員工打卡記錄表 (0條記錄)  
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- staff_id (text, NOT NULL) = 員工編號
+- staff_name (text, NOT NULL) = 員工姓名
+- shift_id (text) = 班次編號
+- clock_type (text, NOT NULL) = 打卡類型 (上班/下班)
+- clock_time (timestamptz, NOT NULL) = 打卡時間
+- location_latitude (numeric) = 定位緯度
+- location_longitude (numeric) = 定位經度
+- location_address (text) = 地址
+- customer_name (text) = 客戶姓名
+- service_address (text) = 服務地址
+- service_date (date) = 服務日期
+- start_time (time) = 開始時間
+- end_time (time) = 結束時間
+- service_type (text) = 服務類型
+- created_at (timestamptz, default now()) = 建立時間
+- updated_at (timestamptz, default now()) = 更新時間
+
+### [public.commission_rate_introducer] — 介紹人佣金費率表 (5條記錄)
+**用途**: 存儲不同介紹人的佣金費率設定，區分首月和後續月份
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- introducer (introducer_enum, NOT NULL) = 介紹人姓名
+- first_month_commission (numeric) = 首月佣金金額
+- subsequent_month_commission (numeric) = 後續月份佣金金額
+
+**樣本資料**:
+- Steven Kwok: 首月 $800, 後續 $800
+- Dr.Lee: 首月 $800, 後續 $800  
+- Annie: 首月 $800, 後續 $800
+
+### [public.customer_personal_data] — 客戶個人資料表 (124條記錄)
+**用途**: 存儲客戶的詳細個人資料和服務資訊
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - customer_id (text) = 項目編號
 - customer_type (customer_type_enum, NOT NULL) = 客戶分類
@@ -135,97 +259,190 @@ TABLES（表結構）
 - voucher_application_status (voucher_application_status_enum) = 社區券申請狀況
 - lds_status (lds_status_enum) = LDS 號碼狀況
 - home_visit_status (home_visit_status_enum) = 公司家訪狀況
-- project_manager (staff_owner_enum) = 負責同事
+- project_manager (project_manager_enum) = 項目經理
 - copay_level (copay_level_enum) = 自付比例等級
 
-[public.commission_rate_introducer]
+### [public.service_signatures] — 服務簽名記錄表 (0條記錄)
+**用途**: 記錄服務過程中員工和客戶的數位簽名
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
-- introducer (introducer_enum, NOT NULL) = 介紹人
-- first_month_commission (numeric) = 首月佣金
-- subsequent_month_commission (numeric) = 後續月份佣金
+- clock_record_id (uuid) = 打卡記錄ID（關聯clock_records表）
+- shift_id (text) = 班次編號
+- staff_id (text, NOT NULL) = 員工編號
+- staff_name (text, NOT NULL) = 員工姓名
+- customer_name (text, NOT NULL) = 客戶姓名
+- staff_signature_data (text) = 員工簽名資料
+- staff_signature_image (text) = 員工簽名圖檔
+- staff_signed_at (timestamptz) = 員工簽名時間
+- client_signature_data (text) = 客戶簽名資料
+- client_signature_image (text) = 客戶簽名圖檔
+- client_signed_at (timestamptz) = 客戶簽名時間
+- service_note (text) = 服務備註
+- service_completed (boolean, default false) = 服務是否完成
+- completed_at (timestamptz) = 完成時間
+- created_at (timestamptz, default now()) = 建立時間
+- updated_at (timestamptz, default now()) = 更新時間
 
-[public.voucher_rate]
+### [public.signature_files] — 簽名檔案儲存表 (0條記錄)
+**用途**: 存儲簽名相關的檔案資訊和路徑
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- signature_id (uuid) = 簽名記錄ID（關聯service_signatures表）
+- file_type (text) = 檔案類型
+- file_path (text, NOT NULL) = 檔案路徑
+- file_url (text) = 檔案URL
+- file_size (integer) = 檔案大小（bytes）
+- created_at (timestamptz, default now()) = 建立時間
+
+### [public.voucher_rate] — 社區券費率表 (7條記錄)
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - service_type (service_type_enum) = 服務類型
 - service_rate (numeric, NOT NULL) = 服務費率（每小時）
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
 
-------------------------------------------------------------------------
-ENUM TYPES（列舉型別）
+## 數據項目 - 枚舉類型定義
+
 contract_status_enum = { 同意, 不同意 }
+
 copay_level_enum = { 5%, 8%, 12%, 16%, 25%, 40% }
+
 covid_vaccine_enum = { 1針, 2針, 3針, 4針, 無接種, Other }
+
 customer_type_enum = { 社區券客戶, 明家街客, 家訪客戶 }
-district_enum = { 中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區, 屯門區, 東區, 沙田區, 油尖旺區, 深水埗區, 灣仔區, 荃灣區, 葵青區, 西貢區, 觀塘區, 離島區, 黃大仙區, 未分類（醫院,院舍) }
-gender_enum = { 男, 女 }
-health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
-home_visit_status_enum = { 已完成, 未完成 }
-introducer_enum = { Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰 }
-lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }
-preferred_area_enum = { 所有區域, 灣仔區, 中西區, 東區, 南區, 油尖旺區, 深水埗區, 九龍城區, 黃大仙區, 觀塘區, 西貢區, 沙田區, 大埔區, 北區, 荃灣區, 屯門區, 元朗區, 葵青區, 離島區 }
-project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
-project_manager_enum = { Candy Ho, Joe Cheung, Kanas Leung }
-service_type_enum = {
-  ES-護送服務(陪診),
-  HC-家居服務,
-  NC-護理服務(專業⼈員),
-  PC-到⼾看顧(輔助⼈員),
-  RA-復康運動(輔助⼈員),
-  RT-復康運動(OTA輔助⼈員),
-  RT-復康運動(專業⼈員),
-  上門評估服務, 傷口護理, 免費服務體驗
+
+district_enum = { 
+  中西區, 九龍城區, 元朗區, 北區, 南區, 大埔區, 屯門區, 東區, 
+  沙田區, 油尖旺區, 深水埗區, 灣仔區, 荃灣區, 葵青區, 西貢區, 
+  觀塘區, 離島區, 黃大仙區, 未分類（醫院,院舍)
 }
-voucher_application_status_enum = { 已經持有, 申請中 }
+
+gender_enum = { 男, 女 }
+
+health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
+
+home_visit_status_enum = { 已完成, 未完成 }
+
+introducer_enum = { 
+  Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 
+  陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰 
+}
+
+lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }
+
+preferred_area_enum = { 
+  所有區域, 灣仔區, 中西區, 東區, 南區, 油尖旺區, 深水埗區, 
+  九龍城區, 黃大仙區, 觀塘區, 西貢區, 沙田區, 大埔區, 北區, 
+  荃灣區, 屯門區, 元朗區, 葵青區, 離島區 
+}
+
+project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
+
+project_manager_enum = { Candy Ho, Joe Cheung, Kanas Leung }
+
+service_type_enum = {
+  ES-護送服務(陪診), HC-家居服務, NC-護理服務(專業⼈員), 
+  PC-到⼾看顧(輔助⼈員), RA-復康運動(輔助⼈員), 
+  RT-復康運動(OTA輔助⼈員), RT-復康運動(專業⼈員), 
+  上門評估服務, 傷口護理, 免費服務體驗, 外傭培訓服務, 
+  新員工培訓導師, 認知障礙訓練, 社區活動
+}
+
 staff_owner_enum = { Kanas Leung, Joe Cheung, Candy Ho }
 
-------------------------------------------------------------------------
-RLS POLICIES（行級安全性）— 建議生產環境配置
+voucher_application_status_enum = { 已經持有, 申請中 }
 
-[public.billing_salary_data] 
-🔒 建議權限配置：
-- SELECT: 僅限已認證用戶 (auth.role() = 'authenticated')
-- INSERT: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin')
-- UPDATE: 僅限管理員角色 (auth.jwt() ->> 'role' = 'admin') 
-- DELETE: 僅限超級管理員 (auth.jwt() ->> 'role' = 'super_admin')
+## 數據項目 - 行級安全性政策
 
-⚠️ 當前設定：對 public 過寬，需收斂至上述建議
+🔒 **ENABLED TABLES (RLS 已啟用的表格):**
 
-[public.care_staff_profiles]
-🔒 建議權限配置：
-- SELECT: 已認證用戶可讀取 (auth.role() = 'authenticated')
-- INSERT: 管理員和HR角色 (auth.jwt() ->> 'role' IN ('admin', 'hr'))
-- UPDATE: 管理員、HR或本人 (auth.jwt() ->> 'role' IN ('admin', 'hr') OR auth.uid()::text = user_id)
-- DELETE: 僅限超級管理員 + 二次確認
+[public.billing_salary_data] ✅ RLS ENABLED
+� Current Policies:
+- SELECT: "Enable read access for all users" → public (允許所有用戶讀取)
+- INSERT: "Enable insert access for all users" → public (允許所有用戶新增)
+- UPDATE: "Enable update access for all users" → public (允許所有用戶更新)
+- DELETE: "Enable delete access for all users" → public (允許所有用戶刪除)
+⚠️ 安全風險：雖然啟用了RLS，但所有操作對public開放，等同無限制
 
-🔧 Storage 權限 (care-staff-files bucket)：
-- 上載: 已認證用戶限制檔案類型(.jpg,.png,.pdf) 最大10MB
-- 讀取: 簽名URL，24小時有效期
-- 刪除: 僅限管理員角色
+[public.care_staff_profiles] ✅ RLS ENABLED  
+� Current Policies:
+- SELECT: "Allow public to read submissions" → anon, authenticated (匿名+認證用戶可讀)
+- INSERT: Multiple policies → anon, authenticated, public (多重插入權限)
+- UPDATE: "Allow public to update file URLs" → anon, authenticated (允許更新文件URL)
+- UPDATE: "Allow update for own profile" → anon, authenticated (允許更新自己檔案)
+- DELETE: "Enable delete for authenticated users" → authenticated (僅認證用戶可刪除)
+⚠️ 權限過寬：匿名用戶可讀取和修改所有員工檔案
 
-⚠️ 當前設定：允許 public 存取，需收斂至上述建議
+[public.clock_records] ✅ RLS ENABLED
+� Current Policies:
+- SELECT: "Users can view own clock records" → public, 條件: staff_id = auth.uid()
+- INSERT: "Users can insert own clock records" → public, 條件: staff_id = auth.uid()
+✅ 安全良好：用戶僅能查看和新增自己的打卡記錄
 
-[public.customer_personal_data]
-🔒 建議權限配置：
-- SELECT: 已認證用戶 (auth.role() = 'authenticated')
-- INSERT: 管理員和業務角色 (auth.jwt() ->> 'role' IN ('admin', 'business'))
-- UPDATE: 管理員、業務或負責同事 (auth.jwt() ->> 'role' IN ('admin', 'business') OR auth.jwt() ->> 'email' = project_manager)
-- DELETE: 僅限超級管理員 + 軟刪除機制
+[public.service_signatures] ✅ RLS ENABLED
+📋 Current Policies: 
+❌ **NO POLICIES DEFINED** - 表格已啟用RLS但無任何policy，完全無法存取
 
-🔧 生產環境實施步驟：
-1. 建立用戶角色表 (user_roles) 
-2. 實作 JWT Claims 更新
-3. 段階式收斂權限 (先記錄，再限制)
-4. 實作審計日誌 (audit_logs)
+🔓 **DISABLED TABLES (RLS 未啟用的表格):**
 
-------------------------------------------------------------------------
-TRIGGERS（觸發器）
+[public.auth_user_bridge] ❌ RLS DISABLED
+⚠️ 安全風險：用戶認證橋接表完全公開，包含敏感權限資料
+
+[public.commission_rate_introducer] ❌ RLS DISABLED  
+⚠️ 安全風險：介紹人佣金資料完全公開
+
+[public.customer_personal_data] ❌ RLS DISABLED
+❌ Policies Exist But Table RLS Disabled:
+- 有4個policy定義但因RLS未啟用而無效
+- 客戶個人資料完全公開存取
+⚠️ 嚴重安全風險：客戶個人敏感資料無保護
+
+[public.signature_files] ❌ RLS DISABLED
+⚠️ 安全風險：簽名檔案儲存資訊完全公開
+
+[public.voucher_rate] ❌ RLS DISABLED  
+❌ Policies Exist But Table RLS Disabled:
+- 有4個完善的角色權限policy但因RLS未啟用而無效
+- SELECT: 需要 authenticated 角色
+- INSERT/UPDATE: 需要 admin 或 manager 角色  
+- DELETE: 需要 admin 角色
+⚠️ 建議：立即啟用RLS以激活已定義的權限控制
+
+[public.job_position_options] ❌ RLS DISABLED
+ℹ️  職位選項lookup表，可考慮保持公開讀取
+
+[public.language_options] ❌ RLS DISABLED
+ℹ️  語言選項lookup表，可考慮保持公開讀取
+
+## 數據項目 - 嚴重安全問題
+
+**數據項目安全狀態**:
+
+1. **customer_personal_data** - 客戶個人資料表未啟用RLS，敏感資料完全暴露
+2. **auth_user_bridge** - 用戶認證表未保護，權限系統存在漏洞
+3. **service_signatures** - 已啟用RLS但無policy，功能完全不可用
+4. **voucher_rate** - 已有完善policy但RLS未啟用，權限控制失效
+
+## 數據項目 - 建議立即行動
+
+**高優先級（立即執行）**:
+1. 啟用 customer_personal_data 的 RLS
+2. 啟用 auth_user_bridge 的 RLS 並建立嚴格權限控制  
+3. 為 service_signatures 建立適當的 policies
+4. 啟用 voucher_rate 的 RLS (policies已存在)
+
+**中優先級**:
+5. 收緊 care_staff_profiles 的權限，限制匿名用戶存取
+6. 檢討 billing_salary_data 的過寬權限
+
+## 數據項目 - 觸發器
+[public.auth_user_bridge] → update_auth_user_bridge_updated_at()
 [public.billing_salary_data] → update_billing_salary_data_updated_at()
 [public.care_staff_profiles] → auto_generate_staff_id()
+[public.clock_records] → update_clock_records_updated_at()
 [public.customer_personal_data] → update_age_from_dob()
+[public.service_signatures] → update_service_signatures_updated_at()
+[public.voucher_rate] → update_voucher_rate_updated_at()
 
-------------------------------------------------------------------------
-OPTION TABLES（下拉 / 多選來源）
+## 數據項目 - 選項表（下拉選單來源）
 
 [public.job_position_options] → 申請職位候選值來源
 | ID | Label |
@@ -260,5 +477,30 @@ OPTION TABLES（下拉 / 多選來源）
 | 7  | 上海話  |
 | 8  | 四邑話  |
 
-------------------------------------------------------------------------
-（完）
+========================================================================
+雙項目系統總覽
+========================================================================
+
+**項目一：認證橋接項目 (MingCare-WorkEz)**
+- 項目網址: https://rsixbgncuaijekuvhofg.supabase.co
+- 表數量: 0個 (已清理冗餘表)
+- 記錄數量: 0條 (已清理測試數據)
+- 狀態: ✅ 運行正常，已簡化
+- 用途: 專注於 auth.users 身份驗證管理
+
+**項目二：數據項目 (Data Project)**  
+- 項目網址: https://cvkxlvdicympakfecgvv.supabase.co
+- 表數量: 11個 (客戶、員工、服務、打卡等業務表)
+- 記錄數量: 4,500+ 條跨所有表
+- 狀態: ✅ 完全運行，但有RLS安全問題需要處理
+- 用途: 主要業務數據管理
+
+**整體系統**
+- 項目總數: 2個
+- 表總數: 11個 (認證項目已簡化，主要業務表在數據項目)  
+- 狀態: ✅ 雙項目架構運行正常，已完成系統簡化
+- 改進: 🟢 冗餘表已清理，維護成本降低
+
+========================================================================
+結束
+========================================================================
