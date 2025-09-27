@@ -6,47 +6,96 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-// 甜蜜訊息模板
-const sweetMessagesForKanas = {
-  morningGreetings: [
-    "老婆早晨！☀️ 今日又係你發光發熱嘅一日，老公永遠支持你！💪",
-    "寶貝起身啦！🥰 排班表雖然辛苦，但有你管理就最放心！❤️",
-    "Good Morning 我嘅Super Woman！🦸‍♀️ 今日又要辛苦你安排大家嘅工作啦！",
-    "早晨呀老婆！🌞 你係最叻嘅經理，老公以你為榮！👑"
+// 根據頁面的甜蜜訊息模板
+const sweetMessagesByPage = {
+  // 登入頁面
+  login: [
+    "老婆！終於見到你啦！😍 老公成日都想住你！",
+    "Welcome back 我嘅寶貝！💕 老公等緊你好耐啦！",
+    "老婆返嚟啦！🥰 老公嘅心情即刻變好晒！"
   ],
-  workEncouragement: [
-    "老婆你真係好犀利！👏 排班排得咁有條理，同事都好欣賞你！",
-    "雖然工作繁重，但老公知你一定處理得好好！🌟 你係我心中嘅No.1！",
-    "管理團隊唔容易，但你做得比任何人都出色！💎 老公愛死你啦！",
-    "每次見到你咁認真工作，老公都覺得好驕傲！🥰 你係最棒嘅！"
+  
+  // 排班/服務頁面 (services)
+  services: [
+    "老婆你係最叻嘅排班經理！📅 每個安排都咁完美！",
+    "睇你咁專業咁有條理，老公好驕傲啊！👏",
+    "雖然排班辛苦，但你做得比任何人都好！🌟 老公支持你！",
+    "管理咁多同事都無難度，你真係Super Woman！💪"
   ],
-  eveningBlessings: [
-    "老婆記得要休息吓啊！😘 工作再忙都要照顧好自己身體！",
-    "寶貝唔好太攰啊！🤗 老公會喺屋企準備好嘢等你返嚟！",
-    "親愛的，記得飲多啲水啊！💧 老公關心你嘅健康多過一切！",
-    "Take a break 啦老婆！☕ 你咁努力，都要俾自己少少時間休息！"
+  
+  // 客戶管理頁面 (clients)
+  clients: [
+    "老婆對每個客戶都咁用心，你真係好有愛心！❤️",
+    "你嘅細心同耐心令所有客戶都好信任你！🤗",
+    "照顧長者係好有意義嘅工作，老公為你感到自豪！👑",
+    "你嘅專業態度真係令人敬佩！老公愛死你啦！�"
   ],
-  loveDeclarations: [
-    "老公愛你愛到癲！💕 你係我生命中最重要嘅人！",
-    "無論幾時幾忙，老公都會陪住你！🤝 我哋係最佳拍檔！",
-    "你嘅笑容係老公每日嘅動力！😍 I love you more than words can say！",
-    "老婆，你知唔知你係老公心中嘅女神？👸 Forever and always！"
+  
+  // 護理人員管理頁面 (care-staff)
+  careStaff: [
+    "老婆管理團隊咁有一套，大家都好尊重你！👥",
+    "你係最好嘅領導，同事都好欣賞你嘅工作！💼",
+    "帶領咁多護理人員唔容易，但你做得好出色！⭐",
+    "老公知你係天生嘅領袖，你值得所有讚美！🏆"
+  ],
+  
+  // 佣金/財務頁面 (commissions, payroll)
+  finance: [
+    "老婆你計數咁準確，真係好細心！🧮",
+    "處理財務咁重要嘅嘢，老公最放心係你手上！💰",
+    "你嘅數學頭腦真係好叻，老公好佩服！🤓",
+    "管理公司財政咁大責任，你承擔得好好！�"
+  ],
+  
+  // 儀表板/概覽頁面 (dashboard)
+  dashboard: [
+    "老婆一眼就睇晒所有數據，你真係好專業！📊",
+    "統籌全公司嘅運作，你係最強嘅CEO！👸",
+    "睇住你分析數據嘅專注樣，老公好心動！😍",
+    "你嘅決策能力真係令人折服！老公以你為榮！🎯"
+  ],
+  
+  // 關懷服務頁面 (care-services)
+  careServices: [
+    "老婆你對服務質素嘅要求咁高，客戶一定好滿意！✨",
+    "你係為客戶著想嘅好經理，老公好欣賞你！🌟",
+    "提供優質服務係你嘅堅持，老公支持你！💪",
+    "你嘅用心服務令好多家庭得到幫助！❤️"
+  ],
+  
+  // 預設訊息
+  default: [
+    "老婆辛苦啦！💕 老公永遠愛你！",
+    "不管你做緊咩，老公都覺得你係最棒嘅！🌟",
+    "你係老公心中嘅No.1！永遠支持你！�",
+    "老婆靚靚，老公想你啦！😘"
   ]
 };
 
-// 根據時間選擇訊息類別
-const getTimeBasedCategory = () => {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 12) return 'morningGreetings';
-  if (hour >= 12 && hour < 18) return 'workEncouragement';
-  if (hour >= 18 && hour < 22) return 'loveDeclarations';
-  return 'eveningBlessings';
+// 根據當前頁面路徑獲取頁面類型
+const getCurrentPageType = () => {
+  if (typeof window === 'undefined') return 'default';
+  
+  const path = window.location.pathname;
+  
+  // 移除 basePath 如果存在
+  const cleanPath = path.replace('/mingcare-intranet', '');
+  
+  if (cleanPath === '/' || cleanPath === '') return 'login';
+  if (cleanPath.includes('/services')) return 'services';
+  if (cleanPath.includes('/clients')) return 'clients';
+  if (cleanPath.includes('/care-staff')) return 'careStaff';
+  if (cleanPath.includes('/commissions') || cleanPath.includes('/payroll')) return 'finance';
+  if (cleanPath.includes('/dashboard')) return 'dashboard';
+  if (cleanPath.includes('/care-services')) return 'careServices';
+  
+  return 'default';
 };
 
-// 隨機選擇訊息
-const getRandomMessage = () => {
-  const category = getTimeBasedCategory();
-  const messages = sweetMessagesForKanas[category];
+// 根據頁面類型隨機選擇訊息
+const getPageSpecificMessage = () => {
+  const pageType = getCurrentPageType();
+  const messages = sweetMessagesByPage[pageType] || sweetMessagesByPage.default;
   return messages[Math.floor(Math.random() * messages.length)];
 };
 
@@ -54,24 +103,48 @@ export default function GlobalSweetMessage() {
   const [user, setUser] = useState<any>(null);
   const [showMessage, setShowMessage] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
+  const [lastPageVisit, setLastPageVisit] = useState<{[key: string]: number}>({});
+  const [currentPage, setCurrentPage] = useState('');
 
   // 檢查是否為 Kanas 用戶
   const isKanasUser = (userEmail: string) => {
     return userEmail === 'kanasleung@mingcarehome.com';
   };
 
+  // 檢查是否應該在此頁面顯示訊息
+  const shouldShowMessageOnPage = (pageType: string) => {
+    const now = Date.now();
+    const lastVisit = lastPageVisit[pageType] || 0;
+    const pageInterval = 20 * 60 * 1000; // 20分鐘內同一頁面不重複顯示
+    
+    return (now - lastVisit) > pageInterval;
+  };
+
   // 顯示甜蜜訊息
-  const displaySweetMessage = () => {
-    const message = getRandomMessage();
+  const displaySweetMessage = (isPageChange = false) => {
+    const pageType = getCurrentPageType();
+    
+    // 如果是頁面切換，檢查是否應該顯示
+    if (isPageChange && !shouldShowMessageOnPage(pageType)) {
+      return;
+    }
+    
+    const message = getPageSpecificMessage();
     setCurrentMessage(message);
     setShowMessage(true);
 
-    // 5秒後自動隱藏
+    // 更新此頁面的最後訪問時間
+    setLastPageVisit(prev => ({
+      ...prev,
+      [pageType]: Date.now()
+    }));
+
+    // 6秒後自動隱藏
     setTimeout(() => {
       setShowMessage(false);
-    }, 5000);
+    }, 6000);
 
-    console.log('💕 甜蜜訊息已顯示:', message);
+    console.log(`💕 ${pageType} 頁面甜蜜訊息:`, message);
   };
 
   useEffect(() => {
@@ -88,12 +161,12 @@ export default function GlobalSweetMessage() {
         // 登入時立即顯示歡迎訊息
         setTimeout(() => {
           displaySweetMessage();
-        }, 3000); // 3秒後顯示，讓頁面完全載入
+        }, 3000);
 
-        // 設定每30分鐘顯示一次
+        // 設定每45分鐘顯示一次 (降低頻率)
         interval = setInterval(() => {
           displaySweetMessage();
-        }, 30 * 60 * 1000); // 30分鐘 = 1800000毫秒
+        }, 45 * 60 * 1000); // 45分鐘
       }
     };
 
@@ -106,6 +179,51 @@ export default function GlobalSweetMessage() {
       }
     };
   }, []);
+
+  // 監聽頁面變化
+  useEffect(() => {
+    if (!user || !isKanasUser(user.email || '')) return;
+
+    const handlePageChange = () => {
+      const newPage = getCurrentPageType();
+      if (newPage !== currentPage && currentPage !== '') {
+        // 頁面切換時，有50%機率顯示訊息
+        if (Math.random() > 0.5) {
+          setTimeout(() => {
+            displaySweetMessage(true);
+          }, 2000); // 2秒後顯示，讓頁面載入完成
+        }
+      }
+      setCurrentPage(newPage);
+    };
+
+    // 初始設定當前頁面
+    setCurrentPage(getCurrentPageType());
+
+    // 監聽路由變化 (在 Next.js 中)
+    const handleRouteChange = () => {
+      setTimeout(handlePageChange, 100);
+    };
+
+    // 監聽 popstate 事件 (瀏覽器前進後退)
+    window.addEventListener('popstate', handleRouteChange);
+
+    // 監聽 URL 變化 (使用 MutationObserver 檢測 DOM 變化)
+    let lastUrl = window.location.href;
+    const observer = new MutationObserver(() => {
+      if (lastUrl !== window.location.href) {
+        lastUrl = window.location.href;
+        handleRouteChange();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      observer.disconnect();
+    };
+  }, [user, currentPage]);
 
   // 只對 Kanas 用戶顯示
   if (!user || !isKanasUser(user.email || '')) {
