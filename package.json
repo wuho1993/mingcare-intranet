@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:local": "rm -rf .next out && cp next.config.local.js next.config.js && next build && git checkout next.config.js",
     "start": "next start",
     "lint": "next lint",
     "export": "next build",
