@@ -106,22 +106,31 @@ export default function GlobalSweetMessage() {
   const [lastPageVisit, setLastPageVisit] = useState<{[key: string]: number}>({});
   const [currentPage, setCurrentPage] = useState('');
 
-  // 檢查是否為 Kanas 用戶
+  // 檢查是否為 Kanas 用戶 - 只有這個特定帳戶才會顯示甜蜜訊息
   const isKanasUser = (userEmail: string) => {
-    return userEmail === 'kanasleung@mingcarehome.com';
+    // 嚴格檢查，只允許這個特定的電子郵件地址
+    const allowedEmail = 'kanasleung@mingcarehome.com';
+    return userEmail?.toLowerCase().trim() === allowedEmail.toLowerCase();
   };
 
   // 檢查是否應該在此頁面顯示訊息
   const shouldShowMessageOnPage = (pageType: string) => {
     const now = Date.now();
     const lastVisit = lastPageVisit[pageType] || 0;
-    const pageInterval = 20 * 60 * 1000; // 20分鐘內同一頁面不重複顯示
+    const pageInterval = 60 * 60 * 1000; // 1小時內同一頁面不重複顯示
     
     return (now - lastVisit) > pageInterval;
   };
 
-  // 顯示甜蜜訊息
-  const displaySweetMessage = (isPageChange = false) => {
+  // 顯示甜蜜訊息 - 每次都重新驗證用戶身份
+  const displaySweetMessage = async (isPageChange = false) => {
+    // 再次驗證用戶身份，確保安全
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser || !isKanasUser(currentUser.email || '')) {
+      console.log('❌ 用戶驗證失敗，停止顯示甜蜜訊息');
+      return;
+    }
+
     const pageType = getCurrentPageType();
     
     // 如果是頁面切換，檢查是否應該顯示
@@ -156,17 +165,21 @@ export default function GlobalSweetMessage() {
       setUser(user);
 
       if (user && isKanasUser(user.email || '')) {
-        console.log('💕 Kanas 用戶已登入，啟動甜蜜訊息系統');
+        console.log('💕 甜蜜訊息系統已為 Kanas 啟動 (僅限 kanasleung@mingcarehome.com)');
         
         // 登入時立即顯示歡迎訊息
         setTimeout(() => {
           displaySweetMessage();
         }, 3000);
 
-        // 設定每45分鐘顯示一次 (降低頻率)
+        // 設定每1-2小時隨機顯示一次 (降低干擾)
+        const minInterval = 60 * 60 * 1000; // 1小時
+        const maxInterval = 120 * 60 * 1000; // 2小時
+        const randomInterval = minInterval + Math.random() * (maxInterval - minInterval);
+        
         interval = setInterval(() => {
           displaySweetMessage();
-        }, 45 * 60 * 1000); // 45分鐘
+        }, randomInterval);
       }
     };
 
@@ -187,11 +200,11 @@ export default function GlobalSweetMessage() {
     const handlePageChange = () => {
       const newPage = getCurrentPageType();
       if (newPage !== currentPage && currentPage !== '') {
-        // 頁面切換時，有50%機率顯示訊息
-        if (Math.random() > 0.5) {
+        // 頁面切換時，有20%機率顯示訊息 (降低頻率)
+        if (Math.random() > 0.8) {
           setTimeout(() => {
             displaySweetMessage(true);
-          }, 2000); // 2秒後顯示，讓頁面載入完成
+          }, 3000); // 3秒後顯示，讓頁面載入完成
         }
       }
       setCurrentPage(newPage);
@@ -225,8 +238,13 @@ export default function GlobalSweetMessage() {
     };
   }, [user, currentPage]);
 
-  // 只對 Kanas 用戶顯示
+  // 嚴格檢查：只對 kanasleung@mingcarehome.com 顯示
   if (!user || !isKanasUser(user.email || '')) {
+    return null;
+  }
+
+  // 雙重檢查電子郵件地址
+  if (user.email?.toLowerCase().trim() !== 'kanasleung@mingcarehome.com') {
     return null;
   }
 
