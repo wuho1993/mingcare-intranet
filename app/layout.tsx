@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import type { Viewport } from 'next'
+import GlobalSweetMessage from '../components/GlobalSweetMessage'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,7 +28,10 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} mobile-friendly`}>{children}</body>
+      <body className={`${inter.className} mobile-friendly`}>
+        {children}
+        <GlobalSweetMessage />
+      </body>
     </html>
   )
 }
