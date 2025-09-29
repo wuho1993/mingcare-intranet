@@ -187,12 +187,6 @@ export default function GlobalSweetMessage() {
           }, 3000); // 3秒後顯示歡迎訊息
         }
         
-        // 額外的測試訊息（每次都會觸發，用於測試）
-        setTimeout(() => {
-          console.log('🎯 測試訊息觸發...');
-          displaySweetMessage();
-        }, 8000); // 8秒後顯示測試訊息
-        
         // 設定每1-2小時隨機顯示一次
         const minInterval = 60 * 60 * 1000; // 1小時
         const maxInterval = 120 * 60 * 1000; // 2小時
@@ -289,34 +283,6 @@ export default function GlobalSweetMessage() {
 
   return (
     <>
-      {/* 測試按鈕 - 臨時在所有環境顯示以便調試 */}
-      {user && isKanasUser(user.email || '') && (
-        <div style={{ 
-          position: 'fixed', 
-          top: '10px', 
-          right: '10px', 
-          zIndex: 10001,
-          background: 'rgba(255, 105, 180, 0.9)',
-          padding: '5px 10px',
-          borderRadius: '20px',
-          fontSize: '12px'
-        }}>
-          <button
-            onClick={() => displaySweetMessage()}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
-              fontWeight: '500'
-            }}
-          >
-            ❤️ 測試訊息
-          </button>
-        </div>
-      )}
       
       {showMessage && (
         <div className="sweet-message-overlay">
