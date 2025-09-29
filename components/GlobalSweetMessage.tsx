@@ -81,21 +81,23 @@ const getCurrentPageType = () => {
   // 移除 basePath 如果存在
   const cleanPath = path.replace('/mingcare-intranet', '');
   
-  if (cleanPath === '/' || cleanPath === '') return 'login';
-  if (cleanPath.includes('/services')) return 'services';
-  if (cleanPath.includes('/clients')) return 'clients';
-  if (cleanPath.includes('/care-staff')) return 'careStaff';
-  if (cleanPath.includes('/commissions') || cleanPath.includes('/payroll')) return 'finance';
-  if (cleanPath.includes('/dashboard')) return 'dashboard';
-  if (cleanPath.includes('/care-services')) return 'careServices';
+  let pageType = 'default';
+  if (cleanPath === '/' || cleanPath === '') pageType = 'login';
+  else if (cleanPath.includes('/services')) pageType = 'services';
+  else if (cleanPath.includes('/clients')) pageType = 'clients';
+  else if (cleanPath.includes('/care-staff')) pageType = 'careStaff';
+  else if (cleanPath.includes('/commissions') || cleanPath.includes('/payroll')) pageType = 'finance';
+  else if (cleanPath.includes('/dashboard')) pageType = 'dashboard';
+  else if (cleanPath.includes('/care-services')) pageType = 'careServices';
   
-  return 'default';
+  console.log('🔍 頁面檢測:', { originalPath: path, cleanPath, pageType });
+  return pageType;
 };
 
 // 根據頁面類型隨機選擇訊息
 const getPageSpecificMessage = () => {
   const pageType = getCurrentPageType();
-  const messages = sweetMessagesByPage[pageType] || sweetMessagesByPage.default;
+  const messages = sweetMessagesByPage[pageType as keyof typeof sweetMessagesByPage] || sweetMessagesByPage.default;
   return messages[Math.floor(Math.random() * messages.length)];
 };
 
@@ -163,6 +165,12 @@ export default function GlobalSweetMessage() {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      console.log('🔍 用戶驗證結果:', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        isKanas: user ? isKanasUser(user.email || '') : false
+      });
 
       if (user && isKanasUser(user.email || '')) {
         console.log('💕 甜蜜訊息系統已為 Kanas 啟動 (僅限 kanasleung@mingcarehome.com)');
@@ -248,6 +256,33 @@ export default function GlobalSweetMessage() {
 
   return (
     <>
+      {/* 測試按鈕 - 只在開發環境顯示 */}
+      {process.env.NODE_ENV === 'development' && user && isKanasUser(user.email || '') && (
+        <div style={{ 
+          position: 'fixed', 
+          top: '10px', 
+          right: '10px', 
+          zIndex: 10001,
+          background: 'rgba(255, 105, 180, 0.9)',
+          padding: '5px 10px',
+          borderRadius: '20px',
+          fontSize: '12px'
+        }}>
+          <button
+            onClick={() => displaySweetMessage()}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            💕 測試訊息
+          </button>
+        </div>
+      )}
+      
       {showMessage && (
         <div className="sweet-message-overlay">
           <div className="sweet-message-toast">
