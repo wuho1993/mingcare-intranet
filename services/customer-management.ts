@@ -367,9 +367,18 @@ export class CustomerManagementService {
         }
       }
 
+      // 轉換表單字段到資料庫字段（處理欄位對應）
+      const mappedData = { ...customerData };
+      
+      // 重要：staff_owner (表單) → project_manager (資料庫)
+      if ('staff_owner' in mappedData && (mappedData as any).staff_owner) {
+        mappedData.project_manager = (mappedData as any).staff_owner as string;
+        delete (mappedData as any).staff_owner;
+      }
+
       // 清理空字串，轉為 null 以避免資料庫約束問題
       const cleanedData = Object.fromEntries(
-        Object.entries(customerData).map(([key, value]) => [
+        Object.entries(mappedData).map(([key, value]) => [
           key,
           typeof value === 'string' && value.trim() === '' ? null : value
         ])
