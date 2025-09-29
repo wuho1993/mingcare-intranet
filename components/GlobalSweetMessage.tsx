@@ -124,23 +124,21 @@ export default function GlobalSweetMessage() {
     return (now - lastVisit) > pageInterval;
   };
 
-  // 顯示甜蜜訊息 - 每次都重新驗證用戶身份
-  const displaySweetMessage = async (isPageChange = false) => {
-    // 再次驗證用戶身份，確保安全
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (!currentUser || !isKanasUser(currentUser.email || '')) {
-      console.log('❌ 用戶驗證失敗，停止顯示甜蜜訊息');
-      return;
-    }
-
+  // 顯示甜蜜訊息 - 簡化版本，移除驗證步驟避免異步問題
+  const displaySweetMessage = (isPageChange = false) => {
+    console.log('🚀 開始顯示甜蜜訊息...');
+    
     const pageType = getCurrentPageType();
     
     // 如果是頁面切換，檢查是否應該顯示
     if (isPageChange && !shouldShowMessageOnPage(pageType)) {
+      console.log('⏭️ 頁面切換太頻繁，跳過顯示');
       return;
     }
     
     const message = getPageSpecificMessage();
+    console.log('💬 準備顯示訊息:', message);
+    
     setCurrentMessage(message);
     setShowMessage(true);
 
@@ -152,10 +150,11 @@ export default function GlobalSweetMessage() {
 
     // 6秒後自動隱藏
     setTimeout(() => {
+      console.log('⏰ 自動隱藏甜蜜訊息');
       setShowMessage(false);
     }, 6000);
 
-    console.log(`💕 ${pageType} 頁面甜蜜訊息:`, message);
+    console.log(`💕 ${pageType} 頁面甜蜜訊息已觸發:`, message);
   };
 
   useEffect(() => {
@@ -253,6 +252,13 @@ export default function GlobalSweetMessage() {
   if (user.email?.toLowerCase().trim() !== 'kanasleung@mingcarehome.com') {
     return null;
   }
+
+  console.log('🎨 渲染狀態:', { 
+    showMessage, 
+    currentMessage, 
+    userEmail: user?.email,
+    isDev: process.env.NODE_ENV === 'development'
+  });
 
   return (
     <>
