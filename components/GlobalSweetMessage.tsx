@@ -167,15 +167,13 @@ export default function GlobalSweetMessage() {
       if (user && isKanasUser(user.email || '')) {
         console.log('💕 甜蜜訊息系統已為 Kanas 啟動 (僅限 kanasleung@mingcarehome.com)');
         
-        // 登入時立即顯示歡迎訊息
-        setTimeout(() => {
-          displaySweetMessage();
-        }, 3000);
-
-        // 設定每1-2小時隨機顯示一次 (降低干擾)
+        // 只設定定期顯示，不在登入時立即顯示
+        // 設定每1-2小時隨機顯示一次
         const minInterval = 60 * 60 * 1000; // 1小時
         const maxInterval = 120 * 60 * 1000; // 2小時
         const randomInterval = minInterval + Math.random() * (maxInterval - minInterval);
+        
+        console.log(`⏰ 下次甜蜜訊息將在 ${Math.round(randomInterval / 60000)} 分鐘後顯示`);
         
         interval = setInterval(() => {
           displaySweetMessage();
