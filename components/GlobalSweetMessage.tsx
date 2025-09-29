@@ -174,7 +174,25 @@ export default function GlobalSweetMessage() {
       if (user && isKanasUser(user.email || '')) {
         console.log('💕 甜蜜訊息系統已為 Kanas 啟動 (僅限 kanasleung@mingcarehome.com)');
         
-        // 只設定定期顯示，不在登入時立即顯示
+        // 檢查是否是今天第一次登入
+        const today = new Date().toDateString();
+        const lastLoginDate = localStorage.getItem('kanas_last_login_date');
+        
+        if (lastLoginDate !== today) {
+          // 今天第一次登入，顯示歡迎訊息
+          localStorage.setItem('kanas_last_login_date', today);
+          setTimeout(() => {
+            console.log('🌅 今日首次登入，顯示歡迎訊息');
+            displaySweetMessage();
+          }, 3000); // 3秒後顯示歡迎訊息
+        }
+        
+        // 額外的測試訊息（每次都會觸發，用於測試）
+        setTimeout(() => {
+          console.log('🎯 測試訊息觸發...');
+          displaySweetMessage();
+        }, 8000); // 8秒後顯示測試訊息
+        
         // 設定每1-2小時隨機顯示一次
         const minInterval = 60 * 60 * 1000; // 1小時
         const maxInterval = 120 * 60 * 1000; // 2小時
@@ -185,6 +203,15 @@ export default function GlobalSweetMessage() {
         interval = setInterval(() => {
           displaySweetMessage();
         }, randomInterval);
+
+        // 添加全域測試函數
+        if (typeof window !== 'undefined') {
+          (window as any).testSweetMessage = () => {
+            console.log('🧪 手動觸發甜蜜訊息測試');
+            displaySweetMessage();
+          };
+          console.log('💡 提示：可在 Console 輸入 testSweetMessage() 手動測試');
+        }
       }
     };
 
@@ -262,8 +289,8 @@ export default function GlobalSweetMessage() {
 
   return (
     <>
-      {/* 測試按鈕 - 只在開發環境顯示 */}
-      {process.env.NODE_ENV === 'development' && user && isKanasUser(user.email || '') && (
+      {/* 測試按鈕 - 臨時在所有環境顯示以便調試 */}
+      {user && isKanasUser(user.email || '') && (
         <div style={{ 
           position: 'fixed', 
           top: '10px', 
@@ -281,10 +308,12 @@ export default function GlobalSweetMessage() {
               border: 'none',
               color: 'white',
               cursor: 'pointer',
-              fontSize: '12px'
+              fontSize: '14px',
+              fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
+              fontWeight: '500'
             }}
           >
-            💕 測試訊息
+            ❤️ 測試訊息
           </button>
         </div>
       )}
@@ -294,13 +323,13 @@ export default function GlobalSweetMessage() {
           <div className="sweet-message-toast">
             <div className="sweet-message-content">
               <div className="sweet-message-header">
-                <span className="sweet-message-icon">💕</span>
+                <span className="sweet-message-icon">❤️</span>
                 <span className="sweet-message-title">來自老公的愛</span>
                 <button 
                   className="sweet-message-close"
                   onClick={() => setShowMessage(false)}
                 >
-                  ×
+                  ✕
                 </button>
               </div>
               <div className="sweet-message-text">
@@ -352,6 +381,10 @@ export default function GlobalSweetMessage() {
         .sweet-message-icon {
           font-size: 24px;
           margin-right: 10px;
+          display: inline-block;
+          font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+          line-height: 1;
+          vertical-align: middle;
         }
 
         .sweet-message-title {
