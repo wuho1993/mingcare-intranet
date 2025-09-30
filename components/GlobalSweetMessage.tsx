@@ -102,6 +102,10 @@ const getPageSpecificMessage = () => {
 };
 
 export default function GlobalSweetMessage() {
+  // 🔇 暫時停用甜蜜訊息功能
+  // Temporarily disable sweet message feature
+  return null;
+
   const [user, setUser] = useState<any>(null);
   const [showMessage, setShowMessage] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
