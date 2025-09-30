@@ -41,6 +41,12 @@ import {
   calculateVoucherSummary,
   VoucherRate
 } from '../../services/billing-salary-management'
+import {
+  exportCalendar,
+  exportCurrentMonthSchedule,
+  exportStaffSchedule,
+  CalendarExportOptions
+} from '../../services/calendar-export'
 
 // 佣金相關類型定義
 interface CommissionRate {
@@ -1112,6 +1118,8 @@ interface ReportsTabProps {
   updateDateRange: (preset: DateRangePreset) => void
   exportLoading: boolean
   handleExport: () => void
+  onCalendarExport: (format: 'ics' | 'google' | 'outlook') => void
+  calendarExportLoading: boolean
   onEdit: (record: BillingSalaryRecord) => void
   onDelete: (recordId: string) => void
   refreshTrigger: number
@@ -1672,7 +1680,15 @@ function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 排程頁面組件
-function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
+function ScheduleTab({ 
+  filters, 
+  onCalendarExport, 
+  calendarExportLoading 
+}: { 
+  filters: BillingSalaryFilters;
+  onCalendarExport: (format: 'ics' | 'google' | 'outlook') => void;
+  calendarExportLoading: boolean;
+}) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [scheduleData, setScheduleData] = useState<Record<string, any[]>>({})
   const [showAddModal, setShowAddModal] = useState(false)
@@ -2099,6 +2115,30 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 
             {/* 多天排班控制 */}
             <div className="flex items-center gap-4">
+              {/* 日曆導出按鈕 */}
+              <div className="relative">
+                <button
+                  onClick={() => onCalendarExport('ics')}
+                  disabled={calendarExportLoading}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title="導出為 ICS 日曆文件"
+                >
+                  {calendarExportLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <span>導出中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>導出日曆</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               {isMultiSelectMode && selectedDates.length > 0 && (
                 <div className="text-sm text-text-secondary">
                   已選擇 {selectedDates.length} 天
@@ -2390,7 +2430,7 @@ function ScheduleTab({ filters }: { filters: BillingSalaryFilters }) {
 }
 
 // 報表頁面組件
-function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, onEdit, onDelete, refreshTrigger, onRefresh, recordUpdateTimes }: ReportsTabProps) {
+function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handleExport, onCalendarExport, calendarExportLoading, onEdit, onDelete, refreshTrigger, onRefresh, recordUpdateTimes }: ReportsTabProps) {
   const [careStaffList, setCareStaffList] = useState<{ name_chinese: string }[]>([])
   const [careStaffLoading, setCareStaffLoading] = useState(true)
 
@@ -2886,7 +2926,29 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
 
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              {/* 導出按鈕 */}
+              {/* 日曆導出按鈕 */}
+              <button
+                onClick={() => onCalendarExport('ics')}
+                disabled={calendarExportLoading}
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                title="導出為日曆文件"
+              >
+                {calendarExportLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+                    <span>導出中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>導出日曆</span>
+                  </>
+                )}
+              </button>
+
+              {/* 導出報表按鈕 */}
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
@@ -2937,6 +2999,7 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const [kpiLoading, setKpiLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
+  const [calendarExportLoading, setCalendarExportLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
   const router = useRouter()
 
@@ -3467,6 +3530,59 @@ export default function ServicesPage() {
   // 導出功能 - 支持PDF和項目選擇
   const handleExport = () => {
     setShowExportModal(true)
+  }
+
+  // 日曆導出功能
+  const handleCalendarExport = async (format: 'ics' | 'google' | 'outlook' = 'ics') => {
+    setCalendarExportLoading(true)
+    try {
+      console.log('🚀 開始導出日曆，格式:', format)
+      
+      const exportOptions: CalendarExportOptions = {
+        format,
+        filters,
+        includeStaffDetails: true,
+        includeCustomerDetails: false,
+        timezone: 'Asia/Hong_Kong'
+      }
+
+      const result = await exportCalendar(exportOptions)
+      
+      if (result.success && result.data) {
+        // 創建下載連結
+        const blob = new Blob([result.data as string], { 
+          type: format === 'ics' ? 'text/calendar;charset=utf-8' : 'text/plain;charset=utf-8'
+        })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = result.filename || `mingcare_calendar_${format}.ics`
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
+        // 根據格式提供不同的提示
+        if (format === 'ics') {
+          alert('📅 日曆文件已下載！\n\n使用方法：\n• Apple Calendar: 雙擊文件直接匯入\n• Google Calendar: 設定 > 匯入與匯出 > 選擇文件\n• Outlook: 檔案 > 開啟與匯出 > 匯入/匯出')
+        } else if (format === 'google') {
+          alert('📅 Google Calendar 文件已下載！\n\n使用方法：\n1. 前往 Google Calendar\n2. 點擊左側「其他日曆」旁的 +\n3. 選擇「匯入」\n4. 上傳剛下載的文件')
+        } else if (format === 'outlook') {
+          alert('📅 Outlook 文件已下載！\n\n使用方法：\n1. 開啟 Outlook\n2. 檔案 > 開啟與匯出 > 匯入/匯出\n3. 選擇「匯入 iCalendar 或 vCalendar 檔案」\n4. 選擇剛下載的文件')
+        }
+        
+        console.log('✅ 日曆導出成功')
+      } else {
+        console.error('❌ 日曆導出失敗:', result.error)
+        alert(`日曆導出失敗: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('❌ 日曆導出錯誤:', error)
+      alert('日曆導出失敗，請稍後再試')
+    } finally {
+      setCalendarExportLoading(false)
+    }
   }
 
   const handleExportConfirm = async () => {
@@ -5280,7 +5396,11 @@ export default function ServicesPage() {
         )}
 
         {activeTab === 'schedule' && (
-          <ScheduleTab filters={filters} />
+          <ScheduleTab 
+            filters={filters} 
+            onCalendarExport={handleCalendarExport}
+            calendarExportLoading={calendarExportLoading}
+          />
         )}
 
         {activeTab === 'reports' && (
@@ -5290,6 +5410,8 @@ export default function ServicesPage() {
             updateDateRange={updateDateRange}
             exportLoading={exportLoading}
             handleExport={handleExport}
+            onCalendarExport={handleCalendarExport}
+            calendarExportLoading={calendarExportLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
             refreshTrigger={refreshTrigger}
