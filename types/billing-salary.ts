@@ -71,7 +71,7 @@ export interface BillingSalaryFilters {
     end: string // YYYY-MM-DD
   }
   serviceType?: ServiceType
-  projectCategory?: ProjectCategory[]  // 改為陣列類型支援多選
+  projectCategory?: ProjectCategory | ProjectCategory[]  // 支援單選或複選
   projectManager?: ProjectManager
   careStaffName?: string
   searchTerm?: string // customer_name / phone / customer_id

@@ -108,12 +108,12 @@ async function getScheduleDataForExport(filters: BillingSalaryFilters) {
     }
 
     if (Array.isArray(filters.projectCategory)) {
-      const categories = filters.projectCategory.filter(category => typeof category === 'string' && category.trim().length > 0)
+      const categories = filters.projectCategory.filter(category => !!category)
       if (categories.length > 0) {
         query = query.in('project_category', categories)
       }
-    } else if (typeof filters.projectCategory === 'string' && filters.projectCategory.trim().length > 0) {
-      query = query.eq('project_category', filters.projectCategory.trim())
+    } else if (filters.projectCategory) {
+      query = query.eq('project_category', filters.projectCategory)
     }
 
     if (filters.projectManager) {

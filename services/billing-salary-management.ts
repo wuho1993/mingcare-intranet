@@ -17,6 +17,14 @@ import type {
   SearchSuggestion
 } from '../types/billing-salary'
 
+// Helper to normalize project category filters to an array
+function normalizeProjectCategories(
+  projectCategory: BillingSalaryFilters['projectCategory']
+): ProjectCategory[] {
+  if (!projectCategory) return []
+  return Array.isArray(projectCategory) ? projectCategory : [projectCategory]
+}
+
 // =============================================================================
 // 基礎 CRUD 操作
 // =============================================================================
@@ -42,8 +50,9 @@ export async function fetchBillingSalaryRecords(
       query = query.eq('service_type', filters.serviceType)
     }
 
-    if (filters.projectCategory && filters.projectCategory.length > 0) {
-      query = query.in('project_category', filters.projectCategory)
+    const projectCategories = normalizeProjectCategories(filters.projectCategory)
+    if (projectCategories.length > 0) {
+      query = query.in('project_category', projectCategories)
     }
 
     if (filters.projectManager) {
@@ -655,8 +664,11 @@ export async function exportToCSV(
       query = query.eq('service_type', filters.serviceType)
     }
 
-    if (filters.projectCategory) {
-      query = query.eq('project_category', filters.projectCategory)
+    const projectCategories = normalizeProjectCategories(filters.projectCategory)
+    if (projectCategories.length === 1) {
+      query = query.eq('project_category', projectCategories[0])
+    } else if (projectCategories.length > 1) {
+      query = query.in('project_category', projectCategories)
     }
 
     if (filters.projectManager) {

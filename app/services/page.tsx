@@ -2446,6 +2446,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   // 項目分類下拉選單狀態
   const [isProjectCategoryDropdownOpen, setIsProjectCategoryDropdownOpen] = useState(false)
 
+  const selectedProjectCategories = Array.isArray(filters.projectCategory)
+    ? filters.projectCategory
+    : filters.projectCategory
+    ? [filters.projectCategory]
+    : []
+
   // 計算下拉選單位置
   const updateDropdownPosition = () => {
     if (searchInputRef.current) {
@@ -2810,8 +2816,8 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   onClick={() => setIsProjectCategoryDropdownOpen(!isProjectCategoryDropdownOpen)}
                 >
                   <div className="flex flex-wrap gap-1">
-                    {filters.projectCategory && filters.projectCategory.length > 0 ? (
-                      filters.projectCategory.map(category => {
+                    {selectedProjectCategories.length > 0 ? (
+                      selectedProjectCategories.map(category => {
                         const option = PROJECT_CATEGORY_OPTIONS.find(opt => opt.value === category)
                         return (
                           <span
@@ -2823,10 +2829,17 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setFilters(prev => ({
-                                  ...prev,
-                                  projectCategory: prev.projectCategory?.filter(c => c !== category) || []
-                                }))
+                                setFilters(prev => {
+                                  const prevCategories = Array.isArray(prev.projectCategory)
+                                    ? prev.projectCategory
+                                    : prev.projectCategory
+                                    ? [prev.projectCategory]
+                                    : []
+                                  return {
+                                    ...prev,
+                                    projectCategory: prevCategories.filter(c => c !== category)
+                                  }
+                                })
                               }}
                               className="ml-1 text-mingcare-blue hover:text-red-600"
                             >
@@ -2847,7 +2860,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 {isProjectCategoryDropdownOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
                     {PROJECT_CATEGORY_OPTIONS.map(option => {
-                      const isSelected = filters.projectCategory?.includes(option.value) || false
+                      const isSelected = selectedProjectCategories.includes(option.value)
                       return (
                         <div
                           key={option.value}
@@ -2855,15 +2868,20 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                             isSelected ? 'bg-mingcare-blue/5 text-mingcare-blue' : 'text-text-primary'
                           }`}
                           onClick={() => {
-                            const currentCategories = filters.projectCategory || []
-                            const newCategories = isSelected
-                              ? currentCategories.filter(c => c !== option.value)
-                              : [...currentCategories, option.value]
-
-                            setFilters(prev => ({
-                              ...prev,
-                              projectCategory: newCategories
-                            }))
+                            setFilters(prev => {
+                              const prevCategories = Array.isArray(prev.projectCategory)
+                                ? prev.projectCategory
+                                : prev.projectCategory
+                                ? [prev.projectCategory]
+                                : []
+                              const newCategories = isSelected
+                                ? prevCategories.filter(c => c !== option.value)
+                                : [...prevCategories, option.value]
+                              return {
+                                ...prev,
+                                projectCategory: newCategories
+                              }
+                            })
                           }}
                         >
                           <span className="truncate">{option.label}</span>
