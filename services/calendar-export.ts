@@ -107,8 +107,13 @@ async function getScheduleDataForExport(filters: BillingSalaryFilters) {
       query = query.eq('service_type', filters.serviceType)
     }
 
-    if (filters.projectCategory) {
-      query = query.eq('project_category', filters.projectCategory)
+    if (Array.isArray(filters.projectCategory)) {
+      const categories = filters.projectCategory.filter(category => typeof category === 'string' && category.trim().length > 0)
+      if (categories.length > 0) {
+        query = query.in('project_category', categories)
+      }
+    } else if (typeof filters.projectCategory === 'string' && filters.projectCategory.trim().length > 0) {
+      query = query.eq('project_category', filters.projectCategory.trim())
     }
 
     if (filters.projectManager) {

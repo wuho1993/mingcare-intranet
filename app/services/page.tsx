@@ -3735,6 +3735,9 @@ export default function ServicesPage() {
     const serviceDate = new Date(firstRecord?.service_date || today)
     const yearMonth = `${serviceDate.getFullYear()}-${String(serviceDate.getMonth() + 1).padStart(2, '0')}`
 
+    const logoUrl = getAssetPath('images/mingcare-logo.png')
+    const stampUrl = getAssetPath('images/company-stamp.png')
+
     // 創建HTML內容
     const htmlContent = `
       <!DOCTYPE html>
@@ -3899,7 +3902,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <div class="company-logo">
-              <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" onerror="this.style.display='none'">
+              <img src="${logoUrl}" alt="明家居家護理標誌" onerror="this.style.display='none'">
             </div>
           </div>
 
@@ -3995,7 +3998,7 @@ export default function ServicesPage() {
           </div>
           <!-- 右邊：公司印章 -->
           <div style="flex: 0 0 auto;">
-            <img src="/images/company-stamp.png" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
+            <img src="${stampUrl}" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
           </div>
         </div>
       </body>
@@ -4023,6 +4026,9 @@ export default function ServicesPage() {
 
     const today = new Date()
     const dateStr = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`
+
+    const logoUrl = getAssetPath('images/mingcare-logo.png')
+    const stampUrl = getAssetPath('images/company-stamp.png')
 
     // 創建HTML內容
     const htmlContent = `
@@ -4174,7 +4180,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <div class="company-logo">
-              <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" onerror="this.style.display='none'">
+              <img src="${logoUrl}" alt="明家居家護理標誌" onerror="this.style.display='none'">
             </div>
           </div>
         </div>
@@ -4221,7 +4227,7 @@ export default function ServicesPage() {
           </div>
           <!-- 右邊：公司印章 -->
           <div style="flex: 0 0 auto;">
-            <img src="/images/company-stamp.png" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
+            <img src="${stampUrl}" alt="公司印章" style="width: 80px; height: auto;" onerror="this.style.display='none'">
           </div>
         </div>
       </body>
@@ -4634,6 +4640,9 @@ export default function ServicesPage() {
         `).join('')
       }
 
+      const logoUrl = getAssetPath('images/mingcare-logo.png')
+      const stampUrl = getAssetPath('images/company-stamp.png')
+
       // 創建可打印的HTML內容
       const printContent = `
         <!DOCTYPE html>
@@ -4890,7 +4899,7 @@ export default function ServicesPage() {
 
               <!-- Right: Company Logo -->
               <div style="flex: 0 0 auto; text-align: right;">
-                <img src={getAssetPath("images/mingcare-logo.png")} alt="明家居家護理標誌" style="height: 180px; width: auto;">
+                <img src="${logoUrl}" alt="明家居家護理標誌" style="height: 180px; width: auto;">
               </div>
             </div>
 
@@ -4929,7 +4938,7 @@ export default function ServicesPage() {
             </div>
             <!-- 右邊：公司印章 -->
             <div style="flex: 0 0 auto;">
-              <img src="/images/company-stamp.png" alt="公司印章" style="height: 80px; width: auto;">
+              <img src="${stampUrl}" alt="公司印章" style="height: 80px; width: auto;">
             </div>
           </div>
         </body>
