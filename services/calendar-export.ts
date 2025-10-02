@@ -309,7 +309,7 @@ function exportToPDF(
               const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
               const metaParts: string[] = []
               if (record.care_staff_name) metaParts.push(escapeHtml(record.care_staff_name))
-              if (record.service_type && record.project_category !== 'MC社區券(醫點）') {
+              if (record.service_type) {
                 metaParts.push(escapeHtml(record.service_type))
               }
               if (record.service_hours) metaParts.push(`${record.service_hours.toFixed(1)} 小時`)
