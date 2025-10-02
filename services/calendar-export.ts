@@ -431,8 +431,8 @@ function exportToPDF(
             letter-spacing: 0.08em;
           }
           .header-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             min-width: 240px;
           }
@@ -441,6 +441,8 @@ function exportToPDF(
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 10px 14px;
+            flex: 1 1 0;
+            min-width: 160px;
           }
           .info-label {
             display: block;
@@ -625,8 +627,8 @@ function exportToPDF(
               font-size: 14px;
             }
             .header-info {
-              grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
               gap: 8px;
+              flex-wrap: nowrap;
             }
             .calendar-grid {
               box-shadow: none;
@@ -722,10 +724,6 @@ function exportToPDF(
           </div>
           <button class="download-button" onclick="window.print()">下載 PDF</button>
           <div class="header-info">
-            <div class="info-item">
-              <span class="info-label">月份</span>
-              <span class="info-value">${escapeHtml(monthLabel)}</span>
-            </div>
             <div class="info-item">
               <span class="info-label">客戶</span>
               <span class="info-value">${escapeHtml(customerLabel)}</span>
