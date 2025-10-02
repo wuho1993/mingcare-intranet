@@ -112,10 +112,14 @@ async function getScheduleDataForExport(filters: BillingSalaryFilters) {
       query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
     }
 
-    // 注意：BillingSalaryFilters 可能沒有 customerName 欄位，使用 customer_name 替代
-    // if (filters.customerName) {
-    //   query = query.ilike('customer_name', `%${filters.customerName}%`)
-    // }
+    if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+      query = query.in('customer_id', filters.selectedCustomerIds)
+    } else if (filters.searchTerm && filters.searchTerm.trim().length >= 2) {
+      const searchTerm = filters.searchTerm.trim()
+      query = query.or(
+        `customer_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,customer_id.ilike.%${searchTerm}%`
+      )
+    }
 
     const { data, error } = await query
 

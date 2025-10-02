@@ -3562,18 +3562,22 @@ export default function ServicesPage() {
       if (result.success && result.data) {
         console.log('✅ 日曆 HTML 內容已生成')
         const htmlContent = result.data as string
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const viewer = window.open(url, '_blank', 'noopener,noreferrer')
+        const viewer = window.open('', '_blank')
 
-        if (!viewer) {
+        if (viewer && viewer.document) {
+          viewer.opener = null
+          viewer.document.open()
+          viewer.document.write(htmlContent)
+          viewer.document.close()
+        } else {
           console.warn('瀏覽器封鎖了彈出視窗，於目前頁面開啟日曆。')
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+          const url = URL.createObjectURL(blob)
           window.location.href = url
+          setTimeout(() => {
+            URL.revokeObjectURL(url)
+          }, 60_000)
         }
-
-        setTimeout(() => {
-          URL.revokeObjectURL(url)
-        }, 60_000)
       } else {
         console.error('❌ 日曆導出失敗:', result.error)
         alert(`日曆導出失敗: ${result.error}`)
