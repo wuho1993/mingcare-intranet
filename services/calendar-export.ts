@@ -267,6 +267,29 @@ function exportToPDF(
 
     const totalHours = sortedRecords.reduce((sum, record) => sum + (record.service_hours || 0), 0)
 
+    const headerItems: { label: string; value: string }[] = [
+      { label: '客戶', value: customerLabel },
+      { label: '日期範圍', value: rangeLabel }
+    ]
+
+    if (filters.careStaffName) {
+      headerItems.push({ label: '護理人員', value: filters.careStaffName })
+    }
+
+    headerItems.push(
+      { label: '排班數量', value: String(events.length) },
+      { label: '總服務時數', value: `${totalHours.toFixed(1)} 小時` },
+      { label: '服務客戶', value: uniqueCustomers.length ? `${uniqueCustomers.length} 位` : '0 位' }
+    )
+
+    const labelsHtml = headerItems
+      .map(item => `<span>${escapeHtml(item.label)}</span>`)
+      .join('<span class="info-separator">·</span>')
+
+    const valuesHtml = headerItems
+      .map(item => `<span>${escapeHtmlWithNbsp(item.value)}</span>`)
+      .join('<span class="info-separator">·</span>')
+
     const formatDateKey = (date: Date) => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -328,19 +351,18 @@ function exportToPDF(
         const eventsHtml = isWithinRange && dayRecords.length > 0
           ? dayRecords.map(record => {
               const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
-              const metaParts: string[] = []
-              if (record.care_staff_name) metaParts.push(escapeHtml(record.care_staff_name))
-              if (record.service_type) {
-                metaParts.push(escapeHtml(record.service_type))
-              }
-              if (record.service_hours) metaParts.push(`${record.service_hours.toFixed(1)} 小時`)
-              const metaLine = metaParts.length > 0 ? `<div class="event-meta">${metaParts.join(' · ')}</div>` : ''
-              const locationLine = record.service_address ? `<div class="event-location">${escapeHtml(record.service_address)}</div>` : ''
+              const hoursText = record.service_hours ? ` (${record.service_hours.toFixed(1)} 小時)` : ''
+              const timeLine = `${timeRange}${hoursText}`
+              const nameParts: string[] = []
+              if (record.customer_name) nameParts.push(escapeHtml(record.customer_name))
+              if (record.care_staff_name) nameParts.push(escapeHtml(record.care_staff_name))
+              const serviceLine = record.service_type ? `<div class="event-line event-line--service">${escapeHtml(record.service_type)}</div>` : ''
+              const locationLine = record.service_address ? `<div class="event-line event-line--location">${escapeHtml(record.service_address)}</div>` : ''
               return `
                 <div class="event">
-                  <div class="event-time">${escapeHtml(timeRange)}</div>
-                  <div class="event-title">${escapeHtml(record.customer_name || '未指定客戶')}</div>
-                  ${metaLine}
+                  <div class="event-line event-line--time">${escapeHtml(timeLine)}</div>
+                  ${nameParts.length > 0 ? `<div class="event-line">${nameParts.join(' · ')}</div>` : ''}
+                  ${serviceLine}
                   ${locationLine}
                 </div>
               `
@@ -432,32 +454,41 @@ function exportToPDF(
           }
           .header-info {
             display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            min-width: 240px;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
           }
-          .info-item {
+          .info-strip {
             background: #fff;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            flex: 1 1 0;
-            min-width: 160px;
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 12px;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
-          .info-label {
-            display: block;
-            font-size: 11px;
-            color: #64748b;
+          .info-strip span {
+            white-space: nowrap;
+          }
+          .info-strip--labels {
+            color: #60708c;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 4px;
           }
-          .info-value {
-            display: block;
+          .info-strip--values {
+            color: #1f2937;
             font-size: 14px;
             font-weight: 600;
-            color: #1f2937;
-            word-break: break-word;
+          }
+          .info-separator {
+            color: #cbd5f5;
+            font-size: 11px;
           }
           .calendar-grid {
             width: 100%;
@@ -550,45 +581,37 @@ function exportToPDF(
           .calendar-cell.today .event {
             border-left-color: #1d4ed8;
           }
-          .event-time {
-            font-size: 11px;
-            color: #1d4ed8;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-          }
-          .events.density-medium .event-time,
-          .events.density-medium .event-meta,
-          .events.density-medium .event-location {
-            font-size: 10.5px;
-          }
-          .events.density-medium .event-title {
-            font-size: 12.5px;
-          }
-          .events.density-high .event-time,
-          .events.density-high .event-meta,
-          .events.density-high .event-location {
-            font-size: 9.5px;
-          }
-          .events.density-high .event-title {
-            font-size: 11.5px;
-          }
-          .event-title {
-            font-size: 13px;
-            font-weight: 600;
+          .event-line {
+            font-size: 12px;
             color: #0f172a;
             margin-top: 2px;
+            line-height: 1.4;
           }
-          .event-meta {
-            font-size: 11px;
+          .event-line:first-child {
+            margin-top: 0;
+          }
+          .event-line--time {
+            font-weight: 600;
+            color: #1d4ed8;
+          }
+          .event-line--service {
             color: #475569;
-            margin-top: 2px;
           }
-          .event-location {
-            font-size: 11px;
+          .event-line--location {
             color: #94a3b8;
-            margin-top: 2px;
             word-break: break-word;
+          }
+          .events.density-medium .event-line {
+            font-size: 10.8px;
+          }
+          .events.density-medium .event-line--time {
+            font-size: 11.5px;
+          }
+          .events.density-high .event-line {
+            font-size: 10px;
+          }
+          .events.density-high .event-line--time {
+            font-size: 10.5px;
           }
           .no-events {
             font-size: 11px;
@@ -630,8 +653,17 @@ function exportToPDF(
               gap: 8px;
               flex-wrap: nowrap;
             }
-            .info-value {
-              font-size: 13px;
+            .info-strip {
+              padding: 8px 12px;
+              gap: 8px;
+              overflow: visible;
+              white-space: nowrap;
+            }
+            .info-strip--labels {
+              font-size: 10px;
+            }
+            .info-strip--values {
+              font-size: 11px;
             }
             .calendar-grid {
               box-shadow: none;
@@ -669,6 +701,7 @@ function exportToPDF(
             .event {
               border-left-width: 2px;
               padding: 4px 6px;
+              box-shadow: none;
             }
             .events.density-medium {
               gap: 4px;
@@ -682,32 +715,23 @@ function exportToPDF(
             .events.density-high .event {
               padding: 2px 4px;
             }
-            .event-time,
-            .event-meta,
-            .event-location {
+            .event-line {
               font-size: 10px;
             }
-            .events.density-medium .event-time,
-            .events.density-medium .event-meta,
-            .events.density-medium .event-location {
-              font-size: 9.5px;
-            }
-            .events.density-high .event-time,
-            .events.density-high .event-meta,
-            .events.density-high .event-location {
-              font-size: 9px;
-            }
-            .event-title {
-              font-size: 11px;
-            }
-            .events.density-medium .event-title {
+            .event-line--time {
               font-size: 10.5px;
             }
-            .events.density-high .event-title {
-              font-size: 10px;
+            .events.density-medium .event-line {
+              font-size: 9.6px;
             }
-            .event {
-              box-shadow: none;
+            .events.density-medium .event-line--time {
+              font-size: 10.2px;
+            }
+            .events.density-high .event-line {
+              font-size: 9.2px;
+            }
+            .events.density-high .event-line--time {
+              font-size: 9.6px;
             }
             .calendar-cell.out-of-range .events {
               display: none;
@@ -727,32 +751,8 @@ function exportToPDF(
           </div>
           <button class="download-button" onclick="window.print()">下載 PDF</button>
           <div class="header-info">
-            <div class="info-item">
-              <span class="info-label">客戶</span>
-              <span class="info-value">${escapeHtml(customerLabel)}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">日期範圍</span>
-              <span class="info-value">${escapeHtml(rangeLabel)}</span>
-            </div>
-            ${filters.careStaffName ? `
-              <div class="info-item">
-                <span class="info-label">護理人員</span>
-                <span class="info-value">${escapeHtml(filters.careStaffName)}</span>
-              </div>
-            ` : ''}
-            <div class="info-item">
-              <span class="info-label">排班數量</span>
-              <span class="info-value">${events.length}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">總服務時數</span>
-              <span class="info-value">${totalHours.toFixed(1)} 小時</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">服務客戶</span>
-              <span class="info-value">${uniqueCustomers.length ? `${uniqueCustomers.length} 位` : '0 位'}</span>
-            </div>
+            <div class="info-strip info-strip--labels">${labelsHtml}</div>
+            <div class="info-strip info-strip--values">${valuesHtml}</div>
           </div>
         </header>
         ${calendarTable}
@@ -793,6 +793,10 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
+}
+
+function escapeHtmlWithNbsp(value: string): string {
+  return escapeHtml(value).replace(/ /g, '&nbsp;')
 }
 
 function sanitizeForFilename(value: string): string {
