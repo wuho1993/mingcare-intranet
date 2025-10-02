@@ -454,7 +454,7 @@ function exportToPDF(
           }
           .info-value {
             display: block;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             color: #1f2937;
             word-break: break-word;
@@ -629,6 +629,9 @@ function exportToPDF(
             .header-info {
               gap: 8px;
               flex-wrap: nowrap;
+            }
+            .info-value {
+              font-size: 13px;
             }
             .calendar-grid {
               box-shadow: none;
