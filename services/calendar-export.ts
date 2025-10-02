@@ -257,6 +257,10 @@ function exportToPDF(
         ? uniqueCustomers[0]
         : `${uniqueCustomers[0]} 等 ${uniqueCustomers.length} 位客戶`
 
+    const primaryRecord = sortedRecords.find(record => record.customer_name) || sortedRecords[0]
+    const primaryCustomerName = primaryRecord?.customer_name || '全部客戶'
+    const primaryCustomerId = primaryRecord?.customer_id || '無編號'
+
     const totalHours = sortedRecords.reduce((sum, record) => sum + (record.service_hours || 0), 0)
 
     const formatDateKey = (date: Date) => {
@@ -301,7 +305,9 @@ function exportToPDF(
               const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
               const metaParts: string[] = []
               if (record.care_staff_name) metaParts.push(escapeHtml(record.care_staff_name))
-              if (record.service_type) metaParts.push(escapeHtml(record.service_type))
+              if (record.service_type && record.project_category !== 'MC社區券(醫點）') {
+                metaParts.push(escapeHtml(record.service_type))
+              }
               if (record.project_category) metaParts.push(escapeHtml(record.project_category))
               if (record.service_hours) metaParts.push(`${record.service_hours.toFixed(1)} 小時`)
               const metaLine = metaParts.length > 0 ? `<div class="event-meta">${metaParts.join(' · ')}</div>` : ''
@@ -368,6 +374,26 @@ function exportToPDF(
             align-items: flex-start;
             gap: 24px;
             margin-bottom: 24px;
+          }
+          .download-button {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+          .download-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(29, 78, 216, 0.3);
+          }
+          .download-button:active {
+            transform: translateY(0);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
           }
           .header-main h1 {
             margin: 0;
@@ -567,6 +593,7 @@ function exportToPDF(
             <h1>明家居家護理服務</h1>
             <p class="header-sub">排班月曆報表</p>
           </div>
+          <button class="download-button" onclick="window.print()">下載 PDF</button>
           <div class="header-info">
             <div class="info-item">
               <span class="info-label">月份</span>
@@ -614,10 +641,12 @@ function exportToPDF(
       </html>
     `
 
+    const filenameBase = `${sanitizeForFilename(primaryCustomerName)}${sanitizeForFilename(monthLabel)}更表-${sanitizeForFilename(primaryCustomerId)}-明家居家護理服務.pdf`
+
     return {
       success: true,
       data: htmlContent,
-      filename: `mingcare_schedule_${options.filters.dateRange?.start || 'start'}_${options.filters.dateRange?.end || 'end'}.pdf`
+      filename: filenameBase
     }
   } catch (error) {
     console.error('PDF 導出錯誤:', error)
@@ -639,4 +668,11 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
+}
+
+function sanitizeForFilename(value: string): string {
+  return value
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, '')
+    .slice(0, 100)
 }
