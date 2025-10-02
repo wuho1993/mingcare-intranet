@@ -354,6 +354,10 @@ function exportToPDF(
         <meta charset="UTF-8" />
         <title>MingCare 排班日曆</title>
         <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
           :root {
             color-scheme: light;
           }
@@ -462,6 +466,7 @@ function exportToPDF(
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            page-break-inside: avoid;
           }
           .calendar-grid th {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -560,17 +565,54 @@ function exportToPDF(
             text-align: center;
           }
           @media print {
+            html, body {
+              width: 297mm;
+              height: 210mm;
+              font-size: 12px;
+            }
             body {
               background: transparent;
-              padding: 0 12px;
+              padding: 6mm 8mm;
+            }
+            .download-button {
+              display: none;
+            }
+            .header {
+              gap: 12px;
+            }
+            .header-main h1 {
+              font-size: 20px;
+            }
+            .header-sub {
+              font-size: 14px;
+            }
+            .header-info {
+              grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+              gap: 8px;
+            }
+            .summary {
+              margin-bottom: 12px;
+              gap: 12px;
+              padding: 12px;
+            }
+            .summary-value {
+              font-size: 16px;
             }
             .calendar-grid {
               box-shadow: none;
               border: 1px solid #cbd5f5;
+              font-size: 11px;
+              page-break-inside: avoid;
+            }
+            .calendar-grid tr,
+            .calendar-grid td {
+              page-break-inside: avoid;
             }
             .calendar-grid th {
               background: #1e3a8a;
               -webkit-print-color-adjust: exact;
+              padding: 8px 6px;
+              font-size: 12px;
             }
             .calendar-cell.weekend {
               background: #fff0f6 !important;
@@ -578,8 +620,28 @@ function exportToPDF(
             .calendar-cell.other-month {
               background: #f5f5f5 !important;
             }
+            .calendar-grid td {
+              min-height: 110px;
+              padding: 6px;
+            }
+            .event {
+              border-left-width: 2px;
+              padding: 4px 6px;
+            }
+            .event-time,
+            .event-meta,
+            .event-location {
+              font-size: 10px;
+            }
+            .event-title {
+              font-size: 11px;
+            }
             .event {
               box-shadow: none;
+            }
+            .footer-note {
+              margin-top: 16px;
+              font-size: 11px;
             }
           }
         </style>
