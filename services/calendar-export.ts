@@ -267,27 +267,20 @@ function exportToPDF(
 
     const totalHours = sortedRecords.reduce((sum, record) => sum + (record.service_hours || 0), 0)
 
-    const headerItems: { label: string; value: string }[] = [
-      { label: '客戶', value: customerLabel },
-      { label: '日期範圍', value: rangeLabel }
-    ]
+    const headerValues: string[] = [customerLabel, rangeLabel]
 
     if (filters.careStaffName) {
-      headerItems.push({ label: '護理人員', value: filters.careStaffName })
+      headerValues.push(`護理員 ${filters.careStaffName}`)
     }
 
-    headerItems.push(
-      { label: '排班數量', value: String(events.length) },
-      { label: '總服務時數', value: `${totalHours.toFixed(1)} 小時` },
-      { label: '服務客戶', value: uniqueCustomers.length ? `${uniqueCustomers.length} 位` : '0 位' }
+    headerValues.push(
+      `${events.length} 筆排班`,
+      `${totalHours.toFixed(1)} 小時`,
+      uniqueCustomers.length ? `${uniqueCustomers.length} 位客戶` : '0 位客戶'
     )
 
-    const labelsHtml = headerItems
-      .map(item => `<span>${escapeHtml(item.label)}</span>`)
-      .join('<span class="info-separator">·</span>')
-
-    const valuesHtml = headerItems
-      .map(item => `<span>${escapeHtmlWithNbsp(item.value)}</span>`)
+    const valuesHtml = headerValues
+      .map(item => escapeHtmlWithNbsp(item))
       .join('<span class="info-separator">·</span>')
 
     const formatDateKey = (date: Date) => {
@@ -416,75 +409,32 @@ function exportToPDF(
           }
           .header {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            margin-bottom: 24px;
-          }
-          .download-button {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border: none;
-            color: #fff;
-            padding: 10px 18px;
-            border-radius: 9999px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-          }
-          .download-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 16px 32px rgba(29, 78, 216, 0.3);
-          }
-          .download-button:active {
-            transform: translateY(0);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-          }
-          .header-main h1 {
-            margin: 0;
-            font-size: 26px;
-            color: #0f172a;
-          }
-          .header-sub {
-            margin: 6px 0 0;
-            font-size: 16px;
-            color: #475569;
-            letter-spacing: 0.08em;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
           }
           .header-info {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
           }
           .info-strip {
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 10px 16px;
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 12px;
-            align-items: center;
+            padding: 8px 12px;
+            display: block;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.4;
           }
           .info-strip span {
             white-space: nowrap;
-          }
-          .info-strip--labels {
-            color: #60708c;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-          }
-          .info-strip--values {
-            color: #1f2937;
-            font-size: 14px;
-            font-weight: 600;
           }
           .info-separator {
             color: #cbd5f5;
@@ -628,42 +578,16 @@ function exportToPDF(
             text-align: center;
           }
           @media print {
-            html, body {
-              width: 297mm;
-              height: 210mm;
-              font-size: 12px;
-            }
             body {
               background: transparent;
-              padding: 6mm 8mm;
-            }
-            .download-button {
-              display: none;
-            }
-            .header {
-              gap: 12px;
-            }
-            .header-main h1 {
-              font-size: 20px;
-            }
-            .header-sub {
-              font-size: 14px;
+              padding: 8mm 8mm 6mm;
             }
             .header-info {
-              gap: 8px;
-              flex-wrap: nowrap;
+              gap: 6px;
             }
             .info-strip {
-              padding: 8px 12px;
-              gap: 8px;
-              overflow: visible;
-              white-space: nowrap;
-            }
-            .info-strip--labels {
-              font-size: 10px;
-            }
-            .info-strip--values {
               font-size: 11px;
+              padding: 6px 10px;
             }
             .calendar-grid {
               box-shadow: none;
@@ -745,14 +669,8 @@ function exportToPDF(
       </head>
       <body>
         <header class="header">
-          <div class="header-main">
-            <h1>明家居家護理服務</h1>
-            <p class="header-sub">排班月曆報表</p>
-          </div>
-          <button class="download-button" onclick="window.print()">下載 PDF</button>
           <div class="header-info">
-            <div class="info-strip info-strip--labels">${labelsHtml}</div>
-            <div class="info-strip info-strip--values">${valuesHtml}</div>
+            <div class="info-strip">${valuesHtml}</div>
           </div>
         </header>
         ${calendarTable}
