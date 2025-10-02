@@ -708,12 +708,14 @@ function exportToPDF(
       </html>
     `
 
-    const filenameBase = `${sanitizeForFilename(primaryCustomerName)}${sanitizeForFilename(monthLabel)}更表-${sanitizeForFilename(primaryCustomerId)}-明家居家護理服務.pdf`
+    const filenameBase = `${sanitizeForFilename(primaryCustomerName)}${sanitizeForFilename(monthLabel)}更表-${sanitizeForFilename(primaryCustomerId)}-明家居家護理服務`
+    const estimatedPages = Math.max(1, Math.ceil(events.length / 10))
+    const filenameWithPages = `${filenameBase} (${estimatedPages}).pdf`
 
     return {
       success: true,
       data: htmlContent,
-      filename: filenameBase
+      filename: filenameWithPages
     }
   } catch (error) {
     console.error('PDF 導出錯誤:', error)
