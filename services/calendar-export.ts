@@ -21,7 +21,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarExportOptions {
-  format: 'ics' | 'google' | 'outlook' | 'pdf'
+  format?: 'pdf'
   filters: BillingSalaryFilters
   includeStaffDetails?: boolean
   includeCustomerDetails?: boolean
@@ -44,7 +44,8 @@ export interface CalendarExportResult {
  */
 export async function exportCalendar(options: CalendarExportOptions): Promise<CalendarExportResult> {
   try {
-    console.log('🚀 開始導出日曆，選項:', options)
+    const format = options.format ?? 'pdf'
+    console.log('🚀 開始導出日曆，格式:', format, '選項:', options)
 
     // 1. 獲取排班數據
     const scheduleData = await getScheduleDataForExport(options.filters)
@@ -58,22 +59,7 @@ export async function exportCalendar(options: CalendarExportOptions): Promise<Ca
     // 2. 轉換為日曆事件
     const events = convertToCalendarEvents(scheduleData.data, options)
 
-    // 3. 根據格式導出
-    switch (options.format) {
-      case 'ics':
-        return await exportToICS(events, options)
-      case 'google':
-        return await exportToGoogleCalendar(events, options)
-      case 'outlook':
-        return await exportToOutlook(events, options)
-      case 'pdf':
-        return exportToPDF(events, scheduleData.data, options)
-      default:
-        return {
-          success: false,
-          error: '不支援的導出格式'
-        }
-    }
+    return exportToPDF(events, scheduleData.data, options)
 
   } catch (error) {
     console.error('❌ 日曆導出失敗:', error)
@@ -218,160 +204,9 @@ function convertToCalendarEvents(
 }
 
 // =============================================================================
-// ICS 格式導出
-// =============================================================================
-
-/**
- * 導出為 ICS (iCal) 格式
- */
-async function exportToICS(events: CalendarEvent[], options: CalendarExportOptions): Promise<CalendarExportResult> {
-  try {
-    const timezone = options.timezone || 'Asia/Hong_Kong'
-    
-    // ICS 文件頭
-    let icsContent = 'BEGIN:VCALENDAR\r\n'
-    icsContent += 'VERSION:2.0\r\n'
-    icsContent += 'PRODID:-//MingCare//MingCare Intranet//EN\r\n'
-    icsContent += 'CALSCALE:GREGORIAN\r\n'
-    icsContent += 'METHOD:PUBLISH\r\n'
-    icsContent += `X-WR-TIMEZONE:${timezone}\r\n`
-    icsContent += 'X-WR-CALNAME:MingCare 排班表\r\n'
-    icsContent += 'X-WR-CALDESC:MingCare 護理服務排班日曆\r\n'
-
-    // 添加時區資訊
-    icsContent += 'BEGIN:VTIMEZONE\r\n'
-    icsContent += `TZID:${timezone}\r\n`
-    icsContent += 'BEGIN:STANDARD\r\n'
-    icsContent += 'DTSTART:20231029T030000\r\n'
-    icsContent += 'TZOFFSETFROM:+0800\r\n'
-    icsContent += 'TZOFFSETTO:+0800\r\n'
-    icsContent += 'TZNAME:HKT\r\n'
-    icsContent += 'END:STANDARD\r\n'
-    icsContent += 'END:VTIMEZONE\r\n'
-
-    // 添加事件
-    events.forEach(event => {
-      icsContent += 'BEGIN:VEVENT\r\n'
-      icsContent += `UID:${event.uid}\r\n`
-      icsContent += `DTSTAMP:${formatICSDateTime(new Date())}\r\n`
-      icsContent += `DTSTART;TZID=${timezone}:${formatICSDateTime(event.startDate)}\r\n`
-      icsContent += `DTEND;TZID=${timezone}:${formatICSDateTime(event.endDate)}\r\n`
-      icsContent += `SUMMARY:${escapeICSText(event.title)}\r\n`
-      icsContent += `DESCRIPTION:${escapeICSText(event.description)}\r\n`
-      
-      if (event.location) {
-        icsContent += `LOCATION:${escapeICSText(event.location)}\r\n`
-      }
-      
-      if (event.categories && event.categories.length > 0) {
-        icsContent += `CATEGORIES:${event.categories.map(escapeICSText).join(',')}\r\n`
-      }
-      
-      if (event.organizer) {
-        icsContent += `ORGANIZER;CN=${escapeICSText(event.organizer)}:MAILTO:info@mingcarehome.com\r\n`
-      }
-
-      icsContent += 'STATUS:CONFIRMED\r\n'
-      icsContent += 'TRANSP:OPAQUE\r\n'
-      icsContent += 'END:VEVENT\r\n'
-    })
-
-    icsContent += 'END:VCALENDAR\r\n'
-
-    // 生成檔案名稱
-    const dateRange = options.filters.dateRange
-    const filename = `mingcare_schedule_${dateRange.start}_${dateRange.end}.ics`
-
-    return {
-      success: true,
-      data: icsContent,
-      filename
-    }
-
-  } catch (error) {
-    console.error('ICS 導出錯誤:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'ICS 導出失敗'
-    }
-  }
-}
-
-// =============================================================================
-// Google Calendar 導出
-// =============================================================================
-
-/**
- * 導出到 Google Calendar
- */
-async function exportToGoogleCalendar(events: CalendarEvent[], options: CalendarExportOptions): Promise<CalendarExportResult> {
-  try {
-    // 建立 Google Calendar URL
-    if (events.length === 0) {
-      return {
-        success: false,
-        error: '沒有事件可導出'
-      }
-    }
-
-    // 對於多個事件，我們可以:
-    // 1. 生成 ICS 文件並提示用戶匯入 Google Calendar
-    // 2. 生成 Google Calendar 連結讓用戶逐一添加
-    
-    const icsResult = await exportToICS(events, options)
-    if (!icsResult.success) {
-      return icsResult
-    }
-
-    // 提供 ICS 文件和 Google Calendar 匯入說明
-    return {
-      success: true,
-      data: icsResult.data,
-      filename: icsResult.filename?.replace('.ics', '_google.ics'),
-    }
-
-  } catch (error) {
-    console.error('Google Calendar 導出錯誤:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Google Calendar 導出失敗'
-    }
-  }
-}
-
-// =============================================================================
-// Outlook 導出
-// =============================================================================
-
-/**
- * 導出到 Outlook
- */
-async function exportToOutlook(events: CalendarEvent[], options: CalendarExportOptions): Promise<CalendarExportResult> {
-  try {
-    // Outlook 也支援 ICS 格式
-    const icsResult = await exportToICS(events, options)
-    if (!icsResult.success) {
-      return icsResult
-    }
-
-    return {
-      success: true,
-      data: icsResult.data,
-      filename: icsResult.filename?.replace('.ics', '_outlook.ics'),
-    }
-
-  } catch (error) {
-    console.error('Outlook 導出錯誤:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Outlook 導出失敗'
-    }
-  }
-}
-
-// =============================================================================
 // PDF 導出
 // =============================================================================
+
 
 function exportToPDF(
   events: CalendarEvent[],
@@ -387,10 +222,6 @@ function exportToPDF(
       return (a.customer_name || '').localeCompare(b.customer_name || '')
     })
 
-    const dateFormatter = new Intl.DateTimeFormat('zh-TW', {
-      year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short'
-    })
-
     const timeFormatter = (time?: string) => {
       if (!time) return '—'
       const [hour, minute] = time.split(':')
@@ -402,12 +233,19 @@ function exportToPDF(
       ? `${filters.dateRange.start} 至 ${filters.dateRange.end}`
       : '未指定日期範圍'
 
-    const monthLabel = (() => {
-      if (!filters.dateRange?.start) return '未指定月份'
-      const date = new Date(filters.dateRange.start)
-      if (Number.isNaN(date.getTime())) return '未指定月份'
-      return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
+    const monthReference = (() => {
+      if (filters.dateRange?.start) {
+        const date = new Date(filters.dateRange.start)
+        if (!Number.isNaN(date.getTime())) return date
+      }
+      if (sortedRecords.length > 0) {
+        const date = new Date(sortedRecords[0].service_date)
+        if (!Number.isNaN(date.getTime())) return date
+      }
+      return new Date()
     })()
+
+    const monthLabel = `${monthReference.getFullYear()}年${String(monthReference.getMonth() + 1).padStart(2, '0')}月`
 
     const uniqueCustomers = Array.from(
       new Set(sortedRecords.map(record => record.customer_name).filter((name): name is string => Boolean(name)))
@@ -421,6 +259,13 @@ function exportToPDF(
 
     const totalHours = sortedRecords.reduce((sum, record) => sum + (record.service_hours || 0), 0)
 
+    const formatDateKey = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
     const recordsByDate = sortedRecords.reduce<Record<string, BillingSalaryRecord[]>>((acc, record) => {
       const key = record.service_date
       acc[key] = acc[key] || []
@@ -428,48 +273,76 @@ function exportToPDF(
       return acc
     }, {})
 
-    const dateSections = Object.entries(recordsByDate)
-      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
-      .map(([date, dayRecords]) => {
-        const formattedDate = dateFormatter.format(new Date(date))
-        const rows = dayRecords.map(record => {
-          return `
-            <tr>
-              <td>${escapeHtml(formattedDate)}</td>
-              <td>${escapeHtml(`${timeFormatter(record.start_time)} ~ ${timeFormatter(record.end_time)}`)}</td>
-              <td>${escapeHtml(record.customer_name || '—')}</td>
-              <td>${escapeHtml(record.service_type || '—')}</td>
-              <td>${escapeHtml(record.care_staff_name || '—')}</td>
-              <td>${escapeHtml(record.project_category || '—')}</td>
-              <td>${escapeHtml(record.service_address || '—')}</td>
-              <td class="number">${record.service_hours ? record.service_hours.toFixed(1) : '—'}</td>
-              <td>${escapeHtml(record.project_manager || '—')}</td>
-            </tr>
-          `
-        }).join('')
+    const year = monthReference.getFullYear()
+    const month = monthReference.getMonth()
+    const firstDayOfMonth = new Date(year, month, 1)
+    const calendarStart = new Date(firstDayOfMonth)
+    calendarStart.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay())
+    const dayMillis = 24 * 60 * 60 * 1000
+    const baseTime = calendarStart.getTime()
+
+    const calendarDays = Array.from({ length: 42 }, (_, idx) => new Date(baseTime + idx * dayMillis))
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+    const todayKey = formatDateKey(new Date())
+
+    const calendarRows: string[] = []
+    for (let week = 0; week < 6; week++) {
+      const cells = calendarDays.slice(week * 7, week * 7 + 7).map(date => {
+        const dayKey = formatDateKey(date)
+        const dayRecords = recordsByDate[dayKey] || []
+        const isCurrentMonth = date.getMonth() === month
+        const classes = ['calendar-cell']
+        if (!isCurrentMonth) classes.push('other-month')
+        if (dayKey === todayKey) classes.push('today')
+        if (date.getDay() === 0 || date.getDay() === 6) classes.push('weekend')
+
+        const eventsHtml = dayRecords.length > 0
+          ? dayRecords.map(record => {
+              const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
+              const metaParts: string[] = []
+              if (record.care_staff_name) metaParts.push(escapeHtml(record.care_staff_name))
+              if (record.service_type) metaParts.push(escapeHtml(record.service_type))
+              if (record.project_category) metaParts.push(escapeHtml(record.project_category))
+              if (record.service_hours) metaParts.push(`${record.service_hours.toFixed(1)} 小時`)
+              const metaLine = metaParts.length > 0 ? `<div class="event-meta">${metaParts.join(' · ')}</div>` : ''
+              const locationLine = record.service_address ? `<div class="event-location">${escapeHtml(record.service_address)}</div>` : ''
+              return `
+                <div class="event">
+                  <div class="event-time">${escapeHtml(timeRange)}</div>
+                  <div class="event-title">${escapeHtml(record.customer_name || '未指定客戶')}</div>
+                  ${metaLine}
+                  ${locationLine}
+                </div>
+              `
+            }).join('')
+          : '<div class="no-events">無排班</div>'
 
         return `
-          <h2 class="date-heading">${escapeHtml(formattedDate)}</h2>
-          <table class="schedule-table">
-            <thead>
-              <tr>
-                <th>日期</th>
-                <th>時間</th>
-                <th>客戶</th>
-                <th>服務類型</th>
-                <th>護理人員</th>
-                <th>所屬項目</th>
-                <th>服務地址</th>
-                <th>服務時數</th>
-                <th>項目經理</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
+          <td class="${classes.join(' ')}">
+            <div class="day-number">${date.getDate()}</div>
+            <div class="events">${eventsHtml}</div>
+          </td>
         `
-      }).join('\n')
+      })
+      calendarRows.push(`<tr>${cells.join('')}</tr>`)
+    }
+
+    const calendarTable = `
+      <table class="calendar-grid">
+        <thead>
+          <tr>${weekdays.map(weekDay => `<th>${weekDay}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${calendarRows.join('\n')}
+        </tbody>
+      </table>
+    `
+
+    const projectCategoryLabel = filters.projectCategory
+      ? Array.isArray(filters.projectCategory)
+        ? filters.projectCategory.map(category => escapeHtml(category)).join(', ')
+        : escapeHtml(filters.projectCategory)
+      : null
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -534,17 +407,6 @@ function exportToPDF(
             color: #1f2937;
             word-break: break-word;
           }
-          h1 {
-            margin: 0 0 4px 0;
-            font-size: 24px;
-          }
-          h2.date-heading {
-            margin: 32px 0 12px;
-            font-size: 18px;
-            color: #2563eb;
-            border-left: 4px solid #2563eb;
-            padding-left: 12px;
-          }
           .summary {
             margin-bottom: 24px;
             padding: 16px;
@@ -568,42 +430,108 @@ function exportToPDF(
           .summary-value {
             font-size: 18px;
             font-weight: 600;
+            color: #0f172a;
           }
-          table.schedule-table {
+          .calendar-grid {
             width: 100%;
             border-collapse: collapse;
             background: #fff;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
           }
-          table.schedule-table th,
-          table.schedule-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
+          .calendar-grid th {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            padding: 12px 8px;
+            font-weight: 600;
+            text-align: center;
             font-size: 13px;
-            vertical-align: top;
+            letter-spacing: 0.12em;
           }
-          table.schedule-table th {
-            background: #f1f5f9;
-            text-align: left;
+          .calendar-grid td {
+            width: 14.285%;
+            min-height: 150px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+            padding: 10px;
+            position: relative;
+            background: #fff;
+            transition: background 0.2s ease;
+          }
+          .calendar-cell.other-month {
+            background: #f8fafc;
+            color: #94a3b8;
+          }
+          .calendar-cell.weekend {
+            background: #fff7ed;
+          }
+          .calendar-cell.weekend.other-month {
+            background: #fff1e6;
+          }
+          .calendar-cell.today {
+            box-shadow: inset 0 0 0 2px #2563eb;
+            background: #eff6ff;
+          }
+          .day-number {
+            font-weight: 700;
+            font-size: 16px;
+            color: #0f172a;
+            margin-bottom: 8px;
+          }
+          .calendar-cell.other-month .day-number {
+            color: #94a3b8;
+          }
+          .events {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .event {
+            border-left: 3px solid #2563eb;
+            background: #eef2ff;
+            padding: 6px 8px;
+            border-radius: 10px;
+            box-shadow: 0 10px 18px rgba(37, 99, 235, 0.15);
+          }
+          .calendar-cell.weekend .event {
+            border-left-color: #db2777;
+            background: #fce7f3;
+          }
+          .calendar-cell.today .event {
+            border-left-color: #1d4ed8;
+          }
+          .event-time {
+            font-size: 11px;
+            color: #1d4ed8;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+          .event-title {
+            font-size: 13px;
             font-weight: 600;
             color: #0f172a;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            margin-top: 2px;
           }
-          table.schedule-table tbody tr:nth-child(even) {
-            background: #f8fafc;
+          .event-meta {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 2px;
           }
-          table.schedule-table tbody tr:hover {
-            background: #f1f5f9;
+          .event-location {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+            word-break: break-word;
           }
-          td.number {
-            text-align: right;
-            font-variant-numeric: tabular-nums;
+          .no-events {
+            font-size: 11px;
+            color: #94a3b8;
+            font-style: italic;
           }
           .footer-note {
-            margin-top: 40px;
+            margin-top: 32px;
             font-size: 12px;
             color: #64748b;
             text-align: center;
@@ -611,13 +539,24 @@ function exportToPDF(
           @media print {
             body {
               background: transparent;
-              padding: 0 16px;
+              padding: 0 12px;
             }
-            table.schedule-table {
+            .calendar-grid {
               box-shadow: none;
+              border: 1px solid #cbd5f5;
             }
-            h2.date-heading {
-              page-break-after: avoid;
+            .calendar-grid th {
+              background: #1e3a8a;
+              -webkit-print-color-adjust: exact;
+            }
+            .calendar-cell.weekend {
+              background: #fff0f6 !important;
+            }
+            .calendar-cell.other-month {
+              background: #f5f5f5 !important;
+            }
+            .event {
+              box-shadow: none;
             }
           }
         </style>
@@ -658,23 +597,19 @@ function exportToPDF(
             <span class="summary-label">總服務時數</span>
             <span class="summary-value">${totalHours.toFixed(1)} 小時</span>
           </div>
-          ${filters.careStaffName ? `
-            <div class="summary-item">
-              <span class="summary-label">護理人員</span>
-              <span class="summary-value">${escapeHtml(filters.careStaffName)}</span>
-            </div>
-          ` : ''}
-          ${filters.projectCategory ? `
+          <div class="summary-item">
+            <span class="summary-label">服務客戶</span>
+            <span class="summary-value">${uniqueCustomers.length > 0 ? `${uniqueCustomers.length} 位` : '全部客戶'}</span>
+          </div>
+          ${projectCategoryLabel ? `
             <div class="summary-item">
               <span class="summary-label">所屬項目</span>
-              <span class="summary-value">${Array.isArray(filters.projectCategory)
-                ? filters.projectCategory.map(escapeHtml).join(', ')
-                : escapeHtml(filters.projectCategory)}</span>
+              <span class="summary-value">${projectCategoryLabel}</span>
             </div>
           ` : ''}
         </section>
-        ${dateSections || '<p>沒有排班資料。</p>'}
-        <p class="footer-note">此文件由 MingCare Intranet 於 ${escapeHtml(new Date().toLocaleString('zh-TW'))} 生成。列印或另存為 PDF 以與團隊分享。</p>
+        ${calendarTable}
+        <p class="footer-note">此文件由 MingCare Intranet 於 ${escapeHtml(new Date().toLocaleString('zh-TW'))} 生成。使用瀏覽器「列印」功能即可匯出為 PDF 並分享。</p>
       </body>
       </html>
     `
@@ -693,6 +628,10 @@ function exportToPDF(
   }
 }
 
+// =============================================================================
+// 輔助函數
+// =============================================================================
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -700,77 +639,4 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
-}
-
-// =============================================================================
-// 輔助函數
-// =============================================================================
-
-/**
- * 格式化 ICS 日期時間
- */
-function formatICSDateTime(date: Date): string {
-  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-}
-
-/**
- * 逸出 ICS 文字
- */
-function escapeICSText(text: string): string {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/;/g, '\\;')
-    .replace(/,/g, '\\,')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '')
-}
-
-// =============================================================================
-// 快速導出功能
-// =============================================================================
-
-/**
- * 快速導出當月排班為 ICS
- */
-export async function exportCurrentMonthSchedule(): Promise<CalendarExportResult> {
-  const now = new Date()
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-  const filters: BillingSalaryFilters = {
-    dateRange: {
-      start: firstDay.toISOString().split('T')[0],
-      end: lastDay.toISOString().split('T')[0]
-    }
-  }
-
-  return exportCalendar({
-    format: 'ics',
-    filters,
-    includeStaffDetails: true,
-    includeCustomerDetails: false,
-    timezone: 'Asia/Hong_Kong'
-  })
-}
-
-/**
- * 快速導出指定護理員的排班
- */
-export async function exportStaffSchedule(
-  staffName: string,
-  startDate: string,
-  endDate: string
-): Promise<CalendarExportResult> {
-  const filters: BillingSalaryFilters = {
-    dateRange: { start: startDate, end: endDate },
-    careStaffName: staffName
-  }
-
-  return exportCalendar({
-    format: 'ics',
-    filters,
-    includeStaffDetails: true,
-    includeCustomerDetails: true,
-    timezone: 'Asia/Hong_Kong'
-  })
 }

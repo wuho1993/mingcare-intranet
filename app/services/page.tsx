@@ -41,12 +41,7 @@ import {
   calculateVoucherSummary,
   VoucherRate
 } from '../../services/billing-salary-management'
-import {
-  exportCalendar,
-  exportCurrentMonthSchedule,
-  exportStaffSchedule,
-  CalendarExportOptions
-} from '../../services/calendar-export'
+import { exportCalendar, CalendarExportOptions } from '../../services/calendar-export'
 
 // 佣金相關類型定義
 interface CommissionRate {
@@ -1118,7 +1113,7 @@ interface ReportsTabProps {
   updateDateRange: (preset: DateRangePreset) => void
   exportLoading: boolean
   handleExport: () => void
-  onCalendarExport: (format: 'pdf' | 'ics' | 'google' | 'outlook') => void
+  onCalendarExport: () => void
   calendarExportLoading: boolean
   onEdit: (record: BillingSalaryRecord) => void
   onDelete: (recordId: string) => void
@@ -1686,7 +1681,7 @@ function ScheduleTab({
   calendarExportLoading 
 }: { 
   filters: BillingSalaryFilters;
-  onCalendarExport: (format: 'pdf' | 'ics' | 'google' | 'outlook') => void;
+  onCalendarExport: () => void;
   calendarExportLoading: boolean;
 }) {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -2116,39 +2111,26 @@ function ScheduleTab({
             {/* 多天排班控制 */}
             <div className="flex items-center gap-4">
               {/* 日曆導出按鈕 */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onCalendarExport('pdf')}
-                  disabled={calendarExportLoading}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  title="導出 PDF 日曆報表"
-                >
-                  {calendarExportLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      <span>產生中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7m12 4l-4 4-4-4m4 4V3" />
-                      </svg>
-                      <span>導出日曆 PDF</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => onCalendarExport('ics')}
-                  disabled={calendarExportLoading}
-                  className="px-3 py-2 border border-purple-200 text-purple-700 bg-white hover:bg-purple-50 transition-all duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  title="下載 ICS 日曆文件"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-xs">ICS</span>
-                </button>
-              </div>
+              <button
+                onClick={onCalendarExport}
+                disabled={calendarExportLoading}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title="導出 PDF 日曆報表"
+              >
+                {calendarExportLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>產生中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7m12 4l-4 4-4-4m4 4V3" />
+                    </svg>
+                    <span>導出日曆 PDF</span>
+                  </>
+                )}
+              </button>
 
               {isMultiSelectMode && selectedDates.length > 0 && (
                 <div className="text-sm text-text-secondary">
@@ -2954,41 +2936,28 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
             <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
 
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               {/* 日曆導出按鈕 */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onCalendarExport('pdf')}
-                  disabled={calendarExportLoading}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
-                  title="導出 PDF 日曆報表"
-                >
-                  {calendarExportLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
-                      <span>產生中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7m12 4l-4 4-4-4m4 4V3" />
-                      </svg>
-                      <span>導出日曆 PDF</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => onCalendarExport('ics')}
-                  disabled={calendarExportLoading}
-                  className="px-3 sm:px-4 py-2 sm:py-3 border border-purple-200 text-purple-700 bg-white hover:bg-purple-50 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 text-xs sm:text-sm"
-                  title="下載 ICS 日曆文件"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>ICS</span>
-                </button>
-              </div>
+              <button
+                onClick={onCalendarExport}
+                disabled={calendarExportLoading}
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                title="導出 PDF 日曆報表"
+              >
+                {calendarExportLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+                    <span>產生中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7m12 4l-4 4-4-4m4 4V3" />
+                    </svg>
+                    <span>導出日曆 PDF</span>
+                  </>
+                )}
+              </button>
 
               {/* 導出報表按鈕 */}
               <button
@@ -3575,13 +3544,13 @@ export default function ServicesPage() {
   }
 
   // 日曆導出功能
-  const handleCalendarExport = async (format: 'pdf' | 'ics' | 'google' | 'outlook' = 'pdf') => {
+  const handleCalendarExport = async () => {
     setCalendarExportLoading(true)
     try {
-      console.log('🚀 開始導出日曆，格式:', format)
+      console.log('🚀 開始導出日曆，格式:', 'pdf')
       
       const exportOptions: CalendarExportOptions = {
-        format,
+        format: 'pdf',
         filters,
         includeStaffDetails: true,
         includeCustomerDetails: false,
@@ -3591,61 +3560,34 @@ export default function ServicesPage() {
       const result = await exportCalendar(exportOptions)
       
       if (result.success && result.data) {
-        if (format === 'pdf') {
-          console.log('✅ 日曆 PDF 內容已生成')
-          const htmlContent = result.data as string
-          const pdfWindow = window.open('', '_blank', 'noopener,noreferrer')
-          if (pdfWindow) {
-            pdfWindow.document.open()
-            pdfWindow.document.write(htmlContent)
-            pdfWindow.document.close()
-            pdfWindow.focus()
-            setTimeout(() => {
-              try {
-                pdfWindow.print()
-              } catch (printError) {
-                console.warn('自動列印失敗，請手動列印或另存為 PDF。', printError)
-              }
-            }, 600)
-            alert('📄 日曆內容已在新視窗開啟。請使用瀏覽器的「列印」功能另存為 PDF。')
-          } else {
-            console.warn('無法開啟新視窗，改為提供 HTML 下載。')
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = result.filename?.replace(/\.pdf$/i, '.html') || 'mingcare_calendar.html'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
-            alert('📄 已下載 HTML 檔案，請於瀏覽器中開啟後列印成 PDF。')
-          }
+        console.log('✅ 日曆 PDF 內容已生成')
+        const htmlContent = result.data as string
+        const pdfWindow = window.open('', '_blank', 'noopener,noreferrer')
+        if (pdfWindow) {
+          pdfWindow.document.open()
+          pdfWindow.document.write(htmlContent)
+          pdfWindow.document.close()
+          pdfWindow.focus()
+          setTimeout(() => {
+            try {
+              pdfWindow.print()
+            } catch (printError) {
+              console.warn('自動列印失敗，請手動列印或另存為 PDF。', printError)
+            }
+          }, 600)
+          alert('📄 日曆內容已在新視窗開啟。請使用瀏覽器的「列印」功能另存為 PDF。')
         } else {
-          const blob = new Blob([result.data as string], { 
-            type: format === 'ics' ? 'text/calendar;charset=utf-8' : 'text/plain;charset=utf-8'
-          })
+          console.warn('無法開啟新視窗，改為提供 HTML 下載。')
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
           const url = URL.createObjectURL(blob)
           const link = document.createElement('a')
           link.href = url
-          const defaultExtension = format === 'ics' ? 'ics' : 'txt'
-          link.download = result.filename || `mingcare_calendar_${format}.${defaultExtension}`
-          link.style.display = 'none'
+          link.download = result.filename?.replace(/\.pdf$/i, '.html') || 'mingcare_calendar.html'
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
           URL.revokeObjectURL(url)
-
-          // 根據格式提供不同的提示
-          if (format === 'ics') {
-            alert('📅 日曆文件已下載！\n\n使用方法：\n• Apple Calendar: 雙擊文件直接匯入\n• Google Calendar: 設定 > 匯入與匯出 > 選擇文件\n• Outlook: 檔案 > 開啟與匯出 > 匯入/匯出')
-          } else if (format === 'google') {
-            alert('📅 Google Calendar 文件已下載！\n\n使用方法：\n1. 前往 Google Calendar\n2. 點擊左側「其他日曆」旁的 +\n3. 選擇「匯入」\n4. 上傳剛下載的文件')
-          } else if (format === 'outlook') {
-            alert('📅 Outlook 文件已下載！\n\n使用方法：\n1. 開啟 Outlook\n2. 檔案 > 開啟與匯出 > 匯入/匯出\n3. 選擇「匯入 iCalendar 或 vCalendar 檔案」\n4. 選擇剛下載的文件')
-          }
-          
-          console.log('✅ 日曆導出成功')
+          alert('📄 已下載 HTML 檔案，請於瀏覽器中開啟後列印成 PDF。')
         }
       } else {
         console.error('❌ 日曆導出失敗:', result.error)
