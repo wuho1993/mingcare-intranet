@@ -283,34 +283,49 @@ function exportToPDF(
 
     const year = monthReference.getFullYear()
     const month = monthReference.getMonth()
-    const firstDayOfMonth = new Date(year, month, 1)
-    const calendarStart = new Date(firstDayOfMonth)
-    calendarStart.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay())
-    const dayMillis = 24 * 60 * 60 * 1000
-    const baseTime = calendarStart.getTime()
+    const defaultRangeStart = new Date(year, month, 1)
+    const defaultRangeEnd = new Date(year, month + 1, 0)
+    const rangeStart = filters.dateRange?.start ? parseISODate(filters.dateRange.start) : defaultRangeStart
+    const rangeEnd = filters.dateRange?.end ? parseISODate(filters.dateRange.end) : defaultRangeEnd
 
-    const calendarDays = Array.from({ length: 42 }, (_, idx) => new Date(baseTime + idx * dayMillis))
+    const calendarStart = new Date(rangeStart)
+    calendarStart.setDate(calendarStart.getDate() - calendarStart.getDay())
+    const calendarEnd = new Date(rangeEnd)
+    const endOffset = 6 - calendarEnd.getDay()
+    calendarEnd.setDate(calendarEnd.getDate() + (endOffset >= 0 ? endOffset : 0))
+
+    const dayMillis = 24 * 60 * 60 * 1000
+    const calendarDays: Date[] = []
+    for (let time = calendarStart.getTime(); time <= calendarEnd.getTime(); time += dayMillis) {
+      calendarDays.push(new Date(time))
+    }
+
+    const rangeStartTime = rangeStart.getTime()
+    const rangeEndTime = rangeEnd.getTime()
     const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+    const weekCount = Math.ceil(calendarDays.length / 7)
     const todayKey = formatDateKey(new Date())
 
     const calendarRows: string[] = []
-    for (let week = 0; week < 6; week++) {
+    for (let week = 0; week < weekCount; week++) {
       const cells = calendarDays.slice(week * 7, week * 7 + 7).map(date => {
         const dayKey = formatDateKey(date)
         const dayRecords = recordsByDate[dayKey] || []
-        const isCurrentMonth = date.getMonth() === month
+        const isCurrentMonth = date.getMonth() === month && date.getFullYear() === year
+        const isWithinRange = date.getTime() >= rangeStartTime && date.getTime() <= rangeEndTime
         const classes = ['calendar-cell']
         if (!isCurrentMonth) classes.push('other-month')
+        if (!isWithinRange) classes.push('out-of-range')
         if (dayKey === todayKey) classes.push('today')
         if (date.getDay() === 0 || date.getDay() === 6) classes.push('weekend')
 
-        const densityClass = dayRecords.length >= 5
+        const densityClass = isWithinRange && dayRecords.length >= 5
           ? 'density-high'
-          : dayRecords.length >= 3
+          : isWithinRange && dayRecords.length >= 3
             ? 'density-medium'
             : 'density-low'
 
-        const eventsHtml = dayRecords.length > 0
+        const eventsHtml = isWithinRange && dayRecords.length > 0
           ? dayRecords.map(record => {
               const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
               const metaParts: string[] = []
@@ -330,7 +345,9 @@ function exportToPDF(
                 </div>
               `
             }).join('')
-          : '<div class="no-events">無排班</div>'
+          : isWithinRange
+            ? '<div class="no-events">無排班</div>'
+            : ''
 
         return `
           <td class="${classes.join(' ')}">
@@ -440,31 +457,6 @@ function exportToPDF(
             color: #1f2937;
             word-break: break-word;
           }
-          .summary {
-            margin-bottom: 24px;
-            padding: 16px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-          }
-          .summary-item {
-            min-width: 160px;
-          }
-          .summary-label {
-            display: block;
-            font-size: 12px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-          }
-          .summary-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #0f172a;
-          }
           .calendar-grid {
             width: 100%;
             border-collapse: collapse;
@@ -496,6 +488,13 @@ function exportToPDF(
           .calendar-cell.other-month {
             background: #f8fafc;
             color: #94a3b8;
+          }
+          .calendar-cell.out-of-range {
+            background: #f1f5f9;
+            color: #cbd5f5;
+          }
+          .calendar-cell.out-of-range .day-number {
+            color: #cbd5f5;
           }
           .calendar-cell.weekend {
             background: #fff7ed;
@@ -594,6 +593,9 @@ function exportToPDF(
             color: #94a3b8;
             font-style: italic;
           }
+          .calendar-cell.out-of-range .events {
+            display: none;
+          }
           .footer-note {
             margin-top: 32px;
             font-size: 12px;
@@ -626,14 +628,6 @@ function exportToPDF(
               grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
               gap: 8px;
             }
-            .summary {
-              margin-bottom: 12px;
-              gap: 12px;
-              padding: 12px;
-            }
-            .summary-value {
-              font-size: 16px;
-            }
             .calendar-grid {
               box-shadow: none;
               border: 1px solid #cbd5f5;
@@ -655,6 +649,13 @@ function exportToPDF(
             }
             .calendar-cell.other-month {
               background: #f5f5f5 !important;
+            }
+            .calendar-cell.out-of-range {
+              background: #f8fafc !important;
+              color: #d1d5db !important;
+            }
+            .calendar-cell.out-of-range .day-number {
+              color: #d1d5db !important;
             }
             .calendar-grid td {
               min-height: 110px;
@@ -703,6 +704,9 @@ function exportToPDF(
             .event {
               box-shadow: none;
             }
+            .calendar-cell.out-of-range .events {
+              display: none;
+            }
             .footer-note {
               margin-top: 16px;
               font-size: 11px;
@@ -736,22 +740,20 @@ function exportToPDF(
                 <span class="info-value">${escapeHtml(filters.careStaffName)}</span>
               </div>
             ` : ''}
+            <div class="info-item">
+              <span class="info-label">排班數量</span>
+              <span class="info-value">${events.length}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">總服務時數</span>
+              <span class="info-value">${totalHours.toFixed(1)} 小時</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">服務客戶</span>
+              <span class="info-value">${uniqueCustomers.length ? `${uniqueCustomers.length} 位` : '0 位'}</span>
+            </div>
           </div>
         </header>
-        <section class="summary">
-          <div class="summary-item">
-            <span class="summary-label">排班數量</span>
-            <span class="summary-value">${events.length}</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">總服務時數</span>
-            <span class="summary-value">${totalHours.toFixed(1)} 小時</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">服務客戶</span>
-            <span class="summary-value">${uniqueCustomers.length > 0 ? `${uniqueCustomers.length} 位` : '全部客戶'}</span>
-          </div>
-        </section>
         ${calendarTable}
         <p class="footer-note">此文件由 MingCare Intranet 於 ${escapeHtml(new Date().toLocaleString('zh-TW'))} 生成。使用瀏覽器「列印」功能即可匯出為 PDF 並分享。</p>
       </body>
@@ -777,6 +779,11 @@ function exportToPDF(
 // =============================================================================
 // 輔助函數
 // =============================================================================
+
+function parseISODate(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, (month || 1) - 1, day || 1)
+}
 
 function escapeHtml(value: string): string {
   return value
