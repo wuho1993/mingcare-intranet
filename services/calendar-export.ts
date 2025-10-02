@@ -413,6 +413,29 @@ function exportToPDF(
             gap: 8px;
             margin-bottom: 12px;
           }
+          .header-actions {
+            align-self: flex-end;
+          }
+          .download-button {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+          }
+          .download-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 20px rgba(29, 78, 216, 0.3);
+          }
+          .download-button:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+          }
           .header-info {
             display: flex;
             flex-direction: column;
@@ -428,7 +451,7 @@ function exportToPDF(
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 600;
             color: #1f2937;
             line-height: 1.4;
@@ -582,11 +605,14 @@ function exportToPDF(
               background: transparent;
               padding: 4mm 6mm;
             }
+            .download-button {
+              display: none;
+            }
             .header-info {
               gap: 6px;
             }
             .info-strip {
-              font-size: 10px;
+              font-size: 12px;
               padding: 5px 8px;
             }
             .calendar-grid {
@@ -669,6 +695,9 @@ function exportToPDF(
       </head>
       <body>
         <header class="header">
+          <div class="header-actions">
+            <button class="download-button" onclick="window.print()">儲存 PDF</button>
+          </div>
           <div class="header-info">
             <div class="info-strip">${valuesHtml}</div>
           </div>
