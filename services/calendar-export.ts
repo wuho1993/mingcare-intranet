@@ -304,6 +304,12 @@ function exportToPDF(
         if (dayKey === todayKey) classes.push('today')
         if (date.getDay() === 0 || date.getDay() === 6) classes.push('weekend')
 
+        const densityClass = dayRecords.length >= 5
+          ? 'density-high'
+          : dayRecords.length >= 3
+            ? 'density-medium'
+            : 'density-low'
+
         const eventsHtml = dayRecords.length > 0
           ? dayRecords.map(record => {
               const timeRange = `${timeFormatter(record.start_time)}${record.end_time ? ` - ${timeFormatter(record.end_time)}` : ''}`
@@ -329,7 +335,7 @@ function exportToPDF(
         return `
           <td class="${classes.join(' ')}">
             <div class="day-number">${date.getDate()}</div>
-            <div class="events">${eventsHtml}</div>
+            <div class="events ${densityClass}">${eventsHtml}</div>
           </td>
         `
       })
@@ -515,12 +521,26 @@ function exportToPDF(
             flex-direction: column;
             gap: 8px;
           }
+          .events.density-medium {
+            gap: 6px;
+          }
+          .events.density-high {
+            gap: 4px;
+          }
           .event {
             border-left: 3px solid #2563eb;
             background: #eef2ff;
             padding: 6px 8px;
             border-radius: 10px;
             box-shadow: 0 10px 18px rgba(37, 99, 235, 0.15);
+          }
+          .events.density-medium .event {
+            padding: 5px 7px;
+            border-radius: 8px;
+          }
+          .events.density-high .event {
+            padding: 4px 6px;
+            border-radius: 6px;
           }
           .calendar-cell.weekend .event {
             border-left-color: #db2777;
@@ -535,6 +555,22 @@ function exportToPDF(
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+          }
+          .events.density-medium .event-time,
+          .events.density-medium .event-meta,
+          .events.density-medium .event-location {
+            font-size: 10.5px;
+          }
+          .events.density-medium .event-title {
+            font-size: 12.5px;
+          }
+          .events.density-high .event-time,
+          .events.density-high .event-meta,
+          .events.density-high .event-location {
+            font-size: 9.5px;
+          }
+          .events.density-high .event-title {
+            font-size: 11.5px;
           }
           .event-title {
             font-size: 13px;
@@ -628,13 +664,41 @@ function exportToPDF(
               border-left-width: 2px;
               padding: 4px 6px;
             }
+            .events.density-medium {
+              gap: 4px;
+            }
+            .events.density-high {
+              gap: 3px;
+            }
+            .events.density-medium .event {
+              padding: 3px 5px;
+            }
+            .events.density-high .event {
+              padding: 2px 4px;
+            }
             .event-time,
             .event-meta,
             .event-location {
               font-size: 10px;
             }
+            .events.density-medium .event-time,
+            .events.density-medium .event-meta,
+            .events.density-medium .event-location {
+              font-size: 9.5px;
+            }
+            .events.density-high .event-time,
+            .events.density-high .event-meta,
+            .events.density-high .event-location {
+              font-size: 9px;
+            }
             .event-title {
               font-size: 11px;
+            }
+            .events.density-medium .event-title {
+              font-size: 10.5px;
+            }
+            .events.density-high .event-title {
+              font-size: 10px;
             }
             .event {
               box-shadow: none;
