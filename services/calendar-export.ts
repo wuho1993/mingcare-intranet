@@ -394,7 +394,7 @@ function exportToPDF(
         <style>
           @page {
             size: A4 landscape;
-            margin: 10mm;
+            margin: 6mm;
           }
           :root {
             color-scheme: light;
@@ -402,7 +402,7 @@ function exportToPDF(
           body {
             font-family: "PingFang TC", "Microsoft JhengHei", "SimSun", sans-serif;
             margin: 0;
-            padding: 24px;
+            padding: 16px;
             background: #f8fafc;
             color: #1f2933;
             line-height: 1.5;
@@ -460,10 +460,10 @@ function exportToPDF(
           }
           .calendar-grid td {
             width: 14.285%;
-            min-height: 150px;
+            min-height: 120px;
             border: 1px solid #e2e8f0;
             vertical-align: top;
-            padding: 10px;
+            padding: 8px;
             position: relative;
             background: #fff;
             transition: background 0.2s ease;
@@ -491,9 +491,9 @@ function exportToPDF(
           }
           .day-number {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             color: #0f172a;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
           }
           .calendar-cell.other-month .day-number {
             color: #94a3b8;
@@ -580,14 +580,14 @@ function exportToPDF(
           @media print {
             body {
               background: transparent;
-              padding: 8mm 8mm 6mm;
+              padding: 4mm 6mm;
             }
             .header-info {
               gap: 6px;
             }
             .info-strip {
-              font-size: 11px;
-              padding: 6px 10px;
+              font-size: 10px;
+              padding: 5px 8px;
             }
             .calendar-grid {
               box-shadow: none;
@@ -602,8 +602,8 @@ function exportToPDF(
             .calendar-grid th {
               background: #1e3a8a;
               -webkit-print-color-adjust: exact;
-              padding: 8px 6px;
-              font-size: 12px;
+              padding: 6px 5px;
+              font-size: 11px;
             }
             .calendar-cell.weekend {
               background: #fff0f6 !important;
@@ -619,50 +619,50 @@ function exportToPDF(
               color: #d1d5db !important;
             }
             .calendar-grid td {
-              min-height: 110px;
-              padding: 6px;
+              min-height: 90px;
+              padding: 4px;
             }
             .event {
               border-left-width: 2px;
-              padding: 4px 6px;
+              padding: 3px 5px;
               box-shadow: none;
             }
             .events.density-medium {
-              gap: 4px;
-            }
-            .events.density-high {
               gap: 3px;
             }
-            .events.density-medium .event {
-              padding: 3px 5px;
+            .events.density-high {
+              gap: 2px;
             }
-            .events.density-high .event {
+            .events.density-medium .event {
               padding: 2px 4px;
             }
+            .events.density-high .event {
+              padding: 2px 3px;
+            }
             .event-line {
-              font-size: 10px;
+              font-size: 9.4px;
             }
             .event-line--time {
-              font-size: 10.5px;
+              font-size: 10px;
             }
             .events.density-medium .event-line {
-              font-size: 9.6px;
+              font-size: 9px;
             }
             .events.density-medium .event-line--time {
-              font-size: 10.2px;
+              font-size: 9.6px;
             }
             .events.density-high .event-line {
-              font-size: 9.2px;
+              font-size: 8.6px;
             }
             .events.density-high .event-line--time {
-              font-size: 9.6px;
+              font-size: 9.2px;
             }
             .calendar-cell.out-of-range .events {
               display: none;
             }
             .footer-note {
-              margin-top: 16px;
-              font-size: 11px;
+              margin-top: 8px;
+              font-size: 10px;
             }
           }
         </style>
