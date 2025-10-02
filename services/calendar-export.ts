@@ -308,7 +308,6 @@ function exportToPDF(
               if (record.service_type && record.project_category !== 'MC社區券(醫點）') {
                 metaParts.push(escapeHtml(record.service_type))
               }
-              if (record.project_category) metaParts.push(escapeHtml(record.project_category))
               if (record.service_hours) metaParts.push(`${record.service_hours.toFixed(1)} 小時`)
               const metaLine = metaParts.length > 0 ? `<div class="event-meta">${metaParts.join(' · ')}</div>` : ''
               const locationLine = record.service_address ? `<div class="event-location">${escapeHtml(record.service_address)}</div>` : ''
@@ -343,12 +342,6 @@ function exportToPDF(
         </tbody>
       </table>
     `
-
-    const projectCategoryLabel = filters.projectCategory
-      ? Array.isArray(filters.projectCategory)
-        ? filters.projectCategory.map(category => escapeHtml(category)).join(', ')
-        : escapeHtml(filters.projectCategory)
-      : null
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -628,12 +621,6 @@ function exportToPDF(
             <span class="summary-label">服務客戶</span>
             <span class="summary-value">${uniqueCustomers.length > 0 ? `${uniqueCustomers.length} 位` : '全部客戶'}</span>
           </div>
-          ${projectCategoryLabel ? `
-            <div class="summary-item">
-              <span class="summary-label">所屬項目</span>
-              <span class="summary-value">${projectCategoryLabel}</span>
-            </div>
-          ` : ''}
         </section>
         ${calendarTable}
         <p class="footer-note">此文件由 MingCare Intranet 於 ${escapeHtml(new Date().toLocaleString('zh-TW'))} 生成。使用瀏覽器「列印」功能即可匯出為 PDF 並分享。</p>
