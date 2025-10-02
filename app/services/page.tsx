@@ -3560,35 +3560,20 @@ export default function ServicesPage() {
       const result = await exportCalendar(exportOptions)
       
       if (result.success && result.data) {
-        console.log('✅ 日曆 PDF 內容已生成')
+        console.log('✅ 日曆 HTML 內容已生成')
         const htmlContent = result.data as string
-        const pdfWindow = window.open('', '_blank', 'noopener,noreferrer')
-        if (pdfWindow) {
-          pdfWindow.document.open()
-          pdfWindow.document.write(htmlContent)
-          pdfWindow.document.close()
-          pdfWindow.focus()
-          setTimeout(() => {
-            try {
-              pdfWindow.print()
-            } catch (printError) {
-              console.warn('自動列印失敗，請手動列印或另存為 PDF。', printError)
-            }
-          }, 600)
-          alert('📄 日曆內容已在新視窗開啟。請使用瀏覽器的「列印」功能另存為 PDF。')
-        } else {
-          console.warn('無法開啟新視窗，改為提供 HTML 下載。')
-          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = result.filename || 'mingcare_calendar.pdf'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          URL.revokeObjectURL(url)
-          alert('📄 已下載 HTML 檔案，請於瀏覽器中開啟後列印成 PDF。')
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const viewer = window.open(url, '_blank', 'noopener,noreferrer')
+
+        if (!viewer) {
+          console.warn('瀏覽器封鎖了彈出視窗，於目前頁面開啟日曆。')
+          window.location.href = url
         }
+
+        setTimeout(() => {
+          URL.revokeObjectURL(url)
+        }, 60_000)
       } else {
         console.error('❌ 日曆導出失敗:', result.error)
         alert(`日曆導出失敗: ${result.error}`)
