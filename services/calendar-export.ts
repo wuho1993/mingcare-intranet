@@ -283,6 +283,11 @@ function exportToPDF(
       .map(item => escapeHtmlWithNbsp(item))
       .join('<span class="info-separator">·</span>')
 
+    const filenameBase = `${sanitizeForFilename(primaryCustomerName)}${sanitizeForFilename(monthLabel)}更表-${sanitizeForFilename(primaryCustomerId)}-明家居家護理服務`
+    const estimatedPages = Math.max(1, Math.ceil(events.length / 10))
+    const filenameWithPages = `${filenameBase} (${estimatedPages}).pdf`
+    const pageTitle = filenameWithPages.replace(/\.pdf$/, '')
+
     const formatDateKey = (date: Date) => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -390,7 +395,7 @@ function exportToPDF(
       <html lang="zh-HK">
       <head>
         <meta charset="UTF-8" />
-        <title>MingCare 排班日曆</title>
+        <title>${escapeHtml(pageTitle)}</title>
         <style>
           @page {
             size: A4 landscape;
@@ -704,13 +709,10 @@ function exportToPDF(
         </header>
         ${calendarTable}
         <p class="footer-note">此文件由 MingCare Intranet 於 ${escapeHtml(new Date().toLocaleString('zh-TW'))} 生成。使用瀏覽器「列印」功能即可匯出為 PDF 並分享。</p>
+        <script>document.title = ${JSON.stringify(pageTitle)}</script>
       </body>
       </html>
     `
-
-    const filenameBase = `${sanitizeForFilename(primaryCustomerName)}${sanitizeForFilename(monthLabel)}更表-${sanitizeForFilename(primaryCustomerId)}-明家居家護理服務`
-    const estimatedPages = Math.max(1, Math.ceil(events.length / 10))
-    const filenameWithPages = `${filenameBase} (${estimatedPages}).pdf`
 
     return {
       success: true,
