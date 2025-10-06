@@ -1125,6 +1125,22 @@ interface ReportsTabProps {
 interface StaffOption {
   name: string
   staffId: string | null
+  normalizedName: string
+  normalizedId: string | null
+}
+
+const normalizeStaffId = (value?: string | null): string | null => {
+  if (!value) return null
+  return value.trim().toLowerCase()
+}
+
+const normalizeStaffName = (value?: string | null): string => {
+  if (!value) return ''
+  return value
+    .trim()
+    .replace(/[\s]/g, '')
+    .replace(/[()（）]/g, '')
+    .toLowerCase()
 }
 
 // 概覽頁面組件
@@ -3459,19 +3475,25 @@ export default function ServicesPage() {
               .filter((record: BillingSalaryRecord) => record.care_staff_name && record.care_staff_name.trim() !== '')
               .forEach((record: BillingSalaryRecord) => {
                 const name = record.care_staff_name.trim()
-                const id = record.staff_id?.trim()
-                const key = id || name
+                const rawId = record.staff_id?.trim() || null
+                const normalizedId = normalizeStaffId(rawId)
+                const normalizedName = normalizeStaffName(name)
+                const key = normalizedId || normalizedName
+
+                if (!key) return
 
                 if (!staffMap.has(key)) {
                   staffMap.set(key, {
                     name,
-                    staffId: id || null
+                    staffId: rawId,
+                    normalizedName,
+                    normalizedId
                   })
                 }
               })
 
             const sortedStaff = Array.from(staffMap.values()).sort((a, b) =>
-              (a.name || '').localeCompare(b.name || '', 'zh-HK')
+              (a.normalizedName || '').localeCompare(b.normalizedName || '', 'zh-HK')
             )
 
             setStaffList(sortedStaff)
@@ -5118,19 +5140,20 @@ export default function ServicesPage() {
 
   // 使用傳遞下來的 onEdit 和 onDelete props，而不是自己定義編輯邏輯
 
-  const getStaffKey = (staff: StaffOption) => (staff.staffId?.trim() || staff.name || '').trim()
+  const getStaffKey = (staff: StaffOption) => staff.normalizedId || staff.normalizedName
   const getStaffDisplayName = (staff: StaffOption) => staff.staffId ? `${staff.name}（${staff.staffId}）` : staff.name
   const doesRecordBelongToStaff = (record: BillingSalaryRecord, staff: StaffOption) => {
-    const staffId = staff.staffId?.trim()
-    const recordStaffId = record.staff_id?.trim()
-    if (staffId) {
-      if (recordStaffId && recordStaffId === staffId) {
-        return true
-      }
+    const recordStaffId = normalizeStaffId(record.staff_id)
+    if (staff.normalizedId && recordStaffId) {
+      return staff.normalizedId === recordStaffId
     }
-    const staffName = (staff.name || '').trim()
-    const recordName = (record.care_staff_name || '').trim()
-    return staffName !== '' && recordName === staffName
+
+    const recordName = normalizeStaffName(record.care_staff_name)
+    if (staff.normalizedName && recordName) {
+      return staff.normalizedName === recordName
+    }
+
+    return false
   }
 
   const downloadAllStaffPDFs = async () => {
