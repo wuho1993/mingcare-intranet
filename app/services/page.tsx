@@ -1810,6 +1810,7 @@ function ScheduleTab({
         for (const schedule of daySchedules) {
           const supabaseData = {
             customer_id: schedule.customer_id,
+            staff_id: schedule.staff_id,
             care_staff_name: schedule.care_staff_name,
             service_date: schedule.service_date,
             start_time: schedule.start_time,
@@ -2389,6 +2390,7 @@ function ScheduleTab({
             start_time: editingLocalSchedule.schedule.start_time,
             end_time: editingLocalSchedule.schedule.end_time,
             service_hours: editingLocalSchedule.schedule.service_hours,
+            staff_id: editingLocalSchedule.schedule.staff_id,
             care_staff_name: editingLocalSchedule.schedule.care_staff_name,
             service_fee: editingLocalSchedule.schedule.service_fee,
             staff_salary: editingLocalSchedule.schedule.staff_salary,
@@ -5651,6 +5653,7 @@ function ScheduleFormModal({
         start_time: existingRecord.start_time,
         end_time: existingRecord.end_time,
         service_hours: existingRecord.service_hours,
+        staff_id: existingRecord.staff_id,
         care_staff_name: existingRecord.care_staff_name,
         service_fee: existingRecord.service_fee,
         staff_salary: existingRecord.staff_salary,
@@ -5671,6 +5674,7 @@ function ScheduleFormModal({
         start_time: '09:00',
         end_time: '17:00',
         service_hours: 8,
+        staff_id: '',
         care_staff_name: '',
         service_fee: 0,
         staff_salary: 0,
@@ -5771,6 +5775,7 @@ function ScheduleFormModal({
     if (!data.phone.trim()) errors.phone = '聯絡電話不能為空'
     if (!data.service_address.trim()) errors.service_address = '服務地址不能為空'
     if (!data.care_staff_name.trim()) errors.care_staff_name = '護理人員不能為空'
+    if (!data.staff_id?.trim()) errors.staff_id = '請透過搜尋選擇護理人員'
     if (data.service_fee <= 0) errors.service_fee = '服務費用必須大於 0'
     if (data.staff_salary < 0) errors.staff_salary = '員工薪資不能為負數'
     if (data.service_hours <= 0) errors.service_hours = '服務時數必須大於 0'
@@ -5822,6 +5827,7 @@ function ScheduleFormModal({
         start_time: formData.start_time,
         end_time: formData.end_time,
         service_hours: formData.service_hours,
+        staff_id: formData.staff_id,
         care_staff_name: formData.care_staff_name,
         service_fee: formData.service_fee,
         staff_salary: formData.staff_salary,
@@ -5843,6 +5849,10 @@ function ScheduleFormModal({
   const updateField = (field: string, value: any) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value }
+
+      if (field === 'care_staff_name') {
+        updated.staff_id = ''
+      }
 
       // 處理日期欄位，確保格式一致
       if (field === 'service_date' && value) {
@@ -5988,6 +5998,7 @@ function ScheduleFormModal({
   // 選擇護理人員
   const selectStaff = (staff: any) => {
     updateField('care_staff_name', staff.name_chinese)
+    updateField('staff_id', staff.staff_id || '')
     setStaffSearchTerm(staff.name_chinese)
     setShowStaffSuggestions(false)
   }
@@ -6321,6 +6332,23 @@ function ScheduleFormModal({
                     )}
                   </div>
 
+                  {/* 護理人員編號（自動帶入） */}
+                  <div>
+                    <label className="block text-apple-caption font-medium text-text-primary mb-2">
+                      護理人員編號 <span className="text-text-secondary">（自動帶入）</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.staff_id || ''}
+                      readOnly
+                      className={`form-input-apple w-full bg-bg-secondary text-text-secondary cursor-not-allowed ${errors.staff_id ? 'border-danger' : ''}`}
+                      placeholder="選擇護理人員後自動填入"
+                    />
+                    {errors.staff_id && (
+                      <p className="text-apple-caption text-danger mt-1">{errors.staff_id}</p>
+                    )}
+                  </div>
+
                   {/* 第二行：開始時間 + 結束時間 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* 開始時間 */}
@@ -6617,6 +6645,9 @@ function LocalScheduleEditModal({
             </div>
             <div className="text-sm text-gray-600 mb-2">
               <strong>護理人員：</strong> {schedule.care_staff_name}
+            </div>
+            <div className="text-sm text-gray-600 mb-2">
+              <strong>護理員編號：</strong> {schedule.staff_id || '—'}
             </div>
             <div className="text-sm text-gray-600 mb-2">
               <strong>服務類型：</strong> {schedule.service_type}

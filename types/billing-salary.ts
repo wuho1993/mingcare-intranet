@@ -15,6 +15,7 @@ export interface BillingSalaryRecord {
   start_time: string // HH:mm
   end_time: string // HH:mm
   service_hours: number
+  staff_id: string
   care_staff_name: string
   service_fee: number
   staff_salary: number
@@ -98,6 +99,7 @@ export interface BillingSalaryFormData {
   start_time: string
   end_time: string
   service_hours: number
+  staff_id: string
   care_staff_name: string
   service_fee: number
   staff_salary: number
