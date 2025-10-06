@@ -3781,10 +3781,8 @@ export default function ServicesPage() {
       service_type: '服務類型',
       project_category: '所屬項目',
       project_manager: '項目經理',
-      // 舊欄位名稱兼容
+      // 舊欄位名稱兼容（已停用）
       service_time: '服務時間',
-      duration_hours: '時數',
-      billing_amount: '金額',
       customer_address: '客戶地址',
       notes: '備註'
     }
@@ -3792,11 +3790,11 @@ export default function ServicesPage() {
     // 計算總結數據
     const totalRecords = records.length
     const totalHours = records.reduce((sum, record) => {
-      const hours = parseFloat(record.service_hours || record.duration_hours || '0')
+      const hours = parseFloat(String(record.service_hours || '0'))
       return sum + (isNaN(hours) ? 0 : hours)
     }, 0)
     const totalSalary = records.reduce((sum, record) => {
-      const salary = parseFloat(record.staff_salary || record.billing_amount || '0')
+      const salary = parseFloat(String(record.staff_salary || '0'))
       return sum + (isNaN(salary) ? 0 : salary)
     }, 0)
 
@@ -4033,8 +4031,7 @@ export default function ServicesPage() {
                       }
                       break
                     case 'service_hours':
-                    case 'duration_hours':
-                      const hours = parseFloat(record[col] || '0')
+                      const hours = parseFloat(String(record[col] || '0'))
                       value = isNaN(hours) ? '0' : hours.toString()
                       break
                     case 'staff_salary':
@@ -4567,8 +4564,8 @@ export default function ServicesPage() {
           let staffSalary = 0
 
           staffRecords.forEach(record => {
-            const hours = parseFloat(record.service_hours || record.duration_hours || '0')
-            const salary = parseFloat(record.staff_salary || '0')
+            const hours = parseFloat(String(record.service_hours || '0'))
+            const salary = parseFloat(String(record.staff_salary || '0'))
             staffHours += isNaN(hours) ? 0 : hours
             staffSalary += isNaN(salary) ? 0 : salary
           })
@@ -4593,8 +4590,8 @@ export default function ServicesPage() {
                   ${staffRecords.map(record => `
                     <tr>
                       ${columns.map(col => {
-                        const value = record[col] || ''
-                        const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'duration_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
+                        const value = (record as any)[col] || ''
+                        const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
                         let displayValue = String(value)
 
                         // 特殊格式化
@@ -4605,12 +4602,12 @@ export default function ServicesPage() {
                           const day = String(date.getDate()).padStart(2, '0')
                           displayValue = `${year}-${month}-${day}`
                         } else if (col === 'service_profit') {
-                          const serviceFee = parseFloat(record.service_fee || '0')
-                          const staffSalaryValue = parseFloat(record.staff_salary || '0')
+                          const serviceFee = parseFloat(String(record.service_fee || '0'))
+                          const staffSalaryValue = parseFloat(String(record.staff_salary || '0'))
                           const profit = serviceFee - staffSalaryValue
                           displayValue = profit.toFixed(2)
                         } else if (isNumber && value) {
-                          const num = parseFloat(value)
+                          const num = parseFloat(String(value))
                           displayValue = isNaN(num) ? '0' : num.toFixed(2)
                         }
 
@@ -4680,11 +4677,11 @@ export default function ServicesPage() {
                     const staffId = staffMeta[staffKey]?.staffId
                     const displayName = staffId ? `${staffName}（${staffId}）` : staffName
                     const staffHours = staffRecords.reduce((sum, record) => {
-                      const hours = parseFloat(record.service_hours || record.duration_hours || '0')
+                      const hours = parseFloat(String(record.service_hours || '0'))
                       return sum + (isNaN(hours) ? 0 : hours)
                     }, 0)
                     const staffSalary = staffRecords.reduce((sum, record) => {
-                      const salary = parseFloat(record.staff_salary || '0')
+                      const salary = parseFloat(String(record.staff_salary || '0'))
                       return sum + (isNaN(salary) ? 0 : salary)
                     }, 0)
 
@@ -4709,7 +4706,6 @@ export default function ServicesPage() {
           </div>
         `
 
-      }
       } else {
         // 非對數模式：普通表格
         tableContent = records.map(record => `
