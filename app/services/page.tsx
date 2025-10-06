@@ -1122,6 +1122,11 @@ interface ReportsTabProps {
   recordUpdateTimes?: Record<string, Date> // 添加記錄更新時間
 }
 
+interface StaffOption {
+  name: string
+  staffId: string | null
+}
+
 // 概覽頁面組件
 function OverviewTab({
   filters,
@@ -3201,7 +3206,7 @@ export default function ServicesPage() {
   // 護理員分開PDF頁面狀態
   const [showStaffListPage, setShowStaffListPage] = useState(false)
   const [staffDownloadStatus, setStaffDownloadStatus] = useState<Record<string, string>>({}) // 記錄每個護理員的下載狀態 ('idle' | 'downloading' | 'downloaded' | 'error')
-  const [staffList, setStaffList] = useState<string[]>([])
+  const [staffList, setStaffList] = useState<StaffOption[]>([])
   const [loadingStaff, setLoadingStaff] = useState(true)
 
   // 默認選中的欄位：1.服務日期 2.客戶姓名 3.服務地址 4.服務類型 5.開始時間-結束時間 6.時數 7.護理員姓名
@@ -3215,6 +3220,7 @@ export default function ServicesPage() {
     end_time: true,          // 5. 結束時間 (默認)
     service_hours: true,     // 6. 時數 (默認)
     care_staff_name: true,   // 7. 護理員姓名 (默認)
+    staff_id: false,
     service_fee: false,
     staff_salary: false,
     service_profit: false,   // 新增：服務利潤
@@ -3238,6 +3244,7 @@ export default function ServicesPage() {
         end_time: true,
         service_hours: true,
         care_staff_name: true,
+        staff_id: false,
         service_type: true,
         service_fee: true,      // 對數模式自動包含
         service_profit: true,   // 對數模式自動包含：服務利潤
@@ -3261,6 +3268,7 @@ export default function ServicesPage() {
         end_time: true,
         service_hours: true,
         care_staff_name: false,  // 工資模式不預設勾選，因為大標題會顯示
+        staff_id: true,
         service_type: true,
         staff_salary: true,     // 工資模式自動包含
         service_profit: false,  // 工資模式不包含服務利潤
@@ -3444,14 +3452,29 @@ export default function ServicesPage() {
         try {
           const response = await fetchBillingSalaryRecords(filters, 1, 10000)
           if (response.success && response.data) {
-            // 從當前數據中提取護理員列表
-            const uniqueStaff = Array.from(new Set(
-              response.data.data
-                .filter((record: BillingSalaryRecord) => record.care_staff_name && record.care_staff_name.trim() !== '')
-                .map((record: BillingSalaryRecord) => record.care_staff_name)
-            )).sort() as string[]
+            // 從當前數據中提取護理員列表（優先使用 staff_id）
+            const staffMap = new Map<string, StaffOption>()
 
-            setStaffList(uniqueStaff)
+            response.data.data
+              .filter((record: BillingSalaryRecord) => record.care_staff_name && record.care_staff_name.trim() !== '')
+              .forEach((record: BillingSalaryRecord) => {
+                const name = record.care_staff_name.trim()
+                const id = record.staff_id?.trim()
+                const key = id || name
+
+                if (!staffMap.has(key)) {
+                  staffMap.set(key, {
+                    name,
+                    staffId: id || null
+                  })
+                }
+              })
+
+            const sortedStaff = Array.from(staffMap.values()).sort((a, b) =>
+              (a.name || '').localeCompare(b.name || '', 'zh-HK')
+            )
+
+            setStaffList(sortedStaff)
           }
         } catch (error) {
           console.error('載入護理員列表失敗:', error)
@@ -3650,28 +3673,32 @@ export default function ServicesPage() {
     }
   }
 
-  const downloadSingleStaffPDF = async (staffName: string, records: any[], columns: string[]) => {
+  const downloadSingleStaffPDF = async (staff: StaffOption, records: any[], columns: string[]) => {
     try {
+      const staffKey = getStaffKey(staff)
+      const staffDisplayName = getStaffDisplayName(staff)
       // 篩選該護理員的記錄
-      const staffRecords = (records || []).filter(record =>
-        (record.care_staff_name || '未知護理人員') === staffName
+      const staffRecords = (records || []).filter((record: BillingSalaryRecord) =>
+        doesRecordBelongToStaff(record, staff)
       )
 
       if (staffRecords.length === 0) {
-        alert('該護理員沒有記錄')
+        alert(`${staffDisplayName} 沒有符合條件的記錄`)
         return
       }
 
       // 按日期排序
       staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
 
-      await generateAndDownloadStaffPDF(staffRecords, columns, staffName)
+      await generateAndDownloadStaffPDF(staffRecords, columns, staff)
 
       // 更新下載狀態
-      setStaffDownloadStatus(prev => ({
-        ...prev,
-        [staffName]: 'downloaded'
-      }))
+      if (staffKey) {
+        setStaffDownloadStatus(prev => ({
+          ...prev,
+          [staffKey]: 'downloaded'
+        }))
+      }
 
     } catch (error) {
       console.error('下載護理員PDF時發生錯誤:', error)
@@ -3679,18 +3706,34 @@ export default function ServicesPage() {
     }
   }
 
-  const generateAndDownloadStaffPDF = async (records: any[], columns: string[], staffName: string) => {
+  const generateAndDownloadStaffPDF = async (records: any[], columns: string[], staff: StaffOption) => {
+    const staffName = staff.name
+    const staffDisplayName = getStaffDisplayName(staff)
     // 查詢員工資料
     let staffData = null
     try {
-      const { data, error } = await supabase
-        .from('care_staff_profiles')
-        .select('staff_id, name_chinese, name_english, hkid')
-        .eq('name_chinese', staffName)
-        .single()
+      if (staff.staffId) {
+        const { data, error } = await supabase
+          .from('care_staff_profiles')
+          .select('staff_id, name_chinese, name_english, hkid')
+          .eq('staff_id', staff.staffId)
+          .single()
 
-      if (!error && data) {
-        staffData = data
+        if (!error && data) {
+          staffData = data
+        }
+      }
+
+      if (!staffData) {
+        const { data, error } = await supabase
+          .from('care_staff_profiles')
+          .select('staff_id, name_chinese, name_english, hkid')
+          .eq('name_chinese', staffName)
+          .single()
+
+        if (!error && data) {
+          staffData = data
+        }
       }
     } catch (error) {
       console.error('查詢護理人員資料失敗:', error)
@@ -3707,6 +3750,7 @@ export default function ServicesPage() {
       end_time: '結束時間',
       service_hours: '服務時數',
       care_staff_name: '護理員姓名',
+      staff_id: '護理員編號',
       service_fee: '服務費用',
       staff_salary: '護理員工資',
       service_profit: '服務利潤',
@@ -3751,7 +3795,7 @@ export default function ServicesPage() {
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>${staffName} ${yearMonth}工資明細</title>
+        <title>${staffDisplayName} ${yearMonth}工資明細</title>
         <style>
           @page {
             size: A4 portrait;
@@ -3916,19 +3960,19 @@ export default function ServicesPage() {
           <!-- 護理人員資料 -->
           ${staffData ? `
           <div class="staff-info">
-            <div class="staff-info-title">護理人員資料</div>
-            <div class="staff-details">
-              <div class="staff-field">
-                <strong>中文姓名:</strong>
-                <span>${staffData.name_chinese || staffName}</span>
-              </div>
+              <div class="staff-info-title">護理人員資料</div>
+              <div class="staff-details">
+                <div class="staff-field">
+                  <strong>中文姓名:</strong>
+                  <span>${staffData.name_chinese || staffName}</span>
+                </div>
               <div class="staff-field">
                 <strong>英文姓名:</strong>
                 <span>${staffData.name_english || ''}</span>
               </div>
               <div class="staff-field">
-                <strong>員工編號:</strong>
-                <span>${staffData.staff_id || ''}</span>
+                  <strong>員工編號:</strong>
+                <span>${staffData.staff_id || staff.staffId || ''}</span>
               </div>
               <div class="staff-field">
                 <strong>身份證號:</strong>
@@ -4271,6 +4315,7 @@ export default function ServicesPage() {
         care_staff_name: '護理員姓名',
         service_fee: '服務費用',
         staff_salary: '護理員工資',
+        staff_id: '護理員編號',
         hourly_rate: '每小時收費',
         hourly_salary: '每小時工資',
         service_type: '服務類型',
@@ -4457,27 +4502,40 @@ export default function ServicesPage() {
 
       } else if (exportMode === 'payroll') {
         // 工資模式：按護理人員分組，每人一頁
-        const staffGroups: Record<string, any[]> = {}
-        records.forEach(record => {
-          const staffName = record.care_staff_name || '未知護理人員'
-          if (!staffGroups[staffName]) {
-            staffGroups[staffName] = []
+        const staffGroups: Record<string, BillingSalaryRecord[]> = {}
+        const staffMeta: Record<string, { name: string; staffId?: string }> = {}
+
+        ;(records || []).forEach(record => {
+          const name = (record.care_staff_name || '未知護理人員').trim()
+          if (!name) return
+          const id = record.staff_id?.trim()
+          const key = id || name
+
+          if (!staffGroups[key]) {
+            staffGroups[key] = []
+            staffMeta[key] = { name, staffId: id || undefined }
           }
-          staffGroups[staffName].push(record)
+
+          staffGroups[key].push(record)
         })
 
         // 為每個護理人員排序（先按護理人員名稱，再按日期）
-        const sortedStaffNames = Object.keys(staffGroups).sort()
+        const sortedStaffKeys = Object.keys(staffGroups).sort((a, b) =>
+          (staffMeta[a]?.name || a).localeCompare(staffMeta[b]?.name || b, 'zh-HK')
+        )
 
         // 總統計
-        let totalStaff = Object.keys(staffGroups).length
+        let totalStaff = sortedStaffKeys.length
         let totalServices = records.length
         let totalHours = 0
         let totalSalary = 0
 
         // 為每個護理人員生成獨立的表格
-        const staffTables = sortedStaffNames.map((staffName, index) => {
-          const staffRecords = staffGroups[staffName]
+        const staffTables = sortedStaffKeys.map(staffKey => {
+          const staffRecords = staffGroups[staffKey]
+          const staffName = staffMeta[staffKey]?.name || '未知護理人員'
+          const staffId = staffMeta[staffKey]?.staffId
+          const staffDisplayName = staffId ? `${staffName}（${staffId}）` : staffName
 
           // 按日期排序
           staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
@@ -4499,7 +4557,7 @@ export default function ServicesPage() {
           return `
             <div class="staff-group">
               <div class="staff-header">
-                <h2>${staffName}</h2>
+                <h2>${staffDisplayName}</h2>
                 <div class="staff-info">記錄數: ${staffRecords.length}筆</div>
               </div>
 
@@ -4526,8 +4584,8 @@ export default function ServicesPage() {
                           displayValue = `${year}-${month}-${day}`
                         } else if (col === 'service_profit') {
                           const serviceFee = parseFloat(record.service_fee || '0')
-                          const staffSalary = parseFloat(record.staff_salary || '0')
-                          const profit = serviceFee - staffSalary
+                          const staffSalaryValue = parseFloat(record.staff_salary || '0')
+                          const profit = serviceFee - staffSalaryValue
                           displayValue = profit.toFixed(2)
                         } else if (isNumber && value) {
                           const num = parseFloat(value)
@@ -4594,8 +4652,11 @@ export default function ServicesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${sortedStaffNames.map(staffName => {
-                    const staffRecords = staffGroups[staffName]
+                  ${sortedStaffKeys.map(staffKey => {
+                    const staffRecords = staffGroups[staffKey]
+                    const staffName = staffMeta[staffKey]?.name || '未知護理人員'
+                    const staffId = staffMeta[staffKey]?.staffId
+                    const displayName = staffId ? `${staffName}（${staffId}）` : staffName
                     const staffHours = staffRecords.reduce((sum, record) => {
                       const hours = parseFloat(record.service_hours || record.duration_hours || '0')
                       return sum + (isNaN(hours) ? 0 : hours)
@@ -4607,7 +4668,7 @@ export default function ServicesPage() {
 
                     return `
                       <tr>
-                        <td>${staffName}</td>
+                        <td>${displayName}</td>
                         <td class="number">${staffRecords.length}</td>
                         <td class="number">${staffHours.toFixed(1)}</td>
                         <td class="number">$${staffSalary.toFixed(2)}</td>
@@ -4626,6 +4687,7 @@ export default function ServicesPage() {
           </div>
         `
 
+      }
       } else {
         // 非對數模式：普通表格
         tableContent = records.map(record => `
@@ -4998,6 +5060,7 @@ export default function ServicesPage() {
       end_time: '結束時間',
       service_hours: '服務時數',
       care_staff_name: '護理員姓名',
+      staff_id: '護理員編號',
       service_fee: '服務費用',
       staff_salary: '護理員工資',
       service_profit: '服務利潤',
@@ -5055,6 +5118,21 @@ export default function ServicesPage() {
 
   // 使用傳遞下來的 onEdit 和 onDelete props，而不是自己定義編輯邏輯
 
+  const getStaffKey = (staff: StaffOption) => (staff.staffId?.trim() || staff.name || '').trim()
+  const getStaffDisplayName = (staff: StaffOption) => staff.staffId ? `${staff.name}（${staff.staffId}）` : staff.name
+  const doesRecordBelongToStaff = (record: BillingSalaryRecord, staff: StaffOption) => {
+    const staffId = staff.staffId?.trim()
+    const recordStaffId = record.staff_id?.trim()
+    if (staffId) {
+      if (recordStaffId && recordStaffId === staffId) {
+        return true
+      }
+    }
+    const staffName = (staff.name || '').trim()
+    const recordName = (record.care_staff_name || '').trim()
+    return staffName !== '' && recordName === staffName
+  }
+
   const downloadAllStaffPDFs = async () => {
     try {
       // 獲取所有記錄
@@ -5071,8 +5149,11 @@ export default function ServicesPage() {
 
       // 設置所有護理員為下載中狀態
       const newStatus: Record<string, string> = {}
-      ;(staffList || []).forEach(staffName => {
-        newStatus[staffName] = 'downloading'
+      ;(staffList || []).forEach(staff => {
+        const key = getStaffKey(staff)
+        if (key) {
+          newStatus[key] = 'downloading'
+        }
       })
       setStaffDownloadStatus(newStatus)
 
@@ -5080,18 +5161,16 @@ export default function ServicesPage() {
       let failureCount = 0
 
       // 順序下載每個護理員的PDF（避免同時打開多個窗口）
-      for (const staffName of staffList) {
+      for (const staff of staffList) {
         try {
           // 篩選該護理員的記錄
-          const staffRecords = allRecords.filter(record =>
-            (record.care_staff_name || '未知護理人員') === staffName
-          )
+          const staffRecords = allRecords.filter(record => doesRecordBelongToStaff(record, staff))
 
           if (staffRecords.length === 0) {
-            console.warn(`護理員 ${staffName} 沒有記錄`)
+            console.warn(`護理員 ${getStaffDisplayName(staff)} 沒有記錄`)
             setStaffDownloadStatus(prev => ({
               ...prev,
-              [staffName]: 'error'
+              [getStaffKey(staff)]: 'error'
             }))
             failureCount++
             continue
@@ -5100,12 +5179,12 @@ export default function ServicesPage() {
           // 按日期排序
           staffRecords.sort((a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime())
 
-          await generateAndDownloadStaffPDF(staffRecords, selectedColumns, staffName)
+          await generateAndDownloadStaffPDF(staffRecords, selectedColumns, staff)
 
           // 更新為成功狀態
           setStaffDownloadStatus(prev => ({
             ...prev,
-            [staffName]: 'downloaded'
+            [getStaffKey(staff)]: 'downloaded'
           }))
 
           successCount++
@@ -5114,10 +5193,10 @@ export default function ServicesPage() {
           await new Promise(resolve => setTimeout(resolve, 1000))
 
         } catch (error) {
-          console.error(`下載護理員 ${staffName} PDF失敗:`, error)
+          console.error(`下載護理員 ${getStaffDisplayName(staff)} PDF失敗:`, error)
           setStaffDownloadStatus(prev => ({
             ...prev,
-            [staffName]: 'error'
+            [getStaffKey(staff)]: 'error'
           }))
           failureCount++
         }
@@ -5210,15 +5289,16 @@ export default function ServicesPage() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-none">
-                  {staffList && staffList.map((staffName: string) => {
-                    const isDownloaded = staffDownloadStatus[staffName] === 'downloaded'
-                    const isDownloading = staffDownloadStatus[staffName] === 'downloading'
+                  {staffList && staffList.map((staff: StaffOption) => {
+                    const staffKey = getStaffKey(staff)
+                    const isDownloaded = staffDownloadStatus[staffKey] === 'downloaded'
+                    const isDownloading = staffDownloadStatus[staffKey] === 'downloading'
 
-                    // 生成文件名：護理員A YYYY-MM工資明細
-                    const fileName = `${staffName} ${(filters.dateRange?.start || 'unknown').substring(0, 7)}工資明細`
+                    // 生成文件名：護理員A（ID） YYYY-MM工資明細
+                    const fileName = `${getStaffDisplayName(staff)} ${(filters.dateRange?.start || 'unknown').substring(0, 7)}工資明細`
 
                     return (
-                      <div key={staffName} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
+                      <div key={staffKey} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
                         <div>
                           <h4 className="font-medium text-text-primary">{fileName}</h4>
                           <p className="text-sm text-text-secondary mt-1">
@@ -5238,7 +5318,7 @@ export default function ServicesPage() {
                                 onClick={async () => {
                                   setStaffDownloadStatus(prev => ({
                                     ...prev,
-                                    [staffName]: 'downloading'
+                                    [staffKey]: 'downloading'
                                   }))
 
                                   try {
@@ -5249,13 +5329,13 @@ export default function ServicesPage() {
                                         .filter(([_, selected]) => selected)
                                         .map(([column, _]) => column)
 
-                                      await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
+                                      await downloadSingleStaffPDF(staff, response.data.data || [], selectedColumns)
                                     }
                                   } catch (error) {
                                     console.error('下載失敗:', error)
                                     setStaffDownloadStatus(prev => ({
                                       ...prev,
-                                      [staffName]: 'error'
+                                      [staffKey]: 'error'
                                     }))
                                     alert('下載失敗，請重試')
                                   }
@@ -5273,7 +5353,7 @@ export default function ServicesPage() {
 
                                 setStaffDownloadStatus(prev => ({
                                   ...prev,
-                                  [staffName]: 'downloading'
+                                  [staffKey]: 'downloading'
                                 }))
 
                                 try {
@@ -5284,13 +5364,13 @@ export default function ServicesPage() {
                                       .filter(([_, selected]) => selected)
                                       .map(([column, _]) => column)
 
-                                    await downloadSingleStaffPDF(staffName, response.data.data || [], selectedColumns)
+                                    await downloadSingleStaffPDF(staff, response.data.data || [], selectedColumns)
                                   }
                                 } catch (error) {
                                   console.error('下載失敗:', error)
                                   setStaffDownloadStatus(prev => ({
                                     ...prev,
-                                    [staffName]: 'error'
+                                    [staffKey]: 'error'
                                   }))
                                   alert('下載失敗，請重試')
                                 }
