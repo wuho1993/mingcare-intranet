@@ -1028,7 +1028,7 @@ export default function EditClientPage() {
 
             {/* 地圖容器 */}
             <div className="flex-1 p-4 overflow-auto">
-              <div className="h-96 mb-4 border border-gray-300 rounded-lg overflow-hidden">
+              <div className="h-96 mb-4 border border-gray-300 rounded-lg overflow-hidden relative">
                 <iframe
                   width="100%"
                   height="100%"
@@ -1038,6 +1038,24 @@ export default function EditClientPage() {
                   referrerPolicy="no-referrer-when-downgrade"
                   src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&q=${encodeURIComponent(formData.service_address || '香港')}&zoom=15`}
                 ></iframe>
+              </div>
+
+              {/* 在 Google Maps 開啟按鈕 */}
+              <div className="mb-4">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.service_address || '香港')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  在新分頁開啟 Google Maps 獲取座標
+                </a>
+                <p className="text-xs text-gray-600 mt-2">
+                  📍 步驟：點擊上方按鈕 → 在地圖上點擊位置 → 從 URL 或地圖資訊中複製座標 → 貼到下方欄位
+                </p>
               </div>
 
               {/* 手動輸入經緯度 */}
@@ -1076,9 +1094,16 @@ export default function EditClientPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-2">
-                💡 提示：您可以在 Google 地圖上右鍵點擊位置，複製經緯度並貼上到此處
-              </p>
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-xs text-blue-800 font-medium mb-1">💡 如何取得座標：</p>
+                <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
+                  <li>點擊上方綠色按鈕，在新分頁開啟 Google Maps</li>
+                  <li>在地圖上點擊您要的位置（會出現紅色標記）</li>
+                  <li>點擊下方彈出的資訊卡片</li>
+                  <li>複製座標（例如：22.302711, 114.177216）</li>
+                  <li>貼到上方的經緯度欄位中</li>
+                </ol>
+              </div>
             </div>
 
             {/* 按鈕區域 */}

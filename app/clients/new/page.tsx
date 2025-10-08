@@ -932,13 +932,29 @@ export default function NewCustomerPage() {
                   title="Google Maps"
                   allowFullScreen
                 />
-                <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-lg shadow-lg text-sm">
-                  <p className="text-text-secondary">💡 在 Google Maps 中：</p>
-                  <ol className="text-xs text-text-secondary mt-1 space-y-1">
-                    <li>1. 搜索並找到正確位置</li>
-                    <li>2. 在地圖上點擊精確位置</li>
-                    <li>3. 複製 URL 中的座標（格式：/@緯度,經度）</li>
-                    <li>4. 點擊下方「手動輸入座標」按鈕</li>
+              </div>
+              
+              {/* 在 Google Maps 開啟按鈕 */}
+              <div className="mt-4">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.service_address + ', 香港')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  在新分頁開啟 Google Maps 獲取座標
+                </a>
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-xs text-blue-800 font-medium mb-1">💡 如何取得座標：</p>
+                  <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
+                    <li>點擊上方綠色按鈕，在新分頁開啟 Google Maps</li>
+                    <li>在地圖上點擊您要的位置（會出現紅色標記）</li>
+                    <li>點擊下方彈出的資訊卡片</li>
+                    <li>複製座標（例如：22.302711, 114.177216）</li>
+                    <li>貼到下方的經緯度欄位中</li>
                   </ol>
                 </div>
               </div>
