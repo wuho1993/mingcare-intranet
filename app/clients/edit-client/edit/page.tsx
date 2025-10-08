@@ -1036,7 +1036,7 @@ export default function EditClientPage() {
                   loading="lazy"
                   allowFullScreen
                   referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(formData.service_address || '香港')}&zoom=15`}
+                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&q=${encodeURIComponent(formData.service_address || '香港')}&zoom=15`}
                 ></iframe>
               </div>
 
