@@ -260,47 +260,82 @@ export default function EditClientPage() {
   const initializeMap = () => {
     if (!mapRef.current || !isGoogleMapsLoaded) return
 
-    const address = formData.service_address || '香港'
-    const geocoder = new (window as any).google.maps.Geocoder()
+    // 如果已有座標，優先使用座標
+    let center = { lat: 22.3193, lng: 114.1694 } // 默認香港中心
+    let shouldGeocode = true
 
-    geocoder.geocode({ address: address + ', 香港' }, (results: any, status: any) => {
-      let center = { lat: 22.3193, lng: 114.1694 } // 默認香港中心
+    if (formData.location_latitude && formData.location_longitude) {
+      center = {
+        lat: formData.location_latitude,
+        lng: formData.location_longitude
+      }
+      shouldGeocode = false
+    }
 
-      if (status === 'OK' && results[0]) {
-        center = {
-          lat: results[0].geometry.location.lat(),
-          lng: results[0].geometry.location.lng()
-        }
+    // 創建地圖
+    googleMapRef.current = new (window as any).google.maps.Map(mapRef.current, {
+      center: center,
+      zoom: 16,
+      mapTypeControl: true,
+      streetViewControl: true,
+      fullscreenControl: true,
+      zoomControl: true
+    })
+
+    // 如果需要 geocoding 並且有地址
+    if (shouldGeocode && formData.service_address?.trim()) {
+      const address = formData.service_address.trim()
+      const geocoder = new (window as any).google.maps.Geocoder()
+
+      // 嘗試多個搜尋策略
+      const searchStrategies = [
+        address + ', 香港',  // 完整地址 + 香港
+        address,              // 只用地址
+        address + ', Hong Kong',  // 英文
+      ]
+
+      let foundLocation = false
+
+      const tryGeocode = (index: number) => {
+        if (index >= searchStrategies.length || foundLocation) return
+
+        geocoder.geocode({ address: searchStrategies[index] }, (results: any, status: any) => {
+          if (status === 'OK' && results[0] && !foundLocation) {
+            foundLocation = true
+            const newCenter = {
+              lat: results[0].geometry.location.lat(),
+              lng: results[0].geometry.location.lng()
+            }
+            googleMapRef.current.setCenter(newCenter)
+            googleMapRef.current.setZoom(17)
+          } else {
+            // 嘗試下一個策略
+            tryGeocode(index + 1)
+          }
+        })
       }
 
-      // 創建地圖
-      googleMapRef.current = new (window as any).google.maps.Map(mapRef.current, {
-        center: center,
-        zoom: 16,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-      })
+      tryGeocode(0)
+    }
 
-      // 如果已有座標，顯示標記
-      if (formData.location_latitude && formData.location_longitude) {
-        const existingPosition = {
-          lat: formData.location_latitude,
-          lng: formData.location_longitude
-        }
-        placeMarker(existingPosition)
-        setTempMarkerPosition(existingPosition)
+    // 如果已有座標，顯示標記
+    if (formData.location_latitude && formData.location_longitude) {
+      const existingPosition = {
+        lat: formData.location_latitude,
+        lng: formData.location_longitude
       }
+      placeMarker(existingPosition)
+      setTempMarkerPosition(existingPosition)
+    }
 
-      // 地圖點擊事件
-      googleMapRef.current.addListener('click', (e: any) => {
-        const position = {
-          lat: e.latLng.lat(),
-          lng: e.latLng.lng()
-        }
-        placeMarker(position)
-        setTempMarkerPosition(position)
-      })
+    // 地圖點擊事件
+    googleMapRef.current.addListener('click', (e: any) => {
+      const position = {
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng()
+      }
+      placeMarker(position)
+      setTempMarkerPosition(position)
     })
   }
 
@@ -426,7 +461,7 @@ export default function EditClientPage() {
         setErrors({ general: response.error + (response.message ? ': ' + response.message : '') })
       } else {
         console.log('Update successful:', response.data)
-        // Show success message and stay on current page
+        // Show success message
         alert('客戶資料更新成功！')
         // Clear any previous errors
         setErrors({})
@@ -451,8 +486,8 @@ export default function EditClientPage() {
           detail: { customerId: clientId }
         }))
         
-        // Optionally refresh the form data to show updated values
-        // window.location.reload() // Uncomment if you want to reload the page
+        // 返回客戶列表頁面
+        router.push('/clients')
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
@@ -932,23 +967,36 @@ export default function EditClientPage() {
                     <p className="text-apple-caption text-danger mt-1">{errors.service_address}</p>
                   )}
                   
-                  {/* 定位功能 */}
-                  <div className="mt-3 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={openMapSelector}
-                      className="btn-secondary-apple flex items-center gap-2 text-sm"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                      </svg>
-                      在地圖上標記位置
-                    </button>
-                    {formData.location_latitude && formData.location_longitude && (
-                      <span className="text-sm text-text-secondary">
-                        📍 已定位 ({formData.location_latitude.toFixed(6)}, {formData.location_longitude.toFixed(6)})
-                      </span>
-                    )}
+                  {/* 定位功能 - 必填 */}
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-text-primary">
+                        服務地址定位
+                      </label>
+                      <span className="text-red-600 text-sm font-bold">*必填</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={openMapSelector}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform hover:scale-105"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        📍 在地圖上標記位置
+                      </button>
+                      {formData.location_latitude && formData.location_longitude ? (
+                        <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                          ✓ 已定位 ({formData.location_latitude.toFixed(6)}, {formData.location_longitude.toFixed(6)})
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full animate-pulse">
+                          ⚠️ 尚未標記位置
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
