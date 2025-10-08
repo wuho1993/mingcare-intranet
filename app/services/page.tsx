@@ -1402,7 +1402,13 @@ function OverviewTab({
 }
 
 // 排班小結組件
-function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string, BillingSalaryFormData[]> }) {
+function ScheduleSummaryView({ 
+  localSchedules, 
+  updateTrigger 
+}: { 
+  localSchedules: Record<string, BillingSalaryFormData[]>
+  updateTrigger?: number
+}) {
   const calculateSummary = () => {
     const allSchedules = Object.values(localSchedules || {}).flat()
     const totalHours = (allSchedules || []).reduce((sum, schedule) => sum + (schedule.service_hours || 0), 0)
@@ -1490,7 +1496,7 @@ function ScheduleSummaryView({ localSchedules }: { localSchedules: Record<string
   // 當本地排程改變時重新計算社區券統計
   useEffect(() => {
     calculateVoucherSummary()
-  }, [localSchedules])
+  }, [localSchedules, updateTrigger])
 
   const summary = calculateSummary()
   const totalVoucherAmount = voucherSummary.reduce((sum: number, item) => sum + item.total_amount, 0)
@@ -1719,6 +1725,9 @@ function ScheduleTab({
   // 月曆客戶篩選狀態
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>('all') // 'all' 或客戶名稱
 
+  // 社區券統計更新觸發器
+  const [voucherUpdateTrigger, setVoucherUpdateTrigger] = useState(0)
+
   // 載入月曆數據
   useEffect(() => {
     const loadCalendarData = async () => {
@@ -1909,6 +1918,8 @@ function ScheduleTab({
       }
       return newSchedules
     })
+    // 觸發社區券統計更新
+    setVoucherUpdateTrigger(prev => prev + 1)
   }
 
   // 處理本地排程點擊 - 打開編輯/刪除選項
@@ -1923,7 +1934,7 @@ function ScheduleTab({
 
   // 更新本地排程
   const handleUpdateLocalSchedule = (formData: BillingSalaryFormData) => {
-    const { dateStr, scheduleIndex } = localScheduleEditModal
+    const { dateStr, scheduleIndex} = localScheduleEditModal
     setLocalSchedules(prev => {
       const newSchedules = { ...prev }
       if (newSchedules[dateStr]) {
@@ -1937,6 +1948,8 @@ function ScheduleTab({
       dateStr: '',
       scheduleIndex: -1
     })
+    // 觸發社區券統計更新
+    setVoucherUpdateTrigger(prev => prev + 1)
   }
 
   // 刪除本地排程（從模態框）
@@ -2382,7 +2395,7 @@ function ScheduleTab({
       {/* 排班小結 */}
       <div className="card-apple border border-border-light fade-in-apple">
         <div className="p-6">
-          <ScheduleSummaryView localSchedules={localSchedules} />
+          <ScheduleSummaryView localSchedules={localSchedules} updateTrigger={voucherUpdateTrigger} />
         </div>
       </div>
 
