@@ -1,18 +1,25 @@
 ========================================================================
 明護 Supabase 數據庫架構文檔 — 雙項目系統
-更新日期: 2025-01-22
+更新日期: 2025-01-08
 ========================================================================
 
 本系統採用雙 Supabase 項目架構：
 1. 認證橋接項目 (MingCare WorkEz) - 負責身份驗證和用戶管理
 2. 數據項目 (Data Project) - 負責業務數據存儲和處理
 
-========================================================================
+=================================================home_visit_status_enum = { 已完成, 未完成 }
+
+introducer_enum = { 
+  Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 
+  陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰, raymond 
+}
+
+lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }===============
 項目一：認證橋接項目 (MingCare WorkEz)
 項目網址: https://rsixbgncuaijekuvhofg.supabase.co
 項目參考ID: rsixbgncuaijekuvhofg
 用途: 員工身份驗證和橋接系統
-更新日期: 2025-01-22
+更新日期: 2025-01-08
 ========================================================================
 
 🔐 項目 1: mingcare-workez (身份驗證項目)
@@ -58,7 +65,7 @@ API Keys：
 項目二：數據項目 (Data Project) 
 項目網址: https://cvkxlvdicympakfecgvv.supabase.co
 用途: 業務數據存儲、客戶管理、員工資料、服務記錄
-更新日期: 2025-01-22
+更新日期: 2025-01-08
 ========================================================================
 
 🏥 項目 2: 明家居家護理服務 Intranet (數據項目)
@@ -150,6 +157,7 @@ copay_level = 自付比例等級
 - employee_code (varchar) = 員工編號
 - display_name (varchar) = 顯示姓名
 - email (varchar) = 電郵地址
+- phone (varchar) = 電話號碼
 - role (varchar, default 'user') = 角色權限
 - department (varchar) = 部門
 - permissions (jsonb, default '{}') = 權限設定（JSON格式）
@@ -168,6 +176,7 @@ copay_level = 自付比例等級
 - end_time (text) = 結束時間
 - service_hours (numeric) = 服務時數
 - care_staff_name (text) = 護理人員
+- staff_id (text) = 員工編號
 - service_fee (numeric) = 服務費用
 - staff_salary (numeric) = 護理人員工資
 - hourly_rate (numeric) = 每小時收費
@@ -224,6 +233,18 @@ copay_level = 自付比例等級
 - start_time (time) = 開始時間
 - end_time (time) = 結束時間
 - service_type (text) = 服務類型
+- location_exception (boolean, default false) = 位置異常標記
+- location_exception_type (location_exception_type_enum) = 位置異常類型
+- location_exception_reason (text) = 位置異常原因
+- clock_latitude (numeric) = 實際打卡位置緯度
+- clock_longitude (numeric) = 實際打卡位置經度
+- distance_from_customer (numeric) = 與客戶位置的距離（米）
+- customer_emotion (customer_emotion_enum) = 客戶情緒狀態
+- customer_cooperation (customer_cooperation_enum) = 客戶配合度
+- customer_health (customer_health_enum) = 客戶健康狀況
+- customer_status_rating (integer) = 客戶狀態整體評分
+- customer_status_note (text) = 客戶狀態備註
+- customer_other_notes (text) = 其他備註
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
 
@@ -261,6 +282,8 @@ copay_level = 自付比例等級
 - home_visit_status (home_visit_status_enum) = 公司家訪狀況
 - project_manager (project_manager_enum) = 項目經理
 - copay_level (copay_level_enum) = 自付比例等級
+- location_latitude (numeric) = 客戶位置緯度
+- location_longitude (numeric) = 客戶位置經度
 
 ### [public.service_signatures] — 服務簽名記錄表 (0條記錄)
 **用途**: 記錄服務過程中員工和客戶的數位簽名
@@ -307,6 +330,12 @@ copay_level_enum = { 5%, 8%, 12%, 16%, 25%, 40% }
 
 covid_vaccine_enum = { 1針, 2針, 3針, 4針, 無接種, Other }
 
+customer_cooperation_enum = { 配合度高, 配合度一般, 配合度較低 }
+
+customer_emotion_enum = { 情緒穩定愉快, 情緒一般, 情緒低落需關注 }
+
+customer_health_enum = { 身體狀況良好, 有輕微不適, 需要醫療關注 }
+
 customer_type_enum = { 社區券客戶, 明家街客, 家訪客戶 }
 
 district_enum = { 
@@ -322,11 +351,13 @@ health_status_enum = { 良好, 中風, 需協助, 長期病患, 認知障礙 }
 home_visit_status_enum = { 已完成, 未完成 }
 
 introducer_enum = { 
-  Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 
+  Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, Raymond,
   陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰 
 }
 
 lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }
+
+location_exception_type_enum = { 客戶要求外出, 電話訊號或其他問題, 其他 }
 
 preferred_area_enum = { 
   所有區域, 灣仔區, 中西區, 東區, 南區, 油尖旺區, 深水埗區, 

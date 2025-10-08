@@ -141,7 +141,7 @@ export const HEALTH_STATUS_OPTIONS = [
 export const INTRODUCER_OPTIONS = [
   'Kanas Leung', 'Joe Cheung', 'Candy Ho', 'Steven Kwok',
   'Dr.Lee', 'Annie', 'Janet', '陸sir', '吳翹政', '余翠英',
-  '陳小姐MC01', '曾先生'
+  '陳小姐MC01', '曾先生', 'raymond'
 ] as const;
 
 export const PROJECT_MANAGER_OPTIONS = [

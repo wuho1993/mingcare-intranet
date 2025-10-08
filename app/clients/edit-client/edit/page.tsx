@@ -45,7 +45,8 @@ export default function EditClientPage() {
     charity_support: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [gettingLocation, setGettingLocation] = useState(false)
+  const [showMapModal, setShowMapModal] = useState(false)
+  const [tempMarkerPosition, setTempMarkerPosition] = useState<{ lat: number; lng: number } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -250,47 +251,34 @@ export default function EditClientPage() {
     }
   }
 
-  // 獲取當前位置
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('您的瀏覽器不支持定位功能')
+  // 打開地圖選擇位置
+  const openMapSelector = () => {
+    if (!formData.service_address?.trim()) {
+      alert('請先輸入服務地址')
       return
     }
+    setShowMapModal(true)
+  }
 
-    setGettingLocation(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        setFormData(prev => ({
-          ...prev,
-          location_latitude: latitude,
-          location_longitude: longitude
-        }))
-        setGettingLocation(false)
-        alert(`定位成功！\n緯度: ${latitude.toFixed(6)}\n經度: ${longitude.toFixed(6)}`)
-      },
-      (error) => {
-        setGettingLocation(false)
-        let errorMessage = '無法獲取位置'
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = '用戶拒絕了定位請求'
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = '位置信息不可用'
-            break
-          case error.TIMEOUT:
-            errorMessage = '定位請求超時'
-            break
-        }
-        alert(errorMessage)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
+  // 確認地圖上選擇的位置
+  const confirmMapLocation = () => {
+    if (tempMarkerPosition) {
+      setFormData(prev => ({
+        ...prev,
+        location_latitude: tempMarkerPosition.lat,
+        location_longitude: tempMarkerPosition.lng
+      }))
+      setShowMapModal(false)
+      setTempMarkerPosition(null)
+    } else {
+      alert('請在地圖上點擊以選擇位置')
+    }
+  }
+
+  // 取消地圖選擇
+  const cancelMapSelection = () => {
+    setShowMapModal(false)
+    setTempMarkerPosition(null)
   }
 
   // 表單驗證 (更寬鬆的驗證，僅檢查必要欄位)
@@ -615,6 +603,7 @@ export default function EditClientPage() {
                     <option value="余翠英">余翠英</option>
                     <option value="陳小姐MC01">陳小姐MC01</option>
                     <option value="曾先生">曾先生</option>
+                    <option value="raymond">raymond</option>
                   </select>
                   {useNewCustomerId && (
                     <p className="text-apple-caption text-text-secondary mt-1">
@@ -856,27 +845,13 @@ export default function EditClientPage() {
                   <div className="mt-3 flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={getCurrentLocation}
-                      disabled={gettingLocation}
+                      onClick={openMapSelector}
                       className="btn-secondary-apple flex items-center gap-2 text-sm"
                     >
-                      {gettingLocation ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          定位中...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          獲取當前位置
-                        </>
-                      )}
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      在地圖上標記位置
                     </button>
                     {formData.location_latitude && formData.location_longitude && (
                       <span className="text-sm text-text-secondary">
@@ -1038,6 +1013,94 @@ export default function EditClientPage() {
         </form>
         </div>
       </main>
+
+      {/* 地圖選擇模態框 */}
+      {showMapModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* 模態框標題 */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">選擇服務位置</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                在地圖上搜尋並點擊以標記位置，或手動輸入經緯度
+              </p>
+            </div>
+
+            {/* 地圖容器 */}
+            <div className="flex-1 p-4 overflow-auto">
+              <div className="h-96 mb-4 border border-gray-300 rounded-lg overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(formData.service_address || '香港')}&zoom=15`}
+                ></iframe>
+              </div>
+
+              {/* 手動輸入經緯度 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    緯度 (Latitude)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={tempMarkerPosition?.lat || ''}
+                    onChange={(e) => setTempMarkerPosition({
+                      lat: parseFloat(e.target.value) || 0,
+                      lng: tempMarkerPosition?.lng || 0
+                    })}
+                    placeholder="例如: 22.302711"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    經度 (Longitude)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={tempMarkerPosition?.lng || ''}
+                    onChange={(e) => setTempMarkerPosition({
+                      lat: tempMarkerPosition?.lat || 0,
+                      lng: parseFloat(e.target.value) || 0
+                    })}
+                    placeholder="例如: 114.177216"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-2">
+                💡 提示：您可以在 Google 地圖上右鍵點擊位置，複製經緯度並貼上到此處
+              </p>
+            </div>
+
+            {/* 按鈕區域 */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={cancelMapSelection}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmMapLocation}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                確認位置
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

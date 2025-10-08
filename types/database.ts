@@ -20,7 +20,7 @@ export type HomeVisitStatus = '已完成' | '未完成';
 export type Introducer =
   | 'Kanas Leung' | 'Joe Cheung' | 'Candy Ho' | 'Steven Kwok'
   | 'Dr.Lee' | 'Annie' | 'Janet' | '陸sir' | '吳翹政' | '余翠英'
-  | '陳小姐MC01' | '曾先生';
+  | '陳小姐MC01' | '曾先生' | 'raymond';
 export type LdsStatus = '已完成評估' | '已經持有' | '待社工評估';
 export type PreferredArea =
   | '所有區域' | '灣仔區' | '中西區' | '東區' | '南區' | '油尖旺區'

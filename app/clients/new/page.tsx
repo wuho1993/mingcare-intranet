@@ -40,7 +40,8 @@ export default function NewCustomerPage() {
     charity_support: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [gettingLocation, setGettingLocation] = useState(false)
+  const [showMapModal, setShowMapModal] = useState(false)
+  const [tempMarkerPosition, setTempMarkerPosition] = useState<{ lat: number; lng: number } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -196,47 +197,34 @@ export default function NewCustomerPage() {
     }
   }
 
-  // 獲取當前位置
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('您的瀏覽器不支持定位功能')
+  // 打開地圖選擇位置
+  const openMapSelector = () => {
+    if (!formData.service_address?.trim()) {
+      alert('請先輸入服務地址')
       return
     }
+    setShowMapModal(true)
+  }
 
-    setGettingLocation(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        setFormData(prev => ({
-          ...prev,
-          location_latitude: latitude,
-          location_longitude: longitude
-        }))
-        setGettingLocation(false)
-        alert(`定位成功！\n緯度: ${latitude.toFixed(6)}\n經度: ${longitude.toFixed(6)}`)
-      },
-      (error) => {
-        setGettingLocation(false)
-        let errorMessage = '無法獲取位置'
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = '用戶拒絕了定位請求'
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = '位置信息不可用'
-            break
-          case error.TIMEOUT:
-            errorMessage = '定位請求超時'
-            break
-        }
-        alert(errorMessage)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
+  // 確認地圖上選擇的位置
+  const confirmMapLocation = () => {
+    if (tempMarkerPosition) {
+      setFormData(prev => ({
+        ...prev,
+        location_latitude: tempMarkerPosition.lat,
+        location_longitude: tempMarkerPosition.lng
+      }))
+      setShowMapModal(false)
+      setTempMarkerPosition(null)
+    } else {
+      alert('請在地圖上點擊以選擇位置')
+    }
+  }
+
+  // 取消地圖選擇
+  const cancelMapSelection = () => {
+    setShowMapModal(false)
+    setTempMarkerPosition(null)
   }
 
   // 表單驗證 - 按照完整規格實施
@@ -479,6 +467,7 @@ export default function NewCustomerPage() {
                     <option value="余翠英">余翠英</option>
                     <option value="陳小姐MC01">陳小姐MC01</option>
                     <option value="曾先生">曾先生</option>
+                    <option value="raymond">raymond</option>
                   </select>
                 </div>
               </div>
@@ -736,31 +725,17 @@ export default function NewCustomerPage() {
                         <p className="text-sm text-danger mt-2">{errors.service_address}</p>
                       )}
                       
-                      {/* 定位功能 */}
+                      {/* 地圖定位功能 */}
                       <div className="mt-3 flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={getCurrentLocation}
-                          disabled={gettingLocation}
+                          onClick={openMapSelector}
                           className="btn-secondary-apple flex items-center gap-2 text-sm"
                         >
-                          {gettingLocation ? (
-                            <>
-                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              定位中...
-                            </>
-                          ) : (
-                            <>
-                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              獲取當前位置
-                            </>
-                          )}
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                          </svg>
+                          在地圖上標記位置
                         </button>
                         {formData.location_latitude && formData.location_longitude && (
                           <span className="text-sm text-text-secondary">
@@ -929,6 +904,100 @@ export default function NewCustomerPage() {
         </form>
         </div>
       </main>
+
+      {/* 地圖選擇器模態框 */}
+      {showMapModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-border-light flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-text-primary">選擇服務地址位置</h3>
+                <p className="text-sm text-text-secondary mt-1">地址：{formData.service_address}</p>
+              </div>
+              <button
+                onClick={cancelMapSelection}
+                className="text-text-secondary hover:text-text-primary"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 p-4 overflow-hidden">
+              <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center relative">
+                <iframe
+                  src={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.service_address + ', 香港')}`}
+                  className="w-full h-full rounded-lg border-0"
+                  title="Google Maps"
+                  allowFullScreen
+                />
+                <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-lg shadow-lg text-sm">
+                  <p className="text-text-secondary">💡 在 Google Maps 中：</p>
+                  <ol className="text-xs text-text-secondary mt-1 space-y-1">
+                    <li>1. 搜索並找到正確位置</li>
+                    <li>2. 在地圖上點擊精確位置</li>
+                    <li>3. 複製 URL 中的座標（格式：/@緯度,經度）</li>
+                    <li>4. 點擊下方「手動輸入座標」按鈕</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-border-light">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-text-primary whitespace-nowrap">
+                    座標輸入：
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="緯度 (例如: 22.3193)"
+                    value={tempMarkerPosition?.lat || ''}
+                    onChange={(e) => {
+                      const lat = parseFloat(e.target.value)
+                      if (!isNaN(lat)) {
+                        setTempMarkerPosition(prev => ({ lat, lng: prev?.lng || 0 }))
+                      }
+                    }}
+                    className="form-input-apple flex-1 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="經度 (例如: 114.1694)"
+                    value={tempMarkerPosition?.lng || ''}
+                    onChange={(e) => {
+                      const lng = parseFloat(e.target.value)
+                      if (!isNaN(lng)) {
+                        setTempMarkerPosition(prev => ({ lat: prev?.lat || 0, lng }))
+                      }
+                    }}
+                    className="form-input-apple flex-1 text-sm"
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={cancelMapSelection}
+                    className="btn-secondary-apple"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmMapLocation}
+                    disabled={!tempMarkerPosition?.lat || !tempMarkerPosition?.lng}
+                    className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    確認位置
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
