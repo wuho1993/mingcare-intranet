@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { CustomerManagementService } from '../../../services/customer-management'
 import LastUpdateIndicator from '../../../components/LastUpdateIndicator'
+import Script from 'next/script'
 import type {
   CustomerFormData,
   CustomerType,
@@ -42,6 +43,10 @@ export default function NewCustomerPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showMapModal, setShowMapModal] = useState(false)
   const [tempMarkerPosition, setTempMarkerPosition] = useState<{ lat: number; lng: number } | null>(null)
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const googleMapRef = useRef<any>(null)
+  const markerRef = useRef<any>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -197,6 +202,81 @@ export default function NewCustomerPage() {
     }
   }
 
+  // 初始化 Google Maps
+  const initializeMap = () => {
+    if (!mapRef.current || !isGoogleMapsLoaded) return
+
+    const address = formData.service_address || '香港'
+    const geocoder = new (window as any).google.maps.Geocoder()
+
+    geocoder.geocode({ address: address + ', 香港' }, (results: any, status: any) => {
+      let center = { lat: 22.3193, lng: 114.1694 } // 默認香港中心
+
+      if (status === 'OK' && results[0]) {
+        center = {
+          lat: results[0].geometry.location.lat(),
+          lng: results[0].geometry.location.lng()
+        }
+      }
+
+      // 創建地圖
+      googleMapRef.current = new (window as any).google.maps.Map(mapRef.current, {
+        center: center,
+        zoom: 16,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      })
+
+      // 如果已有座標，顯示標記
+      if (formData.location_latitude && formData.location_longitude) {
+        const existingPosition = {
+          lat: formData.location_latitude,
+          lng: formData.location_longitude
+        }
+        placeMarker(existingPosition)
+        setTempMarkerPosition(existingPosition)
+      }
+
+      // 地圖點擊事件
+      googleMapRef.current.addListener('click', (e: any) => {
+        const position = {
+          lat: e.latLng.lat(),
+          lng: e.latLng.lng()
+        }
+        placeMarker(position)
+        setTempMarkerPosition(position)
+      })
+    })
+  }
+
+  // 放置標記
+  const placeMarker = (position: { lat: number; lng: number }) => {
+    if (!googleMapRef.current) return
+
+    // 移除舊標記
+    if (markerRef.current) {
+      markerRef.current.setMap(null)
+    }
+
+    // 創建新標記
+    markerRef.current = new (window as any).google.maps.Marker({
+      position: position,
+      map: googleMapRef.current,
+      draggable: true,
+      animation: (window as any).google.maps.Animation.DROP
+    })
+
+    // 標記拖動事件
+    markerRef.current.addListener('dragend', (e: any) => {
+      const newPosition = {
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng()
+      }
+      setTempMarkerPosition(newPosition)
+    })
+  }
+
   // 打開地圖選擇位置
   const openMapSelector = () => {
     if (!formData.service_address?.trim()) {
@@ -204,6 +284,10 @@ export default function NewCustomerPage() {
       return
     }
     setShowMapModal(true)
+    // 延遲初始化地圖，確保 modal 已經渲染
+    setTimeout(() => {
+      initializeMap()
+    }, 100)
   }
 
   // 確認地圖上選擇的位置
@@ -366,18 +450,31 @@ export default function NewCustomerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
-          <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
+      <>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
+          onLoad={() => setIsGoogleMapsLoaded(true)}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+            <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>
-      {/* Header */}
+    <>
+      {/* Google Maps Script */}
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
+        onLoad={() => setIsGoogleMapsLoaded(true)}
+      />
+      
+      <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>
+        {/* Header */}
       <header className="card-apple border-b border-border-light fade-in-apple">
         <div className="w-full px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
@@ -925,38 +1022,20 @@ export default function NewCustomerPage() {
             </div>
             
             <div className="flex-1 p-4 overflow-hidden">
-              <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center relative">
-                <iframe
-                  src={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.service_address + ', 香港')}`}
-                  className="w-full h-full rounded-lg border-0"
-                  title="Google Maps"
-                  allowFullScreen
-                />
-              </div>
+              {/* 互動式 Google Maps */}
+              <div 
+                ref={mapRef}
+                className="h-96 rounded-lg border border-gray-300 overflow-hidden mb-4"
+              ></div>
               
-              {/* 在 Google Maps 開啟按鈕 */}
-              <div className="mt-4">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.service_address + ', 香港')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  在新分頁開啟 Google Maps 獲取座標
-                </a>
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <p className="text-xs text-blue-800 font-medium mb-1">💡 如何取得座標：</p>
-                  <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
-                    <li>點擊上方綠色按鈕，在新分頁開啟 Google Maps</li>
-                    <li>在地圖上點擊您要的位置（會出現紅色標記）</li>
-                    <li>點擊下方彈出的資訊卡片</li>
-                    <li>複製座標（例如：22.302711, 114.177216）</li>
-                    <li>貼到下方的經緯度欄位中</li>
-                  </ol>
-                </div>
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800 font-medium mb-1">💡 使用說明：</p>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• 直接在地圖上<strong>點擊</strong>任何位置來設置標記</li>
+                  <li>• 可以<strong>拖動標記</strong>來調整精確位置</li>
+                  <li>• 座標會自動更新到下方欄位</li>
+                  <li>• 或者直接在下方手動輸入座標</li>
+                </ul>
               </div>
             </div>
 
@@ -1014,6 +1093,7 @@ export default function NewCustomerPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
