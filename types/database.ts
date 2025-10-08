@@ -157,6 +157,8 @@ export interface CustomerFormData {
   home_visit_status?: HomeVisitStatus;
   staff_owner?: StaffOwner;
   copay_level?: CopayLevel;
+  location_latitude?: number;
+  location_longitude?: number;
 }
 
 // 新增/編輯護理人員表單

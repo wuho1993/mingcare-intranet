@@ -40,6 +40,7 @@ export default function NewCustomerPage() {
     charity_support: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [gettingLocation, setGettingLocation] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -193,6 +194,49 @@ export default function NewCustomerPage() {
         return newErrors
       })
     }
+  }
+
+  // 獲取當前位置
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('您的瀏覽器不支持定位功能')
+      return
+    }
+
+    setGettingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setFormData(prev => ({
+          ...prev,
+          location_latitude: latitude,
+          location_longitude: longitude
+        }))
+        setGettingLocation(false)
+        alert(`定位成功！\n緯度: ${latitude.toFixed(6)}\n經度: ${longitude.toFixed(6)}`)
+      },
+      (error) => {
+        setGettingLocation(false)
+        let errorMessage = '無法獲取位置'
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = '用戶拒絕了定位請求'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = '位置信息不可用'
+            break
+          case error.TIMEOUT:
+            errorMessage = '定位請求超時'
+            break
+        }
+        alert(errorMessage)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
   }
 
   // 表單驗證 - 按照完整規格實施
@@ -691,6 +735,39 @@ export default function NewCustomerPage() {
                       {errors.service_address && (
                         <p className="text-sm text-danger mt-2">{errors.service_address}</p>
                       )}
+                      
+                      {/* 定位功能 */}
+                      <div className="mt-3 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={getCurrentLocation}
+                          disabled={gettingLocation}
+                          className="btn-secondary-apple flex items-center gap-2 text-sm"
+                        >
+                          {gettingLocation ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              定位中...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              獲取當前位置
+                            </>
+                          )}
+                        </button>
+                        {formData.location_latitude && formData.location_longitude && (
+                          <span className="text-sm text-text-secondary">
+                            📍 已定位 ({formData.location_latitude.toFixed(6)}, {formData.location_longitude.toFixed(6)})
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* 電話號碼 */}

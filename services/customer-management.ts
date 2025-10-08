@@ -322,6 +322,8 @@ export class CustomerManagementService {
         project_manager: formData.staff_owner || null,
         copay_level: formData.copay_level || null,
         voucher_number: formData.voucher_number || null,
+        location_latitude: formData.location_latitude || null,
+        location_longitude: formData.location_longitude || null,
         created_at: new Date().toISOString()
       };
 
