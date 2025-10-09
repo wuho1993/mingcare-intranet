@@ -4523,8 +4523,16 @@ export default function ServicesPage() {
           amount: number
         }> = {}
 
+        // 計算項目統計
+        const projectStats: Record<string, {
+          count: number
+          hours: number
+          amount: number
+        }> = {}
+
         records.forEach(record => {
           const serviceType = record.service_type || '未知服務類型'
+          const project = record.project_category || '未分類'
           const hours = parseFloat(record.service_hours || '0')
           const amount = parseFloat(record.service_fee || '0')
 
@@ -4532,9 +4540,17 @@ export default function ServicesPage() {
             serviceTypeStats[serviceType] = { count: 0, hours: 0, amount: 0 }
           }
 
+          if (!projectStats[project]) {
+            projectStats[project] = { count: 0, hours: 0, amount: 0 }
+          }
+
           serviceTypeStats[serviceType].count += 1
           serviceTypeStats[serviceType].hours += hours
           serviceTypeStats[serviceType].amount += amount
+
+          projectStats[project].count += 1
+          projectStats[project].hours += hours
+          projectStats[project].amount += amount
         })
 
         // 生成服務類型統計表格
@@ -4575,6 +4591,37 @@ export default function ServicesPage() {
                 <div style="font-weight: bold; color: #428bca;">總服務費用</div>
                 <div style="font-size: 18px; font-weight: bold;">$${totalFees.toFixed(2)}</div>
               </div>
+            </div>
+
+            <!-- 項目統計 -->
+            <div style="margin-top: 20px;">
+              <h4 style="color: #428bca; margin-bottom: 10px; text-align: center;">各項目小結</h4>
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background-color: #428bca; color: white;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">所屬項目</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">次數</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">時數</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b, 'zh-TW')).map(([project, stats]) => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${project}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>
+                    </tr>
+                  `).join('')}
+                  <tr style="background-color: #e7f3ff; font-weight: bold; border-top: 2px solid #428bca;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">總計</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalServices}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalFees.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <!-- 服務類型細分統計 -->
@@ -4720,6 +4767,18 @@ export default function ServicesPage() {
 
         tableContent = staffTables
 
+        // 計算項目統計
+        const projectStats: Record<string, { count: number; hours: number; salary: number }> = {}
+        records.forEach(record => {
+          const project = record.project_category || '未分類'
+          if (!projectStats[project]) {
+            projectStats[project] = { count: 0, hours: 0, salary: 0 }
+          }
+          projectStats[project].count += 1
+          projectStats[project].hours += parseFloat(String(record.service_hours || '0'))
+          projectStats[project].salary += parseFloat(String(record.staff_salary || '0'))
+        })
+
         // 總結頁面
         summaryContent = `
           <div class="total-summary-page">
@@ -4744,6 +4803,36 @@ export default function ServicesPage() {
             </div>
 
             <div class="staff-summary-table">
+              <h3>各項目小結</h3>
+              <table class="summary-table">
+                <thead>
+                  <tr>
+                    <th>所屬項目</th>
+                    <th>服務次數</th>
+                    <th>服務時數</th>
+                    <th>工資</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b, 'zh-TW')).map(([project, stats]) => `
+                    <tr>
+                      <td>${project}</td>
+                      <td class="number">${stats.count}</td>
+                      <td class="number">${stats.hours.toFixed(1)}</td>
+                      <td class="number">$${stats.salary.toFixed(2)}</td>
+                    </tr>
+                  `).join('')}
+                  <tr class="total-row">
+                    <td><strong>總計</strong></td>
+                    <td class="number"><strong>${totalServices}</strong></td>
+                    <td class="number"><strong>${totalHours.toFixed(1)}</strong></td>
+                    <td class="number"><strong>$${totalSalary.toFixed(2)}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="staff-summary-table" style="margin-top: 30px;">
               <h3>各護理人員明細</h3>
               <table class="summary-table">
                 <thead>
