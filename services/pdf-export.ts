@@ -82,11 +82,34 @@ export async function getCustomersForExport(options: PDFExportOptions): Promise<
     }
 
     console.log('執行客戶數據查詢...')
-    let { data: customers, error: customerError } = await customerQuery.order('customer_id', { ascending: true })
-
-    if (customerError) {
-      console.error('客戶數據查詢錯誤:', customerError)
-      throw customerError
+    
+    // 分批獲取所有客戶記錄，避免 Supabase 1000 條限制
+    let customers: any[] = []
+    let page = 0
+    const pageSize = 1000
+    let hasMore = true
+    
+    while (hasMore) {
+      const from = page * pageSize
+      const to = from + pageSize - 1
+      
+      const { data: pageData, error: pageError } = await customerQuery
+        .order('customer_id', { ascending: true })
+        .range(from, to)
+      
+      if (pageError) {
+        console.error('客戶數據查詢錯誤:', pageError)
+        throw pageError
+      }
+      
+      if (pageData && pageData.length > 0) {
+        customers = customers.concat(pageData)
+        hasMore = pageData.length === pageSize
+        page++
+        console.log(`已獲取 ${customers.length} 條客戶記錄...`)
+      } else {
+        hasMore = false
+      }
     }
 
     console.log('查詢到客戶數量:', customers?.length || 0)
@@ -140,44 +163,78 @@ export async function getCustomersForExport(options: PDFExportOptions): Promise<
         const shouldFilterProjectCategory = options.customerType === 'voucher'
         const allowedProjectCategories = ['MC社區券(醫點）', 'Steven140', 'Steven200', 'Steven醫點']
         
-        // 查詢名稱匹配的記錄（使用當前月份範圍）
+        // 查詢名稱匹配的記錄（使用當前月份範圍）- 分頁獲取所有記錄
         if (customerNames.length > 0) {
-          let nameQuery = supabase
-            .from('billing_salary_data')
-            .select('customer_name, customer_id, project_category')
-            .in('customer_name', customerNames)
-            .gte('service_date', currentMonthStart)
-            .lt('service_date', currentMonthEnd)
+          let page = 0
+          const pageSize = 1000
+          let hasMore = true
           
-          // 社區券報表需要篩選項目類別
-          if (shouldFilterProjectCategory) {
-            nameQuery = nameQuery.in('project_category', allowedProjectCategories)
+          while (hasMore) {
+            const from = page * pageSize
+            const to = from + pageSize - 1
+            
+            let nameQuery = supabase
+              .from('billing_salary_data')
+              .select('customer_name, customer_id, project_category')
+              .in('customer_name', customerNames)
+              .gte('service_date', currentMonthStart)
+              .lt('service_date', currentMonthEnd)
+              .range(from, to)
+            
+            // 社區券報表需要篩選項目類別
+            if (shouldFilterProjectCategory) {
+              nameQuery = nameQuery.in('project_category', allowedProjectCategories)
+            }
+            
+            const { data: nameRecords, error: nameError } = await nameQuery
+            
+            if (nameError) throw nameError
+            
+            if (nameRecords && nameRecords.length > 0) {
+              serviceRecords = [...serviceRecords, ...nameRecords]
+              hasMore = nameRecords.length === pageSize
+              page++
+            } else {
+              hasMore = false
+            }
           }
-          
-          const { data: nameRecords, error: nameError } = await nameQuery
-          
-          if (nameError) throw nameError
-          if (nameRecords) serviceRecords = [...serviceRecords, ...nameRecords]
         }
 
-        // 查詢ID匹配的記錄（使用當前月份範圍）
+        // 查詢ID匹配的記錄（使用當前月份範圍）- 分頁獲取所有記錄
         if (customerIds.length > 0) {
-          let idQuery = supabase
-            .from('billing_salary_data')
-            .select('customer_name, customer_id, project_category')
-            .in('customer_id', customerIds)
-            .gte('service_date', currentMonthStart)
-            .lt('service_date', currentMonthEnd)
+          let page = 0
+          const pageSize = 1000
+          let hasMore = true
           
-          // 社區券報表需要篩選項目類別
-          if (shouldFilterProjectCategory) {
-            idQuery = idQuery.in('project_category', allowedProjectCategories)
+          while (hasMore) {
+            const from = page * pageSize
+            const to = from + pageSize - 1
+            
+            let idQuery = supabase
+              .from('billing_salary_data')
+              .select('customer_name, customer_id, project_category')
+              .in('customer_id', customerIds)
+              .gte('service_date', currentMonthStart)
+              .lt('service_date', currentMonthEnd)
+              .range(from, to)
+            
+            // 社區券報表需要篩選項目類別
+            if (shouldFilterProjectCategory) {
+              idQuery = idQuery.in('project_category', allowedProjectCategories)
+            }
+            
+            const { data: idRecords, error: idError } = await idQuery
+            
+            if (idError) throw idError
+            
+            if (idRecords && idRecords.length > 0) {
+              serviceRecords = [...serviceRecords, ...idRecords]
+              hasMore = idRecords.length === pageSize
+              page++
+            } else {
+              hasMore = false
+            }
           }
-          
-          const { data: idRecords, error: idError } = await idQuery
-          
-          if (idError) throw idError
-          if (idRecords) serviceRecords = [...serviceRecords, ...idRecords]
         }        // 去重（因為可能同一條記錄被兩個查詢都找到）
         const uniqueRecords = serviceRecords.filter((record, index, self) => 
           index === self.findIndex(r => r.customer_name === record.customer_name && r.customer_id === record.customer_id)
@@ -368,17 +425,39 @@ async function getVoucherStatsForExport(customers: CustomerListItem[], dateRange
         const monthStart = `${monthInfo.year}-${String(monthInfo.month).padStart(2, '0')}-01`
         const monthEnd = new Date(monthInfo.year, monthInfo.month, 0).toISOString().split('T')[0]
         
-        const { data: serviceUsage, error } = await supabase
-          .from('billing_salary_data')
-          .select('project_category, customer_name, service_date')
-          .gte('service_date', monthStart)
-          .lte('service_date', monthEnd)
-          .neq('project_category', 'MC街客')
+        // 分批獲取該月所有服務記錄
+        let serviceUsage: any[] = []
+        let page = 0
+        const pageSize = 1000
+        let hasMore = true
+        
+        while (hasMore) {
+          const from = page * pageSize
+          const to = from + pageSize - 1
+          
+          const { data: pageData, error } = await supabase
+            .from('billing_salary_data')
+            .select('project_category, customer_name, service_date')
+            .gte('service_date', monthStart)
+            .lte('service_date', monthEnd)
+            .neq('project_category', 'MC街客')
+            .range(from, to)
 
-        if (error) {
-          console.error(`${monthInfo.month}月服務使用數據查詢錯誤:`, error)
-          continue
+          if (error) {
+            console.error(`${monthInfo.month}月服務使用數據查詢錯誤:`, error)
+            break
+          }
+          
+          if (pageData && pageData.length > 0) {
+            serviceUsage = serviceUsage.concat(pageData)
+            hasMore = pageData.length === pageSize
+            page++
+          } else {
+            hasMore = false
+          }
         }
+        
+        console.log(`${monthInfo.month}月已獲取 ${serviceUsage.length} 條服務記錄`)
 
         const monthlyData = (serviceUsage || []).reduce((acc, record) => {
           const category = record.project_category

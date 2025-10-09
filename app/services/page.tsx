@@ -13,6 +13,7 @@ import TestUpdateButton from '../../components/TestUpdateButton'
 import type {
   BillingSalaryFilters,
   BillingSalaryRecord,
+  BillingSalaryRecordWithOvernight,
   BillingSalaryFormData,
   DateRangePreset,
   ServiceType,
@@ -110,7 +111,7 @@ function ReportsCalendarView({
   refreshTrigger?: number;
   recordUpdateTimes?: Record<string, Date>;
 }) {
-  const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecord[]>>({})
+  const [calendarData, setCalendarData] = useState<Record<string, BillingSalaryRecordWithOvernight[]>>({})
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isMobile, setIsMobile] = useState(false)
@@ -148,20 +149,38 @@ function ReportsCalendarView({
     const loadCalendarData = async () => {
       setLoading(true)
       try {
-        const response = await fetchBillingSalaryRecords(filters, 1, 1000) // 獲取更多記錄用於月曆顯示
+        const response = await fetchBillingSalaryRecords(filters, 1, 100000) // 獲取所有記錄用於月曆顯示（無上限）
 
         if (response.success && response.data) {
           const records = response.data.data || []
           setAllRecords(records) // 存儲所有記錄
 
-          // 將記錄按日期分組
-          const groupedByDate: Record<string, BillingSalaryRecord[]> = {}
+          // 將記錄按日期分組（支援跨夜更）
+          const groupedByDate: Record<string, BillingSalaryRecordWithOvernight[]> = {}
           records.forEach((record: BillingSalaryRecord) => {
-            const dateKey = record.service_date
-            if (!groupedByDate[dateKey]) {
-              groupedByDate[dateKey] = []
+            const startDate = record.service_date
+            
+            // 添加到開始日期
+            if (!groupedByDate[startDate]) {
+              groupedByDate[startDate] = []
             }
-            groupedByDate[dateKey].push(record)
+            groupedByDate[startDate].push(record)
+            
+            // 檢測跨夜更：結束時間小於開始時間
+            if (record.start_time && record.end_time && record.start_time > record.end_time) {
+              // 計算結束日期（隔天）
+              const startDateObj = new Date(startDate + 'T00:00:00')
+              startDateObj.setDate(startDateObj.getDate() + 1)
+              const endDate = formatDateSafely(startDateObj)
+              
+              // 也添加到結束日期（隔天），標記為跨夜顯示
+              if (!groupedByDate[endDate]) {
+                groupedByDate[endDate] = []
+              }
+              // 添加標記以便在顯示時區分
+              const overnightRecord = { ...record, _isOvernightEndDay: true }
+              groupedByDate[endDate].push(overnightRecord)
+            }
           })
 
           setCalendarData(groupedByDate)
@@ -369,7 +388,15 @@ function ReportsCalendarView({
                         <div className="text-blue-600 mb-0.5 sm:mb-1 leading-tight text-xs">
                           {record.service_type}
                         </div>
-                        <div className="text-gray-600 text-xs">
+                        <div className="text-gray-600 text-xs flex items-center gap-1">
+                          {/* 跨夜更標記 */}
+                          {record.start_time && record.end_time && record.start_time > record.end_time && (
+                            <span title="跨夜更" className="text-orange-500">🌙</span>
+                          )}
+                          {/* 隔天顯示標記 */}
+                          {(record as any)._isOvernightEndDay && (
+                            <span className="text-xs text-orange-600 font-semibold">(隔天)</span>
+                          )}
                           {record.start_time}-{record.end_time}
                         </div>
                       </div>
@@ -530,6 +557,10 @@ function ReportsCalendarView({
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
+                    {/* 跨夜更標記 */}
+                    {record.start_time && record.end_time && record.start_time > record.end_time && (
+                      <span title="跨夜更" className="text-orange-500 mr-1">🌙</span>
+                    )}
                     {record.start_time} - {record.end_time}
                   </div>
 
@@ -647,7 +678,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
       }
 
       // 一次獲取所有記錄，不使用分頁
-      const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+      const response = await fetchBillingSalaryRecords(filters, 1, 100000)
 
       // 二月和四月的特別調試
       if (filters.dateRange?.start) {
@@ -3479,7 +3510,7 @@ export default function ServicesPage() {
       const loadStaffList = async () => {
         setLoadingStaff(true)
         try {
-          const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+          const response = await fetchBillingSalaryRecords(filters, 1, 100000)
           if (response.success && response.data) {
             // 從當前數據中提取護理員列表（優先使用 staff_id）
             const staffMap = new Map<string, StaffOption>()
@@ -3656,7 +3687,7 @@ export default function ServicesPage() {
 
     try {
       // 獲取要導出的數據
-      const response = await fetchBillingSalaryRecords(filters, 1, 10000) // 獲取所有記錄
+      const response = await fetchBillingSalaryRecords(filters, 1, 100000) // 獲取所有記錄
 
       if (!response.success || !response.data) {
         throw new Error('無法獲取數據')
@@ -3810,6 +3841,22 @@ export default function ServicesPage() {
       const salary = parseFloat(String(record.staff_salary || '0'))
       return sum + (isNaN(salary) ? 0 : salary)
     }, 0)
+
+    // 按所屬項目分組統計
+    const projectStats = records.reduce((acc, record) => {
+      const project = record.project_category || '未分類'
+      if (!acc[project]) {
+        acc[project] = {
+          count: 0,
+          hours: 0,
+          salary: 0
+        }
+      }
+      acc[project].count += 1
+      acc[project].hours += parseFloat(String(record.service_hours || '0'))
+      acc[project].salary += parseFloat(String(record.staff_salary || '0'))
+      return acc
+    }, {} as Record<string, { count: number; hours: number; salary: number }>)
 
     const today = new Date()
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -4071,11 +4118,36 @@ export default function ServicesPage() {
           </tbody>
         </table>
 
+        <!-- 按所屬項目分組統計 -->
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+          <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #495057;">各項目小結</div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 0;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px;">所屬項目</th>
+                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: center;">服務次數</th>
+                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: right;">總時數</th>
+                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: right;">總工資</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b)).map(([project, stats]: [string, any]) => `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px;">${project}</td>
+                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: center;">${stats.count} 次</td>
+                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: right;">${stats.hours.toFixed(1)} 小時</td>
+                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: right;">$${stats.salary.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
         <!-- 底部佈局：左邊統計，右邊印章 -->
-        <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-          <!-- 左邊：統計資訊 -->
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <!-- 左邊：總計統計資訊 -->
           <div style="flex: 1;">
-            <div style="margin-bottom: 5px; font-size: 12px;"><strong>服務次數:</strong> ${totalRecords} 次</div>
+            <div style="margin-bottom: 5px; font-size: 12px;"><strong>總服務次數:</strong> ${totalRecords} 次</div>
             <div style="margin-bottom: 5px; font-size: 12px;"><strong>總時數:</strong> ${totalHours.toFixed(1)} 小時</div>
             <div style="font-weight: bold; font-size: 14px; color: #000000;"><strong>總工資:</strong> $${totalSalary.toFixed(2)}</div>
           </div>
@@ -5168,7 +5240,7 @@ export default function ServicesPage() {
   const downloadAllStaffPDFs = async () => {
     try {
       // 獲取所有記錄
-      const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+      const response = await fetchBillingSalaryRecords(filters, 1, 100000)
       if (!response.success || !response.data) {
         alert('無法獲取記錄資料')
         return
@@ -5355,7 +5427,7 @@ export default function ServicesPage() {
 
                                   try {
                                     // 獲取該護理員的記錄
-                                    const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+                                    const response = await fetchBillingSalaryRecords(filters, 1, 100000)
                                     if (response.success && response.data) {
                                       const selectedColumns = Object.entries(exportColumns)
                                         .filter(([_, selected]) => selected)
@@ -5390,7 +5462,7 @@ export default function ServicesPage() {
 
                                 try {
                                   // 獲取該護理員的記錄
-                                  const response = await fetchBillingSalaryRecords(filters, 1, 10000)
+                                  const response = await fetchBillingSalaryRecords(filters, 1, 100000)
                                   if (response.success && response.data) {
                                     const selectedColumns = Object.entries(exportColumns)
                                       .filter(([_, selected]) => selected)
@@ -5895,21 +5967,23 @@ function ScheduleFormModal({
     if (!data.project_category) errors.project_category = '請選擇項目分類'
     if (!data.project_manager) errors.project_manager = '請選擇項目負責人'
 
-    // 檢查時間邏輯
-    if (data.start_time >= data.end_time) {
-      errors.end_time = '結束時間必須晚於開始時間'
-    }
+    // 時間邏輯檢查已移除 - 現在支援跨夜更（例如：23:00-07:00）
 
     return errors
   }
 
-  // 計算服務時數
+  // 計算服務時數（支援跨夜更）
   const calculateServiceHours = (startTime: string, endTime: string): number => {
     const [startHour, startMin] = startTime.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
 
-    const startMinutes = startHour * 60 + startMin
-    const endMinutes = endHour * 60 + endMin
+    let startMinutes = startHour * 60 + startMin
+    let endMinutes = endHour * 60 + endMin
+
+    // 跨夜更：結束時間小於開始時間，加24小時（1440分鐘）
+    if (endMinutes < startMinutes) {
+      endMinutes += 1440
+    }
 
     return Math.max(0, (endMinutes - startMinutes) / 60)
   }

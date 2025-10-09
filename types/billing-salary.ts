@@ -33,6 +33,11 @@ export interface BillingSalaryRecordWithCalculated extends BillingSalaryRecord {
   profit: number // service_fee - staff_salary
 }
 
+// 跨夜更記錄（用於月曆顯示）
+export interface BillingSalaryRecordWithOvernight extends BillingSalaryRecord {
+  _isOvernightEndDay?: boolean // 標記此記錄是否為跨夜更的結束日顯示
+}
+
 // =============================================================================
 // ENUM 類型定義
 // =============================================================================
