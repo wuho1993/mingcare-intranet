@@ -459,9 +459,10 @@ async function getVoucherStatsForExport(customers: CustomerListItem[], dateRange
         
         console.log(`${monthInfo.month}月已獲取 ${serviceUsage.length} 條服務記錄`)
 
+        type MonthlyDataItem = { project_category: string; service_count: number; customers: string[] }
         const monthlyData = (serviceUsage || []).reduce((acc, record) => {
           const category = record.project_category
-          const existingCategory = acc.find(item => item.project_category === category)
+          const existingCategory = acc.find((item: MonthlyDataItem) => item.project_category === category)
           
           if (existingCategory) {
             existingCategory.service_count += 1
@@ -477,7 +478,7 @@ async function getVoucherStatsForExport(customers: CustomerListItem[], dateRange
           }
           
           return acc
-        }, [] as Array<{ project_category: string; service_count: number; customers: string[] }>)
+        }, [] as MonthlyDataItem[])
         
         monthlyServiceUsage.push({
           month: monthInfo.month,
