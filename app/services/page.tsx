@@ -31,6 +31,7 @@ import {
   getBusinessKPI,
   getProjectCategorySummary,
   fetchBillingSalaryRecords,
+  fetchAllBillingSalaryRecords,
   createBillingSalaryRecord,
   updateBillingSalaryRecord,
   deleteBillingSalaryRecord,
@@ -677,8 +678,8 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         }
       }
 
-      // 一次獲取所有記錄，不使用分頁
-      const response = await fetchBillingSalaryRecords(filters, 1, 100000)
+      // 獲取所有記錄（分批獲取，無上限）
+      const response = await fetchAllBillingSalaryRecords(filters)
 
       // 二月和四月的特別調試
       if (filters.dateRange?.start) {
@@ -688,16 +689,14 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
             success: response.success,
             dataExists: !!response.data,
             dataType: typeof response.data,
-            dataDataExists: !!(response.data?.data),
-            dataDataType: typeof response.data?.data,
-            dataDataLength: response.data?.data?.length
+            dataLength: response.data?.length
           })
         }
       }
 
       if (response.success && response.data) {
-        const fetchedRecords = response.data.data || []
-        setTotalRecords(response.data.total || 0) // 設置總記錄數
+        const fetchedRecords = response.data || []
+        setTotalRecords(fetchedRecords.length) // 設置總記錄數
         setOriginalRecords(fetchedRecords)
         // 應用當前排序
         sortRecords(fetchedRecords, sortConfig)
@@ -3510,12 +3509,12 @@ export default function ServicesPage() {
       const loadStaffList = async () => {
         setLoadingStaff(true)
         try {
-          const response = await fetchBillingSalaryRecords(filters, 1, 100000)
+          const response = await fetchAllBillingSalaryRecords(filters)
           if (response.success && response.data) {
             // 從當前數據中提取護理員列表（優先使用 staff_id）
             const staffMap = new Map<string, StaffOption>()
 
-            response.data.data
+            response.data
               .filter((record: BillingSalaryRecord) => record.care_staff_name && record.care_staff_name.trim() !== '')
               .forEach((record: BillingSalaryRecord) => {
                 const name = record.care_staff_name.trim()
@@ -3686,14 +3685,14 @@ export default function ServicesPage() {
     setShowExportModal(false)
 
     try {
-      // 獲取要導出的數據
-      const response = await fetchBillingSalaryRecords(filters, 1, 100000) // 獲取所有記錄
+      // 獲取要導出的數據（分批獲取，無上限）
+      const response = await fetchAllBillingSalaryRecords(filters)
 
       if (!response.success || !response.data) {
         throw new Error('無法獲取數據')
       }
 
-      let records = response.data.data || []
+      let records = response.data || []
 
       // 對數模式需要特殊排序：先按客戶名稱，再按日期
       if (exportMode === 'accounting') {
@@ -5239,14 +5238,14 @@ export default function ServicesPage() {
 
   const downloadAllStaffPDFs = async () => {
     try {
-      // 獲取所有記錄
-      const response = await fetchBillingSalaryRecords(filters, 1, 100000)
+      // 獲取所有記錄（分批獲取，無上限）
+      const response = await fetchAllBillingSalaryRecords(filters)
       if (!response.success || !response.data) {
         alert('無法獲取記錄資料')
         return
       }
 
-      const allRecords = response.data.data || []
+      const allRecords = response.data || []
       const selectedColumns = Object.entries(exportColumns)
         .filter(([_, selected]) => selected)
         .map(([column, _]) => column)
@@ -5427,13 +5426,13 @@ export default function ServicesPage() {
 
                                   try {
                                     // 獲取該護理員的記錄
-                                    const response = await fetchBillingSalaryRecords(filters, 1, 100000)
+                                    const response = await fetchAllBillingSalaryRecords(filters)
                                     if (response.success && response.data) {
                                       const selectedColumns = Object.entries(exportColumns)
                                         .filter(([_, selected]) => selected)
                                         .map(([column, _]) => column)
 
-                                      await downloadSingleStaffPDF(staff, response.data.data || [], selectedColumns)
+                                      await downloadSingleStaffPDF(staff, response.data || [], selectedColumns)
                                     }
                                   } catch (error) {
                                     console.error('下載失敗:', error)
@@ -5462,13 +5461,13 @@ export default function ServicesPage() {
 
                                 try {
                                   // 獲取該護理員的記錄
-                                  const response = await fetchBillingSalaryRecords(filters, 1, 100000)
+                                  const response = await fetchAllBillingSalaryRecords(filters)
                                   if (response.success && response.data) {
                                     const selectedColumns = Object.entries(exportColumns)
                                       .filter(([_, selected]) => selected)
                                       .map(([column, _]) => column)
 
-                                    await downloadSingleStaffPDF(staff, response.data.data || [], selectedColumns)
+                                    await downloadSingleStaffPDF(staff, response.data || [], selectedColumns)
                                   }
                                 } catch (error) {
                                   console.error('下載失敗:', error)

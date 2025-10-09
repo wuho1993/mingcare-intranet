@@ -113,6 +113,95 @@ export async function fetchBillingSalaryRecords(
   }
 }
 
+// 獲取所有記錄（分批獲取，無上限）
+export async function fetchAllBillingSalaryRecords(
+  filters: BillingSalaryFilters
+): Promise<ApiResponse<BillingSalaryRecordWithCalculated[]>> {
+  try {
+    let allRecords: any[] = []
+    let page = 0
+    const pageSize = 1000
+    let hasMore = true
+
+    while (hasMore) {
+      const from = page * pageSize
+      const to = from + pageSize - 1
+
+      let query = supabase
+        .from('billing_salary_data')
+        .select('*')
+
+      // 應用篩選條件
+      if (filters.dateRange.start && filters.dateRange.end) {
+        query = query
+          .gte('service_date', filters.dateRange.start)
+          .lte('service_date', filters.dateRange.end)
+      }
+
+      if (filters.serviceType) {
+        query = query.eq('service_type', filters.serviceType)
+      }
+
+      const projectCategories = normalizeProjectCategories(filters.projectCategory)
+      if (projectCategories.length > 0) {
+        query = query.in('project_category', projectCategories)
+      }
+
+      if (filters.projectManager) {
+        query = query.eq('project_manager', filters.projectManager)
+      }
+
+      if (filters.careStaffName) {
+        query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
+      }
+
+      // 優先處理多選客戶
+      if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+        query = query.in('customer_id', filters.selectedCustomerIds)
+      } else if (filters.searchTerm && filters.searchTerm.length >= 2) {
+        query = query.or(`customer_name.ilike.%${filters.searchTerm}%,phone.ilike.%${filters.searchTerm}%,customer_id.ilike.%${filters.searchTerm}%`)
+      }
+
+      const { data, error } = await query
+        .order('service_date', { ascending: false })
+        .order('start_time', { ascending: true })
+        .range(from, to)
+
+      if (error) {
+        console.error('Error fetching records:', error)
+        throw error
+      }
+
+      if (data && data.length > 0) {
+        allRecords = allRecords.concat(data)
+        hasMore = data.length === pageSize
+        page++
+        console.log(`已獲取 ${allRecords.length} 條記錄...`)
+      } else {
+        hasMore = false
+      }
+    }
+
+    // 添加計算欄位
+    const dataWithCalculated: BillingSalaryRecordWithCalculated[] = allRecords.map(record => ({
+      ...record,
+      profit: (record.service_fee || 0) - (record.staff_salary || 0)
+    }))
+
+    return {
+      success: true,
+      data: dataWithCalculated,
+      message: `成功獲取 ${dataWithCalculated.length} 條記錄`
+    }
+  } catch (error) {
+    console.error('Error in fetchAllBillingSalaryRecords:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '獲取所有記錄時發生錯誤'
+    }
+  }
+}
+
 export async function createBillingSalaryRecord(
   formData: Omit<BillingSalaryFormData, 'hourly_rate' | 'hourly_salary'> | BillingSalaryFormData
 ): Promise<ApiResponse<BillingSalaryRecord>> {
