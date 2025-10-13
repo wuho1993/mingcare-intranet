@@ -233,28 +233,87 @@ export default function NewCustomerPage() {
       const address = formData.service_address.trim()
       const geocoder = new (window as any).google.maps.Geocoder()
 
-      // 嘗試多個搜尋策略
+      console.log('🗺️ 開始地址地理編碼:', address)
+
+      // 嘗試多個搜尋策略（加強版）
       const searchStrategies = [
-        address + ', 香港',  // 完整地址 + 香港
-        address,              // 只用地址
-        address + ', Hong Kong',  // 英文
+        address + ', 香港',              // 完整地址 + 香港
+        address + ', Hong Kong',         // 完整地址 + Hong Kong
+        address,                          // 只用地址
+        address.replace(/[樓層座]/g, '') + ', 香港',  // 移除樓層資訊再試
+        address.split(',')[0] + ', 香港', // 只用第一部分地址
       ]
 
       let foundLocation = false
+      let attemptCount = 0
 
       const tryGeocode = (index: number) => {
-        if (index >= searchStrategies.length || foundLocation) return
+        if (index >= searchStrategies.length) {
+          // 所有策略都失敗
+          if (!foundLocation) {
+            console.warn('⚠️ 所有地理編碼策略都失敗，地圖將顯示在香港中心位置')
+            // 顯示提示訊息
+            if (googleMapRef.current) {
+              const infoWindow = new (window as any).google.maps.InfoWindow({
+                content: `
+                  <div style="padding: 10px; max-width: 250px;">
+                    <h3 style="margin: 0 0 8px 0; color: #d32f2f; font-size: 14px; font-weight: bold;">⚠️ 無法定位地址</h3>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;">系統無法找到此地址：</p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; background: #f5f5f5; padding: 6px; border-radius: 4px;">${address}</p>
+                    <p style="margin: 0; font-size: 12px; color: #666;">請在地圖上手動點擊選擇正確位置，或檢查地址是否正確。</p>
+                  </div>
+                `,
+                position: googleMapRef.current.getCenter()
+              })
+              infoWindow.open(googleMapRef.current)
+              
+              // 3秒後自動關閉
+              setTimeout(() => {
+                infoWindow.close()
+              }, 5000)
+            }
+          }
+          return
+        }
+
+        if (foundLocation) return
+
+        attemptCount++
+        console.log(`🔍 嘗試策略 ${attemptCount}:`, searchStrategies[index])
 
         geocoder.geocode({ address: searchStrategies[index] }, (results: any, status: any) => {
-          if (status === 'OK' && results[0] && !foundLocation) {
+          console.log(`📍 策略 ${attemptCount} 結果:`, status, results)
+          
+          if (status === 'OK' && results && results[0] && !foundLocation) {
             foundLocation = true
             const newCenter = {
               lat: results[0].geometry.location.lat(),
               lng: results[0].geometry.location.lng()
             }
-            googleMapRef.current.setCenter(newCenter)
-            googleMapRef.current.setZoom(17)
+            console.log('✅ 成功定位地址:', newCenter)
+            
+            if (googleMapRef.current) {
+              googleMapRef.current.setCenter(newCenter)
+              googleMapRef.current.setZoom(17)
+              
+              // 顯示成功訊息
+              const infoWindow = new (window as any).google.maps.InfoWindow({
+                content: `
+                  <div style="padding: 8px;">
+                    <p style="margin: 0; font-size: 13px; color: #2e7d32;">✓ 已定位到此地址</p>
+                  </div>
+                `,
+                position: newCenter
+              })
+              infoWindow.open(googleMapRef.current)
+              
+              // 2秒後自動關閉
+              setTimeout(() => {
+                infoWindow.close()
+              }, 2000)
+            }
           } else {
+            console.log(`⚠️ 策略 ${attemptCount} 失敗，嘗試下一個策略`)
             // 嘗試下一個策略
             tryGeocode(index + 1)
           }

@@ -329,7 +329,7 @@ function ReportsCalendarView({
               style={{ minHeight: `${minHeight}px`, overflow: 'visible' }}
               className={`
                 p-1 sm:p-2 border rounded-lg
-                ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' :
+                ${!isCurrentMonth ? 'bg-bg-secondary text-text-tertiary border-border-light' :
                   isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
                 ${isToday ? 'ring-1 sm:ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
               `}
@@ -337,7 +337,7 @@ function ReportsCalendarView({
               <div className={`
                 text-xs sm:text-sm font-bold mb-1 sm:mb-2
                 ${isToday ? 'text-mingcare-blue' :
-                  isCurrentMonth ? 'text-text-primary' : 'text-gray-300'}
+                  isCurrentMonth ? 'text-text-primary' : 'text-text-tertiary'}
               `}>
                 {date.getDate()}
               </div>
@@ -366,7 +366,7 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className={`text-xs sm:text-sm border border-gray-200 rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'bg-white'}`}
+                        className={`text-xs sm:text-sm border border-border-light rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'bg-white'}`}
                         data-updated={recordUpdateTimes?.[record.id] ? 'true' : 'false'}
                       >
                         {/* 方案1: 大字體更新標題 - 保證能看到 */}
@@ -442,7 +442,7 @@ function ReportsCalendarView({
               <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
 
               {/* 記錄詳情 */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <div className="bg-bg-secondary rounded-lg p-3 mb-4">
                 <div className="text-sm text-text-secondary mb-1">
                   {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
                 </div>
@@ -519,7 +519,7 @@ function ReportsCalendarView({
                   setSelectedRecord(record)
                   setShowRecordMenu(true)
                 }}
-                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'border-gray-200'}`}
+                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'border-border-light'}`}
               >
                 {/* 30分鐘更新提示 */}
                 {(() => {
@@ -541,7 +541,7 @@ function ReportsCalendarView({
                   <h3 className="font-semibold text-gray-800 truncate">
                     {record.customer_name}
                   </h3>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  <span className="text-xs text-text-secondary bg-gray-100 px-2 py-1 rounded">
                     {record.service_date}
                   </span>
                 </div>
@@ -586,7 +586,7 @@ function ReportsCalendarView({
             <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
 
             {/* 記錄詳情 */}
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+            <div className="bg-bg-secondary rounded-lg p-3 mb-4">
               <div className="text-sm text-text-secondary mb-1">
                 {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
               </div>
@@ -1601,7 +1601,7 @@ function ScheduleSummaryView({
       ) : (
         <div>
           <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
-          <div className="bg-gray-50 rounded-lg p-6 text-center">
+          <div className="bg-bg-secondary rounded-lg p-6 text-center">
             <div className="text-text-secondary">
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2319,7 +2319,7 @@ function ScheduleTab({
                   className={`
                     p-2 border-2 rounded-lg cursor-pointer
                     transition-all duration-200 hover:shadow-md
-                    ${!isCurrentMonth ? 'bg-gray-50 text-gray-300 border-gray-200' :
+                    ${!isCurrentMonth ? 'bg-bg-secondary text-text-tertiary border-border-light' :
                       isSelected ? 'bg-green-100 border-green-500 border-2' :
                       isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
                     ${isToday ? 'ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
@@ -2329,7 +2329,7 @@ function ScheduleTab({
                   <div className={`
                     text-lg font-bold mb-3 flex justify-between items-center
                     ${isToday ? 'text-mingcare-blue' :
-                      isCurrentMonth ? 'text-text-primary' : 'text-gray-300'}
+                      isCurrentMonth ? 'text-text-primary' : 'text-text-tertiary'}
                   `}>
                     <span>{date.getDate()}</span>
                     {isCurrentMonth && (
@@ -2346,7 +2346,7 @@ function ScheduleTab({
                       {(remoteSchedules || []).map((schedule, i) => (
                         <div
                           key={`remote-${i}`}
-                          className="text-base bg-white border border-gray-200 rounded p-3 shadow-sm"
+                          className="text-base bg-white border border-border-light rounded p-3 shadow-sm"
                         >
                           {/* 第一行：客戶名稱/護理人員名稱 - 允許換行 */}
                           <div className="font-medium text-gray-800 mb-2 text-base break-words leading-tight">
@@ -5454,7 +5454,7 @@ export default function ServicesPage() {
                     disabled={Object.values(staffDownloadStatus).some(status => status === 'downloading')}
                     className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
                       Object.values(staffDownloadStatus).some(status => status === 'downloading')
-                        ? 'bg-gray-100 text-gray-500 border border-gray-300 cursor-not-allowed'
+                        ? 'bg-gray-100 text-text-secondary border border-border-medium cursor-not-allowed'
                         : 'bg-mingcare-blue text-white hover:bg-blue-600 active:bg-blue-700'
                     }`}
                   >
@@ -5570,7 +5570,7 @@ export default function ServicesPage() {
                               disabled={isDownloading}
                               className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
                                 isDownloading
-                                ? 'bg-gray-100 text-gray-500 border border-gray-300 cursor-not-allowed'
+                                ? 'bg-gray-100 text-text-secondary border border-border-medium cursor-not-allowed'
                                 : 'bg-mingcare-blue text-white hover:bg-blue-600 active:bg-blue-700'
                               }`}
                             >
@@ -5725,7 +5725,7 @@ export default function ServicesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="p-6 border-b border-border-light flex-shrink-0">
               <h3 className="text-lg font-medium text-text-primary">導出設定</h3>
             </div>
 
@@ -5822,7 +5822,7 @@ export default function ServicesPage() {
                     ({exportModeConfigs[exportMode].name} 預設配置，可自由調整)
                   </span>
                 </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-lg p-3 bg-bg-secondary">
                   {Object.entries({
                     service_date: '服務日期',
                     customer_id: '客戶編號',
@@ -5868,7 +5868,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3 flex-shrink-0">
+            <div className="p-6 border-t border-border-light flex justify-end space-x-3 flex-shrink-0">
               <button
                 onClick={() => setShowExportModal(false)}
                 className="px-4 py-2 text-text-secondary border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200"

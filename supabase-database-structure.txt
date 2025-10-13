@@ -7,14 +7,7 @@
 1. 認證橋接項目 (MingCare WorkEz) - 負責身份驗證和用戶管理
 2. 數據項目 (Data Project) - 負責業務數據存儲和處理
 
-=================================================home_visit_status_enum = { 已完成, 未完成 }
-
-introducer_enum = { 
-  Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 
-  陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰, raymond 
-}
-
-lds_status_enum = { 已完成評估, 已經持有, 待社工評估 }===============
+========================================================================
 項目一：認證橋接項目 (MingCare WorkEz)
 項目網址: https://rsixbgncuaijekuvhofg.supabase.co
 項目參考ID: rsixbgncuaijekuvhofg
@@ -217,7 +210,7 @@ copay_level = 自付比例等級
 - contract_status (contract_status_enum) = 合約狀態
 - created_at (timestamptz, default now()) = 建立時間
 
-### [public.clock_records] — 員工打卡記錄表 (0條記錄)  
+### [public.clock_records] — 員工打卡記錄表 (1+條記錄)  
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - staff_id (text, NOT NULL) = 員工編號
 - staff_name (text, NOT NULL) = 員工姓名
