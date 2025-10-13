@@ -6,7 +6,6 @@ import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
 import CardUpdateIndicator from '../../components/CardUpdateIndicator'
-import TestUpdateButton from '../../components/TestUpdateButton'
 import { generateCustomerPDF } from '../../services/pdf-export'
 import type {
   CustomerListItem,
@@ -1593,23 +1592,6 @@ export default function ClientsPage() {
           </div>
         </div>
       )}
-      
-      {/* 測試更新通知按鈕 */}
-      <TestUpdateButton
-        label="客戶更新"
-        onTriggerUpdate={() => {
-          // 觸發第一個客戶的更新通知
-          if (customers.length > 0) {
-            const firstCustomer = customers[0]
-            const customerId = firstCustomer.customer_id || firstCustomer.id
-            const updateTime = new Date().toISOString()
-            localStorage.setItem(`customer_update_${customerId}`, updateTime)
-            window.dispatchEvent(new CustomEvent('customerUpdated', {
-              detail: { customerId }
-            }))
-          }
-        }}
-      />
     </div>
   );
 }
