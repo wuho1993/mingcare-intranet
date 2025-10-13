@@ -586,8 +586,8 @@ export default function EditClientPage() {
           detail: { customerId: clientId }
         }))
         
-        // 返回客戶列表頁面
-        router.push('/clients')
+        // 使用 history.back() 返回上一頁，保持列表位置和排序
+        window.history.back()
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
@@ -1228,7 +1228,7 @@ export default function EditClientPage() {
             <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-3 sm:space-y-0 sm:space-x-4 order-1 sm:order-2">
               <button
                 type="button"
-                onClick={() => router.push('/clients')}
+                onClick={() => window.history.back()}
                 className="btn-apple-secondary w-full sm:w-auto"
               >
                 取消
