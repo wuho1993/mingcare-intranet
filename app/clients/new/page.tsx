@@ -583,30 +583,22 @@ export default function NewCustomerPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <>
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
-          onLoad={() => setIsGoogleMapsLoaded(true)}
-        />
+  return (
+    <>
+      {/* Google Maps Script - 只載入一次 */}
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
+        onLoad={() => setIsGoogleMapsLoaded(true)}
+      />
+      
+      {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-bg-primary">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
             <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
           </div>
         </div>
-      </>
-    )
-  }
-
-  return (
-    <>
-      {/* Google Maps Script */}
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
-        onLoad={() => setIsGoogleMapsLoaded(true)}
-      />
+      ) : (
       
       <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>
         {/* Header */}
@@ -1265,6 +1257,7 @@ export default function NewCustomerPage() {
         </div>
       )}
       </div>
+      )}
     </>
   )
 }
