@@ -66,7 +66,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
     return acc
   }, {} as Record<string, number>)
 
-  // Introducer stats (introducer_enum: Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰)
+  // Introducer stats (introducer_enum: Kanas Leung, Joe Cheung, Candy Ho, Steven Kwok, Dr.Lee, Annie, Janet, 陸sir, 吳翹政, 余翠英, 陳小姐MC01, 曾先生, 梁曉峰, raymond)
   const introducerStats = customers.reduce((acc, customer) => {
     const introducer = (customer as any).introducer
     // Only count customers who have an introducer (exclude null/undefined/empty)

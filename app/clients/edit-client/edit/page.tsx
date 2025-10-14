@@ -829,6 +829,7 @@ export default function EditClientPage() {
                     <option value="余翠英">余翠英</option>
                     <option value="陳小姐MC01">陳小姐MC01</option>
                     <option value="曾先生">曾先生</option>
+                    <option value="梁曉峰">梁曉峰</option>
                     <option value="raymond">raymond</option>
                   </select>
                   {useNewCustomerId && (
