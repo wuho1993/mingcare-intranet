@@ -47,6 +47,7 @@ export interface CustomerListItem {
   service_address: string;
   project_manager: string;
   created_at: string;
+  updated_at: string; // 最後更新時間
   customer_type: string;
   introducer?: string;
   voucher_application_status?: string;

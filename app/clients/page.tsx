@@ -5,12 +5,10 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
-import CardUpdateIndicator from '../../components/CardUpdateIndicator'
 import { generateCustomerPDF } from '../../services/pdf-export'
 import type {
   CustomerListItem,
   CustomerFilters,
-  ViewMode,
   SearchSuggestion
 } from '../../types/customer-management'
 
@@ -401,7 +399,7 @@ export default function ClientsPage() {
   const [customers, setCustomers] = useState<CustomerListItem[]>([])
   const [allCustomers, setAllCustomers] = useState<CustomerListItem[]>([]) // Complete dataset for summary
   const [activeTab, setActiveTab] = useState<'list' | 'summary'>('list')
-  const [viewMode, setViewMode] = useState<ViewMode>('card')
+  // 移除 viewMode，只使用列表模式
   const [filters, setFilters] = useState<CustomerFilters>({})
   const [searchQuery, setSearchQuery] = useState('')
   const [searchSuggestions, setSuggestions] = useState<SearchSuggestion[]>([])
@@ -1098,7 +1096,7 @@ export default function ClientsPage() {
                 )}
               </div>
 
-              {/* 新增客戶 & 檢視切換按鈕 */}
+              {/* 新增客戶按鈕 - 移除視圖切換 */}
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => router.push('/clients/new')}
@@ -1110,39 +1108,6 @@ export default function ClientsPage() {
                   <span className="hidden sm:inline">新增客戶</span>
                   <span className="sm:hidden">新增</span>
                 </button>
-
-                <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50">
-                  <button
-                    onClick={() => setViewMode('card')}
-                    className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                      viewMode === 'card'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <span className="hidden sm:inline">卡片</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                      viewMode === 'list'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                      </svg>
-                      <span className="hidden sm:inline">列表</span>
-                    </div>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -1182,156 +1147,55 @@ export default function ClientsPage() {
                 </button>
               </div>
             ) : (
-              /* Customer Data Display */
+              /* Customer Data Display - 只使用列表視圖 */
               <>
-                {viewMode === 'card' ? (
-                  /* Card View */
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                    {customers.map((customer, index) => (
-                      <div
-                        key={customer.id}
-                        className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 relative overflow-visible transform hover:rotate-1 card-hover-float pulse-glow rounded-2xl md:rounded-3xl border-2 border-gray-100 hover:border-transparent bg-white shadow-lg"
-                        style={{ animationDelay: `${0.4 + index * 0.05}s` }}
-                        onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
-                      >
-                        {/* 30分鐘更新提示 */}
-                        <CardUpdateIndicator 
-                          lastUpdateTime={customerUpdateTimes[customer.customer_id || customer.id] || null} 
-                        />
+                {/* List View */}
+                <div className="overflow-hidden rounded-apple-sm border border-border-light">
+                  <table className="min-w-full divide-y divide-border-light">
+                    <thead className="bg-bg-tertiary">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          客戶資料
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          聯絡資訊
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          服務地址
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          類型
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          狀態資訊
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          建立日期
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
+                          最後更新
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-border-light">
+                      {customers.map((customer, index) => {
+                        // 計算相對更新時間
+                        const getRelativeTime = (updatedAt: string) => {
+                          const now = new Date()
+                          const updated = new Date(updatedAt)
+                          const diffMs = now.getTime() - updated.getTime()
+                          const diffMins = Math.floor(diffMs / 60000)
+                          const diffHours = Math.floor(diffMs / 3600000)
+                          const diffDays = Math.floor(diffMs / 86400000)
+                          
+                          if (diffMins < 1) return '剛剛更新'
+                          if (diffMins < 60) return `${diffMins}分鐘前`
+                          if (diffHours < 24) return `${diffHours}小時前`
+                          if (diffDays < 7) return `${diffDays}天前`
+                          return new Date(updatedAt).toLocaleDateString('zh-TW')
+                        }
                         
-                        {/* Enhanced Customer Type Header Bar */}
-                        <div className={`px-3 py-2 md:px-4 md:py-3 text-white font-medium text-xs md:text-sm rounded-t-2xl md:rounded-t-3xl ${
-                          customer.customer_type === '社區券客戶'
-                            ? 'bg-gradient-to-r from-green-500 to-green-600'
-                            : customer.customer_type === '家訪客戶'
-                            ? 'bg-gradient-to-r from-purple-500 to-purple-600'
-                            : 'bg-gradient-to-r from-blue-500 to-blue-600'
-                        }`}>
-                          <div className="flex items-center justify-center">
-                            <span>{customer.customer_type}</span>
-                          </div>
-                        </div>
-
-                        <div className="p-3 md:p-6 bg-white rounded-b-2xl md:rounded-b-3xl relative z-10">
-                          {/* Card Header */}
-                          <div className="flex justify-between items-start mb-2 md:mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-base md:text-xl font-bold text-gray-900 truncate mb-1 group-hover:text-gray-700 transition-colors duration-300">
-                                {customer.customer_name}
-                              </h3>
-                              <p className="text-xs md:text-sm text-gray-500 group-hover:text-gray-400 transition-colors duration-300">
-                                {customer.customer_id || '未分配編號'}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Card Body */}
-                          <div className="space-y-2 md:space-y-3 mb-2 md:mb-4">
-                            <div className="flex items-center text-xs md:text-apple-caption text-text-secondary">
-                              <svg className="h-3 w-3 md:h-4 md:w-4 mr-2 md:mr-3 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              {customer.phone}
-                            </div>
-                            <div className="flex items-start text-xs md:text-apple-caption text-text-secondary">
-                              <svg className="h-3 w-3 md:h-4 md:w-4 mr-2 md:mr-3 mt-0.5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span className="line-clamp-2">{customer.service_address}</span>
-                            </div>
-                          </div>
-
-                          {/* Status Information - 2個標籤一行 */}
-                          <div className="space-y-1.5 md:space-y-2 mb-2 md:mb-4">
-                            <div className="grid grid-cols-2 gap-1.5 md:gap-2">
-                              {customer.voucher_application_status && (
-                                <div className="text-xs">
-                                  <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">社區券：</span>
-                                  <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
-                                    customer.voucher_application_status === '已經持有'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {customer.voucher_application_status}
-                                  </span>
-                                </div>
-                              )}
-                              {customer.lds_status && (
-                                <div className="text-xs">
-                                  <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">LDS：</span>
-                                  <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
-                                    customer.lds_status === '已完成評估' || customer.lds_status === '已經持有'
-                                      ? 'bg-blue-100 text-blue-800'
-                                      : 'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {customer.lds_status}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-1.5 md:gap-2">
-                              {customer.home_visit_status && (
-                                <div className="text-xs">
-                                  <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">家訪：</span>
-                                  <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs w-full text-center block ${
-                                    customer.home_visit_status === '已完成'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {customer.home_visit_status}
-                                  </span>
-                                </div>
-                              )}
-                              {customer.copay_level && (
-                                <div className="text-xs">
-                                  <span className="font-medium text-text-primary block mb-0.5 md:mb-1 text-xs">自付：</span>
-                                  <span className="px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-xs bg-purple-100 text-purple-800 w-full text-center block">
-                                    {customer.copay_level}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Card Footer - 移除客戶類型，只保留日期 */}
-                          <div className="pt-2 md:pt-4 border-t border-border-light text-right">
-                            <span className="text-xs text-text-tertiary">
-                              {new Date(customer.created_at).toLocaleDateString('zh-TW')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  /* List View */
-                  <div className="overflow-hidden rounded-apple-sm border border-border-light">
-                    <table className="min-w-full divide-y divide-border-light">
-                      <thead className="bg-bg-tertiary">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            客戶資料
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            聯絡資訊
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            服務地址
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            類型
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            狀態資訊
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">
-                            建立日期
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-border-light">
-                        {customers.map((customer, index) => (
+                        return (
                           <tr
                             key={customer.id}
                             className="hover:bg-bg-tertiary transition-colors cursor-pointer"
@@ -1426,12 +1290,15 @@ export default function ClientsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
                               {new Date(customer.created_at).toLocaleDateString('zh-TW')}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
+                              {getRelativeTime(customer.updated_at)}
+                            </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </>
             )}
           </div>
