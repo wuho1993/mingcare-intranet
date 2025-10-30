@@ -640,14 +640,11 @@ export default function ClientsPage() {
   // 載入時觸發搜尋
   useEffect(() => {
     if (user) {
-      // 檢查是否從編輯頁返回（透過 performance.navigation）
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      const isBackNavigation = navigation?.type === 'back_forward'
-      
-      // 如果是返回導航且有更新記錄，不重新載入（保持順序）
-      const hasRecentUpdate = localStorage.getItem('customerUpdated')
-      if (isBackNavigation && hasRecentUpdate) {
+      // 檢查是否從編輯頁返回（避免重新載入）
+      const skipReload = sessionStorage.getItem('skipCustomerReload')
+      if (skipReload === 'true') {
         console.log('🔄 從編輯頁返回，保持列表順序')
+        sessionStorage.removeItem('skipCustomerReload')
         return
       }
       
