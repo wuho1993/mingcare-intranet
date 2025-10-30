@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
@@ -405,11 +405,17 @@ export default function ClientsPage() {
   const [searchSuggestions, setSuggestions] = useState<SearchSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(20)
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // 從 URL 參數讀取頁碼（如果有的話）
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pageParam = searchParams.get('page')
+    return pageParam ? parseInt(pageParam, 10) : 1
+  })
   
   // 追蹤每個客戶的更新時間
   const [customerUpdateTimes, setCustomerUpdateTimes] = useState<Record<string, Date>>({})
@@ -1199,7 +1205,7 @@ export default function ClientsPage() {
                           <tr
                             key={customer.id}
                             className="hover:bg-bg-tertiary transition-colors cursor-pointer"
-                            onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}`)}
+                            onClick={() => router.push(`/clients/edit-client/edit?id=${customer.customer_id || customer.id}&returnPage=${currentPage}`)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">

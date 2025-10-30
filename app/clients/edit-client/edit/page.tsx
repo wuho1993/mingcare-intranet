@@ -27,6 +27,7 @@ interface User {
 export default function EditClientPage() {
   const searchParams = useSearchParams()
   const clientId = searchParams.get('id')
+  const returnPage = searchParams.get('returnPage') || '1'
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -586,8 +587,8 @@ export default function EditClientPage() {
           detail: { customerId: clientId }
         }))
         
-        // 使用 history.back() 返回上一頁，保持列表位置和排序
-        window.history.back()
+        // 返回客戶列表，保持原來的頁碼
+        router.push(`/clients?page=${returnPage}`)
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
@@ -623,8 +624,8 @@ export default function EditClientPage() {
       } else {
         // Show success message
         alert('客戶資料刪除成功！將返回客戶列表。')
-        // 刪除成功，返回客戶列表 - 保持搜尋狀態
-        window.history.back()
+        // 刪除成功，返回客戶列表，保持原來的頁碼
+        router.push(`/clients?page=${returnPage}`)
       }
     } catch (error: any) {
       console.error('Failed to delete customer:', error)
@@ -1229,7 +1230,7 @@ export default function EditClientPage() {
             <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-3 sm:space-y-0 sm:space-x-4 order-1 sm:order-2">
               <button
                 type="button"
-                onClick={() => window.history.back()}
+                onClick={() => router.push(`/clients?page=${returnPage}`)}
                 className="btn-apple-secondary w-full sm:w-auto"
               >
                 取消
