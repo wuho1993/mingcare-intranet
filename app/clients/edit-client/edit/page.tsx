@@ -587,8 +587,8 @@ export default function EditClientPage() {
           detail: { customerId: clientId }
         }))
         
-        // 返回客戶列表，保持原來的頁碼
-        router.push(`/clients?page=${returnPage}`)
+        // 使用 history.back() 返回，避免重新載入數據
+        window.history.back()
       }
     } catch (error: any) {
       console.error('Failed to update customer:', error)
@@ -624,7 +624,7 @@ export default function EditClientPage() {
       } else {
         // Show success message
         alert('客戶資料刪除成功！將返回客戶列表。')
-        // 刪除成功，返回客戶列表，保持原來的頁碼
+        // 刪除成功，返回客戶列表（刪除後需要重新載入）
         router.push(`/clients?page=${returnPage}`)
       }
     } catch (error: any) {
@@ -1230,7 +1230,7 @@ export default function EditClientPage() {
             <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-3 sm:space-y-0 sm:space-x-4 order-1 sm:order-2">
               <button
                 type="button"
-                onClick={() => router.push(`/clients?page=${returnPage}`)}
+                onClick={() => window.history.back()}
                 className="btn-apple-secondary w-full sm:w-auto"
               >
                 取消
