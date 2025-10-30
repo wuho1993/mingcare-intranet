@@ -167,6 +167,7 @@ export class CustomerManagementService {
           service_address,
           project_manager,
           created_at,
+          updated_at,
           customer_type,
           introducer,
           voucher_application_status,
