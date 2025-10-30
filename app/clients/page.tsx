@@ -1186,10 +1186,13 @@ export default function ClientsPage() {
                     <tbody className="bg-white divide-y divide-border-light">
                       {customers.map((customer, index) => {
                         // 計算相對更新時間
-                        const getRelativeTime = (updatedAt: string) => {
+                        const getRelativeTime = (customerId: string, createdAt: string) => {
+                          // 優先使用 localStorage 中的更新時間
+                          const updateTime = customerUpdateTimes[customerId]
+                          const timeToUse = updateTime || new Date(createdAt)
+                          
                           const now = new Date()
-                          const updated = new Date(updatedAt)
-                          const diffMs = now.getTime() - updated.getTime()
+                          const diffMs = now.getTime() - timeToUse.getTime()
                           const diffMins = Math.floor(diffMs / 60000)
                           const diffHours = Math.floor(diffMs / 3600000)
                           const diffDays = Math.floor(diffMs / 86400000)
@@ -1198,7 +1201,7 @@ export default function ClientsPage() {
                           if (diffMins < 60) return `${diffMins}分鐘前`
                           if (diffHours < 24) return `${diffHours}小時前`
                           if (diffDays < 7) return `${diffDays}天前`
-                          return new Date(updatedAt).toLocaleDateString('zh-TW')
+                          return timeToUse.toLocaleDateString('zh-TW')
                         }
                         
                         return (
@@ -1297,7 +1300,7 @@ export default function ClientsPage() {
                               {new Date(customer.created_at).toLocaleDateString('zh-TW')}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
-                              {getRelativeTime(customer.updated_at || customer.created_at)}
+                              {getRelativeTime(customer.customer_id || customer.id, customer.created_at)}
                             </td>
                           </tr>
                         )
