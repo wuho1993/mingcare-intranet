@@ -676,6 +676,9 @@ export default function ClientsPage() {
   // 分頁處理
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+    // 更新 URL 但不增加歷史記錄，保持頁面狀態
+    const newUrl = page > 1 ? `/clients?page=${page}` : '/clients'
+    window.history.replaceState({}, '', newUrl)
   }
 
   // 計算分頁信息
@@ -1189,6 +1192,7 @@ export default function ClientsPage() {
                         const getRelativeTime = (customerId: string, createdAt: string) => {
                           // 優先使用 localStorage 中的更新時間
                           const updateTime = customerUpdateTimes[customerId]
+                          const hasRecentUpdate = !!updateTime // 有更新記錄表示是最近編輯的
                           const timeToUse = updateTime || new Date(createdAt)
                           
                           const now = new Date()
@@ -1197,11 +1201,27 @@ export default function ClientsPage() {
                           const diffHours = Math.floor(diffMs / 3600000)
                           const diffDays = Math.floor(diffMs / 86400000)
                           
-                          if (diffMins < 1) return '剛剛更新'
-                          if (diffMins < 60) return `${diffMins}分鐘前`
-                          if (diffHours < 24) return `${diffHours}小時前`
-                          if (diffDays < 7) return `${diffDays}天前`
-                          return timeToUse.toLocaleDateString('zh-TW')
+                          let text = ''
+                          let colorClass = 'text-text-secondary' // 預設顏色
+                          
+                          if (diffMins < 1) {
+                            text = '剛剛更新'
+                            colorClass = hasRecentUpdate ? 'text-green-600 font-semibold' : 'text-text-secondary'
+                          } else if (diffMins < 60) {
+                            text = `${diffMins}分鐘前`
+                            colorClass = hasRecentUpdate ? 'text-green-600 font-semibold' : 'text-text-secondary'
+                          } else if (diffHours < 24) {
+                            text = `${diffHours}小時前`
+                            colorClass = hasRecentUpdate ? 'text-blue-600 font-medium' : 'text-text-secondary'
+                          } else if (diffDays < 7) {
+                            text = `${diffDays}天前`
+                            colorClass = 'text-text-secondary'
+                          } else {
+                            text = timeToUse.toLocaleDateString('zh-TW')
+                            colorClass = 'text-text-secondary'
+                          }
+                          
+                          return <span className={colorClass}>{text}</span>
                         }
                         
                         return (
@@ -1299,7 +1319,7 @@ export default function ClientsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
                               {new Date(customer.created_at).toLocaleDateString('zh-TW')}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
+                            <td className="px-6 py-4 whitespace-nowrap text-apple-caption">
                               {getRelativeTime(customer.customer_id || customer.id, customer.created_at)}
                             </td>
                           </tr>
