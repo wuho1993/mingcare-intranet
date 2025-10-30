@@ -26,6 +26,7 @@ export interface BillingSalaryRecord {
   project_manager: ProjectManager
   created_at: string
   updated_at: string
+  profit?: number // 服務利潤（可選，從 API 返回的計算結果）
 }
 
 // 計算欄位（前端顯示用）

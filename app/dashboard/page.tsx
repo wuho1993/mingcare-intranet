@@ -51,7 +51,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="text-lg">載入中...</div>
       </div>
     )
@@ -189,9 +189,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50 shadow-sm h-16 sm:h-20">
+      <header className="card-apple border-b border-border-light fade-in-apple sticky top-0 z-50 h-16 sm:h-20">
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -230,9 +230,9 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* 主要模組 */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 fade-in-apple hover:shadow-2xl transition-shadow duration-300">
+        <div className="card-apple p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 fade-in-apple hover:shadow-2xl transition-shadow duration-300">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">主要模組</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {navigationItems.map((item, index) => (
@@ -276,7 +276,7 @@ export default function Dashboard() {
         </div>
 
         {/* 快速操作 */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-gray-100 p-4 sm:p-6 lg:p-8 fade-in-apple">
+        <div className="card-apple p-4 sm:p-6 lg:p-8 fade-in-apple" style={{ animationDelay: '0.1s' }}>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">快速操作</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {quickActions.map((action, index) => (

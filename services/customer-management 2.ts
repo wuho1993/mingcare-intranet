@@ -193,13 +193,13 @@ export class CustomerManagementService {
         query = query.or(`customer_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,customer_id.ilike.%${filters.search}%`);
       }
 
+      // 符合 API 規格的排序（必須在 range 之前）
+      query = query.order('created_at', { ascending: false });
+
       // 符合 API 規格的分頁
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
-
-      // 符合 API 規格的排序
-      query = query.order('created_at', { ascending: false });
 
       const { data, error, count } = await query;
 
