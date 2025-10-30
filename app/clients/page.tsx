@@ -1291,7 +1291,7 @@ export default function ClientsPage() {
                               {new Date(customer.created_at).toLocaleDateString('zh-TW')}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-apple-caption text-text-secondary">
-                              {getRelativeTime(customer.updated_at)}
+                              {getRelativeTime(customer.updated_at || customer.created_at)}
                             </td>
                           </tr>
                         )

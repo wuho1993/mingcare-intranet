@@ -167,7 +167,6 @@ export class CustomerManagementService {
           service_address,
           project_manager,
           created_at,
-          updated_at,
           customer_type,
           voucher_application_status,
           lds_status,
@@ -203,7 +202,15 @@ export class CustomerManagementService {
 
       const { data, error, count } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase 錯誤詳情:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
 
       // 符合 API 規格的回應格式
       return {
