@@ -358,7 +358,7 @@ preferred_area_enum = {
   荃灣區, 屯門區, 元朗區, 葵青區, 離島區 
 }
 
-project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
+project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點, 俊佳 }
 
 project_manager_enum = { Candy Ho, Joe Cheung, Kanas Leung }
 

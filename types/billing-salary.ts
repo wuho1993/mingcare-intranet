@@ -62,6 +62,7 @@ export type ProjectCategory =
   | 'Steven140'
   | 'Steven200'
   | 'Steven醫點'
+  | '俊佳'
 
 export type ProjectManager = 
   | 'Candy Ho'
@@ -222,7 +223,8 @@ export const PROJECT_CATEGORY_OPTIONS: { value: ProjectCategory; label: string }
   { value: 'MC街客', label: 'MC街客' },
   { value: 'Steven140', label: 'Steven140' },
   { value: 'Steven200', label: 'Steven200' },
-  { value: 'Steven醫點', label: 'Steven醫點' }
+  { value: 'Steven醫點', label: 'Steven醫點' },
+  { value: '俊佳', label: '俊佳' }
 ]
 
 export const PROJECT_MANAGER_OPTIONS: { value: ProjectManager; label: string }[] = [
