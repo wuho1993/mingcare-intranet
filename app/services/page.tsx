@@ -4123,31 +4123,6 @@ export default function ServicesPage() {
           </tbody>
         </table>
 
-        <!-- 按所屬項目分組統計 -->
-        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
-          <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #495057;">各項目小結</div>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 0;">
-            <thead>
-              <tr>
-                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px;">所屬項目</th>
-                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: center;">服務次數</th>
-                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: right;">總時數</th>
-                <th style="border: 1px solid #ddd; padding: 6px; background-color: #e9ecef; font-size: 11px; text-align: right;">總工資</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b)).map(([project, stats]: [string, any]) => `
-                <tr>
-                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px;">${project}</td>
-                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: center;">${stats.count} 次</td>
-                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: right;">${stats.hours.toFixed(1)} 小時</td>
-                  <td style="border: 1px solid #ddd; padding: 6px; font-size: 11px; text-align: right;">$${stats.salary.toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
         <!-- 底部佈局：左邊統計，右邊印章 -->
         <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
           <!-- 左邊：總計統計資訊 -->
@@ -4813,36 +4788,6 @@ export default function ServicesPage() {
                   <div class="stat-value">$${totalSalary.toFixed(2)}</div>
                 </div>
               </div>
-            </div>
-
-            <div class="staff-summary-table">
-              <h3>各項目小結</h3>
-              <table class="summary-table">
-                <thead>
-                  <tr>
-                    <th>所屬項目</th>
-                    <th>服務次數</th>
-                    <th>服務時數</th>
-                    <th>工資</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b, 'zh-TW')).map(([project, stats]) => `
-                    <tr>
-                      <td>${project}</td>
-                      <td class="number">${stats.count}</td>
-                      <td class="number">${stats.hours.toFixed(1)}</td>
-                      <td class="number">$${stats.salary.toFixed(2)}</td>
-                    </tr>
-                  `).join('')}
-                  <tr class="total-row">
-                    <td><strong>總計</strong></td>
-                    <td class="number"><strong>${totalServices}</strong></td>
-                    <td class="number"><strong>${totalHours.toFixed(1)}</strong></td>
-                    <td class="number"><strong>$${totalSalary.toFixed(2)}</strong></td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
 
             <div class="staff-summary-table" style="margin-top: 30px;">
