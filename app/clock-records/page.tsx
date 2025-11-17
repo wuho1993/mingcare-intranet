@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { supabaseAdmin } from '../../lib/supabase-admin'
 
 interface User {
   id: string
@@ -77,12 +78,18 @@ export default function ClockRecordsPage() {
 
   const loadRecords = async () => {
     try {
-      const { data, error } = await supabase
+      // 使用管理員客戶端來獲取所有打卡記錄（繞過 RLS）
+      const { data, error } = await supabaseAdmin
         .from('clock_records')
         .select('*')
         .order('clock_time', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('載入打卡記錄錯誤:', error)
+        throw error
+      }
+      
+      console.log('載入的打卡記錄:', data?.length || 0, '筆')
       setRecords(data || [])
       setFilteredRecords(data || [])
     } catch (error) {

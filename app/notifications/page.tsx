@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { supabaseAdmin } from '../../lib/supabase-admin'
 
 interface User {
   id: string
@@ -120,13 +121,19 @@ export default function NotificationsPage() {
 
   const loadNotifications = async () => {
     try {
-      const { data, error } = await supabase
+      // 使用管理員客戶端來獲取所有通知（繞過 RLS）
+      const { data, error } = await supabaseAdmin
         .from('notifications')
         .select('*')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('載入通知錯誤:', error)
+        throw error
+      }
+      
+      console.log('載入的通知:', data?.length || 0, '筆')
       setNotifications(data || [])
       setFilteredNotifications(data || [])
     } catch (error) {
