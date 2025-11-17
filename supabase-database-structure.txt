@@ -1,6 +1,6 @@
 ========================================================================
 明護 Supabase 數據庫架構文檔 — 雙項目系統
-更新日期: 2025-01-08
+更新日期: 2025-11-17
 ========================================================================
 
 本系統採用雙 Supabase 項目架構：
@@ -12,7 +12,7 @@
 項目網址: https://rsixbgncuaijekuvhofg.supabase.co
 項目參考ID: rsixbgncuaijekuvhofg
 用途: 員工身份驗證和橋接系統
-更新日期: 2025-01-08
+更新日期: 2025-11-17
 ========================================================================
 
 🔐 項目 1: mingcare-workez (身份驗證項目)
@@ -58,7 +58,7 @@ API Keys：
 項目二：數據項目 (Data Project) 
 項目網址: https://cvkxlvdicympakfecgvv.supabase.co
 用途: 業務數據存儲、客戶管理、員工資料、服務記錄
-更新日期: 2025-01-08
+更新日期: 2025-11-17
 ========================================================================
 
 🏥 項目 2: 明家居家護理服務 Intranet (數據項目)
@@ -143,7 +143,7 @@ copay_level = 自付比例等級
 
 ## 數據項目 - 表結構詳情
 
-### [public.auth_user_bridge] — 認證用戶橋接表 (2條記錄)
+### [public.auth_user_bridge] — 認證用戶橋接表 (31條記錄)
 - id (integer, NOT NULL, auto-increment) = 系統 ID
 - mingcare_workez_user_id (uuid, NOT NULL) = MingCare WorkEz 用戶 ID
 - data_project_user_id (uuid) = 數據項目用戶 ID  
@@ -158,7 +158,7 @@ copay_level = 自付比例等級
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
 
-### [public.billing_salary_data] — 客戶收費及護理人員工資表 (2,225條記錄)
+### [public.billing_salary_data] — 客戶收費及護理人員工資表 (3,161條記錄)
 - id (uuid, NOT NULL, default uuid_generate_v4()) = 系統 ID
 - service_date (date) = 服務日期
 - customer_id (text) = 項目編號
@@ -180,7 +180,7 @@ copay_level = 自付比例等級
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
 
-### [public.care_staff_profiles] — 護理人員檔案表 (191條記錄)
+### [public.care_staff_profiles] — 護理人員檔案表 (212條記錄)
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - staff_id (text) = 員工編號
 - name_chinese (text) = 中文姓名
@@ -210,7 +210,8 @@ copay_level = 自付比例等級
 - contract_status (contract_status_enum) = 合約狀態
 - created_at (timestamptz, default now()) = 建立時間
 
-### [public.clock_records] — 員工打卡記錄表 (1+條記錄)  
+### [public.clock_records] — 員工打卡記錄表 (0條記錄)  
+**狀態**: ✅ 表結構完整，等待數據錄入
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - staff_id (text, NOT NULL) = 員工編號
 - staff_name (text, NOT NULL) = 員工姓名
@@ -253,7 +254,7 @@ copay_level = 自付比例等級
 - Dr.Lee: 首月 $800, 後續 $800  
 - Annie: 首月 $800, 後續 $800
 
-### [public.customer_personal_data] — 客戶個人資料表 (124條記錄)
+### [public.customer_personal_data] — 客戶個人資料表 (136條記錄)
 **用途**: 存儲客戶的詳細個人資料和服務資訊
 - id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
 - customer_id (text) = 項目編號
@@ -277,6 +278,7 @@ copay_level = 自付比例等級
 - copay_level (copay_level_enum) = 自付比例等級
 - location_latitude (numeric) = 客戶位置緯度
 - location_longitude (numeric) = 客戶位置經度
+- customer_remark (text) = 客戶備註
 
 ### [public.service_signatures] — 服務簽名記錄表 (0條記錄)
 **用途**: 記錄服務過程中員工和客戶的數位簽名
@@ -297,6 +299,85 @@ copay_level = 自付比例等級
 - completed_at (timestamptz) = 完成時間
 - created_at (timestamptz, default now()) = 建立時間
 - updated_at (timestamptz, default now()) = 更新時間
+
+### [public.notifications] — 員工通知記錄表 (0條記錄)
+**用途**: 存儲發送給員工的各類系統通知和提醒
+**狀態**: ✅ RLS 已啟用，6個政策已配置，表結構完整等待數據
+
+**欄位結構**:
+- id (uuid, NOT NULL, default gen_random_uuid()) = 系統 ID
+- staff_name (text, NOT NULL) = 員工姓名
+- employee_code (text) = 員工編號
+- type (text, NOT NULL) = 通知類型
+- title (text, NOT NULL) = 通知標題
+- message (text, NOT NULL) = 通知內容
+- related_shift_id (uuid) = 相關班次ID
+- related_service_date (date) = 相關服務日期
+- related_customer_name (text) = 相關客戶姓名
+- metadata (jsonb, default '{}') = 額外元數據
+- is_read (boolean, default false) = 是否已讀
+- is_deleted (boolean, default false) = 是否已刪除
+- read_at (timestamptz) = 已讀時間
+- priority (text, default 'normal') = 優先級
+- category (text, default 'general') = 分類
+- is_pushed (boolean, default false) = 是否已推送
+- push_scheduled_at (timestamptz) = 推送排程時間
+- push_sent_at (timestamptz) = 推送發送時間
+- created_at (timestamptz, default now()) = 建立時間
+- updated_at (timestamptz, default now()) = 更新時間
+- expires_at (timestamptz) = 過期時間
+
+**通知類型 (type) 約束值**:
+- shift_reminder_tomorrow = 明日班次提醒
+- shift_reminder_soon = 班次即將開始
+- shift_assigned = 新增班次
+- shift_changed = 班次變更
+- shift_cancelled = 班次取消
+- shift_address_changed = 班次地址變更
+- clock_in_late = 打卡遲到提醒
+- clock_in_success = 打卡成功
+- clock_out_success = 下班打卡成功
+- clock_out_missing = 缺少下班打卡
+- salary_monthly = 月薪通知
+- salary_weekly = 週薪通知
+- system_maintenance = 系統維護通知
+- announcement = 公告
+- other = 其他
+
+**優先級 (priority) 約束值**:
+- urgent = 緊急
+- high = 高
+- normal = 普通
+- low = 低
+
+**分類 (category) 約束值**:
+- shift = 班次相關
+- salary = 薪資相關
+- system = 系統相關
+- announcement = 公告
+- general = 一般
+
+**索引**:
+- idx_notifications_staff_name (staff_name)
+- idx_notifications_is_read (is_read) WHERE is_deleted = false
+- idx_notifications_created_at (created_at DESC)
+- idx_notifications_type (type)
+- idx_notifications_staff_unread (staff_name, is_read) WHERE is_deleted = false
+- idx_notifications_related_shift (related_shift_id) WHERE related_shift_id IS NOT NULL
+- idx_notifications_service_date (related_service_date) WHERE related_service_date IS NOT NULL
+- idx_notifications_staff_active (staff_name, created_at DESC) WHERE is_deleted = false
+
+**觸發器**:
+- trigger_set_notification_read_at: 更新 read_at 當 is_read 變為 true
+- trigger_update_notifications_updated_at: 自動更新 updated_at
+
+**RLS 政策**:
+1. notifications_insert_policy (INSERT): 允許 anon/authenticated 插入
+2. notifications_select_policy (SELECT): 員工可查看自己的通知（匹配 JWT 的 name_chinese 或 display_name）
+3. notifications_update_policy (UPDATE): 員工可更新自己的通知
+4. 員工只能查看自己的通知 (SELECT): 基於 app.current_staff_name
+5. 員工可以更新自己的通知 (UPDATE): 基於 app.current_staff_name
+6. 系統可以創建通知 (INSERT): 允許系統創建通知
 
 ### [public.signature_files] — 簽名檔案儲存表 (0條記錄)
 **用途**: 存儲簽名相關的檔案資訊和路徑
@@ -358,7 +439,7 @@ preferred_area_enum = {
   荃灣區, 屯門區, 元朗區, 葵青區, 離島區 
 }
 
-project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點, 俊佳 }
+project_category_enum = { MC社區券(醫點）, MC街客, Steven140, Steven200, Steven醫點 }
 
 project_manager_enum = { Candy Ho, Joe Cheung, Kanas Leung }
 
@@ -514,16 +595,60 @@ voucher_application_status_enum = { 已經持有, 申請中 }
 
 **項目二：數據項目 (Data Project)**  
 - 項目網址: https://cvkxlvdicympakfecgvv.supabase.co
-- 表數量: 11個 (客戶、員工、服務、打卡等業務表)
-- 記錄數量: 4,500+ 條跨所有表
-- 狀態: ✅ 完全運行，但有RLS安全問題需要處理
+- 表數量: 12個 (客戶、員工、服務、打卡、通知等業務表)
+- 記錄數量: 6,700+ 條跨所有表
+- 狀態: ✅ 完全運行，RLS 已配置
 - 用途: 主要業務數據管理
 
 **整體系統**
 - 項目總數: 2個
-- 表總數: 11個 (認證項目已簡化，主要業務表在數據項目)  
+- 表總數: 12個 (認證項目已簡化，主要業務表在數據項目)  
 - 狀態: ✅ 雙項目架構運行正常，已完成系統簡化
-- 改進: 🟢 冗餘表已清理，維護成本降低
+- 改進: 🟢 冗餘表已清理，通知系統已集成，維護成本降低
+- 最新更新: 新增員工打卡記錄和通知管理頁面
+
+========================================================================
+最新系統更新 (2025-11-17)
+========================================================================
+
+## 新增管理頁面
+
+### 1. 員工打卡記錄管理頁面
+- **路徑**: `/clock-records`
+- **功能**: 
+  - 顯示所有員工打卡記錄
+  - 支援按員工、打卡類型、日期篩選
+  - 顯示打卡位置、距離、客戶狀態信息
+  - 位置異常標記和原因顯示
+  - 分頁瀏覽 (每頁50筆)
+- **數據來源**: `clock_records` 表
+- **狀態**: ✅ 已完成，等待實際打卡數據
+
+### 2. 應用程式通知訊息管理頁面
+- **路徑**: `/notifications`
+- **功能**:
+  - 顯示所有系統通知記錄
+  - 支援按員工、通知類型、優先級、分類、已讀狀態篩選
+  - 顯示通知標題、內容、相關資訊
+  - 推送狀態追蹤
+  - 未讀通知數統計
+  - 分頁瀏覽 (每頁50筆)
+- **數據來源**: `notifications` 表
+- **狀態**: ✅ 已完成，等待通知數據
+
+## 主頁導航更新
+- 新增「員工打卡記錄」導航卡片 (粉紅色主題)
+- 新增「應用程式通知訊息」導航卡片 (靛藍色主題)
+- 新增對應的 SVG 圖標
+
+## 數據庫狀態
+根據 2025-11-17 的檢查結果:
+- `auth_user_bridge`: 31條記錄 (+29條，增長率 1450%)
+- `billing_salary_data`: 3,161條記錄 (+936條，增長率 42%)
+- `care_staff_profiles`: 212條記錄 (+21條，增長率 11%)
+- `customer_personal_data`: 136條記錄 (+12條，增長率 10%)
+- `clock_records`: 0條記錄 (新表，等待數據)
+- `notifications`: 0條記錄 (新表，等待數據)
 
 ========================================================================
 結束
