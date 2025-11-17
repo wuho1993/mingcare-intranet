@@ -8,6 +8,7 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
   },
   env: {
+    // Expose service role key for admin operations
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   }
 }
