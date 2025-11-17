@@ -88,7 +88,7 @@ export async function fetchBillingSalaryRecords(
     }
 
     // 添加計算欄位
-    const dataWithCalculated: BillingSalaryRecordWithCalculated[] = (data || []).map(record => ({
+    const dataWithCalculated: BillingSalaryRecordWithCalculated[] = (data || []).map((record: BillingSalaryRecord) => ({
       ...record,
       profit: (record.service_fee || 0) - (record.staff_salary || 0)
     }))
@@ -254,7 +254,7 @@ export async function getSearchSuggestions(
 
     const suggestions: SearchSuggestion[] = []
     
-    data?.forEach(record => {
+    data?.forEach((record: BillingSalaryRecord) => {
       if (record.customer_name?.toLowerCase().includes(query.toLowerCase())) {
         suggestions.push({
           id: record.id,
@@ -730,7 +730,7 @@ export async function exportToCSV(
     // 轉換數據為 CSV 格式
     const csvRows = [
       headers.join(','), // 標題行
-      ...data.map(record => {
+      ...data.map((record: BillingSalaryRecord) => {
         const profit = (record.service_fee || 0) - (record.staff_salary || 0)
         
         return [
@@ -828,7 +828,7 @@ async function checkTimeConflicts(
         continue
       }
 
-      const dateConflicts = data?.filter(record => {
+      const dateConflicts = data?.filter((record: BillingSalaryRecord) => {
         return isTimeOverlapping(
           startTime,
           endTime,
@@ -972,11 +972,12 @@ export async function getAllCareStaff(): Promise<ApiResponse<{ name_chinese: str
     if (error) throw error
 
     // 去重並過濾
-    const uniqueNames = Array.from(new Set(
-      (data || [])
-        .map(item => item.name_chinese)
-        .filter(name => name && name.trim().length > 0)
-    )).map(name => ({ name_chinese: name }))
+    const filteredNames = (data || [])
+      .map((item: any) => item.name_chinese)
+      .filter((name: any): name is string => name && typeof name === 'string' && name.trim().length > 0)
+    
+    const uniqueNames = Array.from(new Set(filteredNames) as Set<string>)
+      .map((name: string) => ({ name_chinese: name }))
 
     return { success: true, data: uniqueNames }
   } catch (error) {
