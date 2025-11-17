@@ -10,6 +10,20 @@ interface CommissionRate {
   subsequent_month_commission: number
 }
 
+interface CustomerData {
+  customer_id: string
+  customer_name: string
+  introducer: string
+  customer_type: string
+}
+
+interface BillingData {
+  customer_id: string
+  service_date: string
+  service_hours: number
+  total_fee: number
+}
+
 interface CustomerCommissionData {
   customer_id: string
   customer_name: string
@@ -112,12 +126,12 @@ export default function CommissionsPage() {
       const monthlyStats = new Map()
 
       // 合併客戶和服務數據
-      const qualifiedCustomers = customerData.filter(customer =>
-        billingData.some(billing => billing.customer_id === customer.customer_id)
+      const qualifiedCustomers = (customerData || []).filter((customer: CustomerData) =>
+        (billingData || []).some((billing: BillingData) => billing.customer_id === customer.customer_id)
       )
 
-      qualifiedCustomers.forEach(customer => {
-        const customerBilling = billingData.filter(b => b.customer_id === customer.customer_id)
+      qualifiedCustomers.forEach((customer: CustomerData) => {
+        const customerBilling = (billingData || []).filter((b: BillingData) => b.customer_id === customer.customer_id)
         
         customerBilling.forEach(billing => {
           const serviceMonth = new Date(billing.service_date).toISOString().substring(0, 7)
