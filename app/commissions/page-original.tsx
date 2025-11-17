@@ -24,6 +24,16 @@ interface BillingData {
   service_fee?: number
 }
 
+interface MonthlyStatsData {
+  customer_id: string
+  customer_name: string
+  introducer: string
+  service_month: string
+  monthly_hours: number
+  monthly_fee: number
+  first_service_date: string
+}
+
 interface CustomerCommissionData {
   customer_id: string
   customer_name: string
@@ -165,7 +175,7 @@ export default function CommissionsPage() {
 
       Array.from(monthlyStats.values())
         .sort((a, b) => a.service_month.localeCompare(b.service_month))
-        .forEach(monthData => {
+        .forEach((monthData: MonthlyStatsData) => {
           const isQualified = monthData.monthly_hours >= 25 || monthData.monthly_fee >= 6200
           
           if (isQualified) {
@@ -173,7 +183,7 @@ export default function CommissionsPage() {
             const currentSequence = (customerMonthSequence.get(customerKey) || 0) + 1
             customerMonthSequence.set(customerKey, currentSequence)
 
-            const commissionRate = commissionRates?.find(rate => rate.introducer === monthData.introducer)
+            const commissionRate = commissionRates?.find((rate: CommissionRate) => rate.introducer === monthData.introducer)
             let commissionAmount = 0
 
             if (commissionRate) {
@@ -194,7 +204,7 @@ export default function CommissionsPage() {
       // 按介紹人分組
       const groupedByIntroducer = new Map<string, IntroducerSummary>()
 
-      commissionResults.forEach(result => {
+      commissionResults.forEach((result: CustomerCommissionData) => {
         if (!groupedByIntroducer.has(result.introducer)) {
           groupedByIntroducer.set(result.introducer, {
             introducer: result.introducer,
@@ -238,9 +248,9 @@ export default function CommissionsPage() {
 
   const filteredData = selectedIntroducer === 'all' 
     ? commissionData 
-    : commissionData.filter(item => item.introducer === selectedIntroducer)
+    : commissionData.filter((item: IntroducerSummary) => item.introducer === selectedIntroducer)
 
-  const totalCommission = filteredData.reduce((sum, item) => sum + item.total_commission, 0)
+  const totalCommission = filteredData.reduce((sum: number, item: IntroducerSummary) => sum + item.total_commission, 0)
 
   if (loading) {
     return (
@@ -303,7 +313,7 @@ export default function CommissionsPage() {
                 className="form-input-apple"
               >
                 <option value="all">全部介紹人</option>
-                {commissionData.map(item => (
+                {commissionData.map((item: IntroducerSummary) => (
                   <option key={item.introducer} value={item.introducer}>
                     {item.introducer}
                   </option>
@@ -353,7 +363,7 @@ export default function CommissionsPage() {
 
         {/* 佣金明細 */}
         <div className="space-y-6">
-          {filteredData.map((introducerData, index) => (
+          {filteredData.map((introducerData: IntroducerSummary, index: number) => (
             <div key={introducerData.introducer} className="card-apple fade-in-apple" style={{ animationDelay: `${0.1 * (index + 1)}s` }}>
               <div className="bg-bg-secondary px-6 py-4 border-b border-border-light rounded-t-apple">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
@@ -385,7 +395,7 @@ export default function CommissionsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-light">
-                    {introducerData.customers.map((customer, customerIndex) => (
+                    {introducerData.customers.map((customer: CustomerCommissionData, customerIndex: number) => (
                       <tr key={`${customer.customer_id}-${customer.service_month}`} className="hover:bg-bg-secondary transition-colors">
                         <td className="px-4 py-3 text-text-primary">{customer.customer_id}</td>
                         <td className="px-4 py-3 text-text-primary">{customer.customer_name}</td>
