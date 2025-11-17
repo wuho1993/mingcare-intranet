@@ -2585,7 +2585,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         return
       }
 
-      const results = (data || []).map(item => ({
+      const results = (data || []).map((item: any) => ({
         customer_id: item.customer_id || '',
         customer_name: item.customer_name || '',
         phone: item.phone || '',
