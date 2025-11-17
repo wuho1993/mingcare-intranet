@@ -21,7 +21,7 @@ interface BillingData {
   customer_id: string
   service_date: string
   service_hours: number
-  total_fee: number
+  service_fee?: number
 }
 
 interface CustomerCommissionData {
@@ -133,7 +133,7 @@ export default function CommissionsPage() {
       qualifiedCustomers.forEach((customer: CustomerData) => {
         const customerBilling = (billingData || []).filter((b: BillingData) => b.customer_id === customer.customer_id)
         
-        customerBilling.forEach(billing => {
+        customerBilling.forEach((billing: BillingData) => {
           const serviceMonth = new Date(billing.service_date).toISOString().substring(0, 7)
           const key = `${customer.customer_id}-${serviceMonth}`
 
