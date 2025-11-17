@@ -2,13 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 
 // 管理員客戶端 - 使用 service role key 繞過 RLS
 // 僅用於後台管理功能，可以訪問所有數據
-// Lazy initialization to avoid build-time errors
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null
+let _supabaseAdmin: any = null
 
 export const getSupabaseAdmin = () => {
-  // During build/SSR, return a mock client
+  // During build/SSR, return null
   if (typeof window === 'undefined') {
-    return null as any
+    return null
   }
   
   if (!_supabaseAdmin) {
@@ -26,11 +25,5 @@ export const getSupabaseAdmin = () => {
   return _supabaseAdmin
 }
 
-// For backward compatibility, export a getter that works during runtime
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
-  get(target, prop) {
-    const client = getSupabaseAdmin()
-    if (!client) return undefined
-    return (client as any)[prop]
-  }
-})
+// For backward compatibility
+export const supabaseAdmin = typeof window === 'undefined' ? null : (getSupabaseAdmin() as any)

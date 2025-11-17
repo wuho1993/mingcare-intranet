@@ -1,11 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr'
 
+let _supabase: any = null
+
 export const createClient = () => {
-  // Only create client if environment variables are available
-  // This prevents errors during build time
+  // Only create client in browser environment
   if (typeof window === 'undefined') {
-    // During build/SSR, return a mock client
-    return null as any
+    return null
   }
   
   return createBrowserClient(
@@ -14,12 +14,18 @@ export const createClient = () => {
   )
 }
 
-// Export a getter function instead of a singleton to avoid build-time initialization
-let _supabase: ReturnType<typeof createBrowserClient> | null = null
-export const supabase = (() => {
-  if (typeof window === 'undefined') return null as any
+// Lazy getter function
+export function getSupabase() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  
   if (!_supabase) {
     _supabase = createClient()
   }
+  
   return _supabase
-})()
+}
+
+// For backward compatibility - use getter on first access
+export const supabase = typeof window === 'undefined' ? null : (getSupabase() as any)
