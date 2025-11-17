@@ -189,7 +189,7 @@ export class CareStaffManagementService {
       }
 
       // 判斷匹配類型
-      const suggestions: CareStaffSearchSuggestion[] = (data || []).map(item => {
+      const suggestions: CareStaffSearchSuggestion[] = (data || []).map((item: any) => {
         let match_type: 'name' | 'phone' | 'staff_id' | 'mixed' = 'name'
         
         const query = queryTerm.toLowerCase()

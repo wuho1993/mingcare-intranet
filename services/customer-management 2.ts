@@ -123,7 +123,7 @@ export class CustomerManagementService {
       if (error) throw error;
 
       // 符合 API 規格的回應格式
-      const suggestions: SearchSuggestion[] = (data || []).map(item => ({
+      const suggestions: SearchSuggestion[] = (data || []).map((item: any) => ({
         id: item.id,
         customer_id: item.customer_id,
         customer_name: item.customer_name,

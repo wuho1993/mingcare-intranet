@@ -123,7 +123,7 @@ export class CustomerManagementService {
       if (error) throw error;
 
       // 符合 API 規格的回應格式
-      const suggestions: SearchSuggestion[] = (data || []).map(item => ({
+      const suggestions: SearchSuggestion[] = (data || []).map((item: any) => ({
         id: item.id,
         customer_id: item.customer_id,
         customer_name: item.customer_name,
@@ -552,7 +552,7 @@ export class CustomerManagementService {
       console.log(`Found ${voucherCustomers.length} 社區券客戶`);
       
       // 獲取客戶姓名列表
-      const voucherCustomerNames = voucherCustomers.map(c => c.customer_name).filter(Boolean);
+      const voucherCustomerNames = voucherCustomers.map((c: any) => c.customer_name).filter(Boolean);
       console.log('Voucher customer names:', voucherCustomerNames.slice(0, 5), '...'); // Log first 5 names
 
       if (voucherCustomerNames.length === 0) {
@@ -584,7 +584,7 @@ export class CustomerManagementService {
       // Step 3: 按所屬項目(project_category)分組計算服務人數（排除MC街客）
       const projectCategoryServiceCount = new Map<string, Set<string>>();
       
-      billingData.forEach(record => {
+      billingData.forEach((record: any) => {
         const projectCategory = record.project_category || '未知';
         
         // 跳過 MC街客，只統計社區券相關項目

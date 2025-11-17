@@ -362,7 +362,7 @@ export class StatisticsService {
           .gte('service_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
       ])
 
-      const totalRevenue = monthlyRevenue.data?.reduce((sum, record) => sum + (record.service_fee || 0), 0) || 0
+      const totalRevenue = monthlyRevenue.data?.reduce((sum: number, record: any) => sum + (record.service_fee || 0), 0) || 0
 
       return {
         totalCustomers: customersCount.count || 0,
@@ -401,9 +401,9 @@ export class StatisticsService {
 
       if (error) throw error
 
-      const totalSalary = data?.reduce((sum, record) => sum + (record.staff_salary || 0), 0) || 0
-      const totalHours = data?.reduce((sum, record) => sum + (record.service_hours || 0), 0) || 0
-      const uniqueStaff = new Set(data?.map(record => record.care_staff_name).filter(Boolean)).size
+      const totalSalary = data?.reduce((sum: number, record: any) => sum + (record.staff_salary || 0), 0) || 0
+      const totalHours = data?.reduce((sum: number, record: any) => sum + (record.service_hours || 0), 0) || 0
+      const uniqueStaff = new Set(data?.map((record: any) => record.care_staff_name).filter(Boolean)).size
 
       return {
         totalSalary,
