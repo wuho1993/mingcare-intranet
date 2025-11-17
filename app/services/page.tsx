@@ -4337,7 +4337,7 @@ export default function ServicesPage() {
             </tr>
           </thead>
           <tbody>
-            ${summaryData.map(item => `
+            ${summaryData.map((item: any) => `
               <tr>
                 <td>${item.staffName}</td>
                 <td>${item.recordCount}</td>
@@ -6221,7 +6221,7 @@ function ScheduleFormModal({
         return
       }
 
-      const results = (data || []).map(item => ({
+      const results = (data || []).map((item: any) => ({
         name_chinese: item.name_chinese || '',
         name_english: item.name_english || '',
         staff_id: item.staff_id || '',
