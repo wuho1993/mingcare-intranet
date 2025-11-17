@@ -10,6 +10,31 @@ interface CommissionRate {
   subsequent_month_commission: number
 }
 
+interface CustomerData {
+  customer_id: string
+  customer_name: string
+  introducer: string
+  customer_type: string
+}
+
+interface BillingData {
+  customer_id: string
+  service_date: string
+  service_hours: number
+  service_fee?: number
+  project_category?: string
+}
+
+interface MonthlyStatsData {
+  customer_id: string
+  customer_name: string
+  introducer: string
+  service_month: string
+  monthly_hours: number
+  monthly_fee: number
+  first_service_date: string
+}
+
 interface CustomerCommissionData {
   customer_id: string
   customer_name: string
@@ -48,7 +73,7 @@ export default function CommissionsPage() {
     try {
       // 按月份分組數據
       const monthlyData = new Map<string, CustomerCommissionData[]>()
-      allFilteredCommissionData.forEach(item => {
+      allFilteredCommissionData.forEach((item: CustomerCommissionData) => {
         if (!monthlyData.has(item.service_month)) {
           monthlyData.set(item.service_month, [])
         }
@@ -66,13 +91,13 @@ export default function CommissionsPage() {
       const allIntroducers = new Set<string>() // 用來統計所有出現的介紹人
 
       // 為每個月計算統計並按介紹人分組
-      const monthlyStats = sortedMonths.map(month => {
+      const monthlyStats = sortedMonths.map((month: string) => {
         const monthData = monthlyData.get(month)!
         const [year, monthNum] = month.split('-')
         
         // 按介紹人分組 - 包含所有有佣金的記錄
         const introducerGroups = new Map<string, CustomerCommissionData[]>()
-        monthData.forEach(item => {
+        monthData.forEach((item: CustomerCommissionData) => {
           // 處理有佣金率設定的介紹人，且實際有佣金的記錄
           const commissionRateRecord = commissionRatesData.find(r => r.introducer === item.introducer)
           const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
@@ -87,13 +112,13 @@ export default function CommissionsPage() {
         })
 
         // 計算月統計 - 包含所有有佣金的記錄
-        const monthServiceFee = monthData.reduce((sum, item) => sum + item.monthly_fee, 0)
-        const monthServiceHours = monthData.reduce((sum, item) => sum + item.monthly_hours, 0)
+        const monthServiceFee = monthData.reduce((sum: number, item: CustomerCommissionData) => sum + item.monthly_fee, 0)
+        const monthServiceHours = monthData.reduce((sum: number, item: CustomerCommissionData) => sum + item.monthly_hours, 0)
         const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
         const monthUnqualifiedCount = monthData.filter(item => !item.is_qualified && item.commission_amount > 0).length
         
         // 修正：計算所有佣金（包括Steven Kwok不達標的減半佣金）
-        const monthCommission = monthData.reduce((sum, item) => {
+        const monthCommission = monthData.reduce((sum: number, item: CustomerCommissionData) => {
           // 只計算實際有佣金的記錄
           return sum + (item.commission_amount || 0)
         }, 0)
@@ -106,7 +131,7 @@ export default function CommissionsPage() {
         totalCommission += monthCommission
 
         // 收集所有介紹人（只計算有佣金率設定的）
-        Array.from(introducerGroups.keys()).forEach(introducerName => {
+        Array.from(introducerGroups.keys()).forEach((introducerName: string) => {
           allIntroducers.add(introducerName)
         })
 
@@ -116,8 +141,8 @@ export default function CommissionsPage() {
         console.log(`   介紹人組數: ${introducerGroups.size}`)
         
         // 檢查每個介紹人的佣金
-        introducerGroups.forEach((customers, introducerName) => {
-          const introducerCommission = customers.reduce((sum, c) => sum + (c.commission_amount || 0), 0)
+        introducerGroups.forEach((customers: CustomerCommissionData[], introducerName: string) => {
+          const introducerCommission = customers.reduce((sum: number, c: CustomerCommissionData) => sum + (c.commission_amount || 0), 0)
           const qualifiedCount = customers.filter(c => c.is_qualified).length
           const unqualifiedCount = customers.filter(c => !c.is_qualified).length
           const firstMonthCount = customers.filter(c => c.month_sequence === 1).length
@@ -127,13 +152,13 @@ export default function CommissionsPage() {
           console.log(`     首月:${firstMonthCount}, 後續:${subsequentMonthCount}`)
           
           // 詳細列出每個客戶的佣金
-          customers.forEach(c => {
+          customers.forEach((c: CustomerCommissionData) => {
             console.log(`     客戶 ${c.customer_id}: 第${c.month_sequence}月, ${c.is_qualified ? '達標' : '不達標'}, 佣金$${c.commission_amount}`)
           })
         })
 
         // 計算介紹人佣金和詳細客戶資料
-        const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]) => {
+        const introducerCommissions = Array.from(introducerGroups.entries()).map(([introducerName, customers]: [string, CustomerCommissionData[]]) => {
           // 修正：包含所有有佣金的客戶，不只是達標的
           const customersWithCommission = customers.filter(c => c.commission_amount > 0)
           const qualifiedCustomers = customersWithCommission.filter(c => c.is_qualified)
@@ -202,7 +227,7 @@ export default function CommissionsPage() {
         is_qualified: boolean
       }>()
       
-      allFilteredCommissionData.forEach(item => {
+      allFilteredCommissionData.forEach((item: CustomerCommissionData) => {
         const key = `${item.introducer}-${item.customer_id}`
         if (!customerMap.has(key)) {
           customerMap.set(key, {
@@ -221,9 +246,9 @@ export default function CommissionsPage() {
       })
 
       // 再按介紹人匯總
-      customerMap.forEach(customer => {
+      customerMap.forEach((customer: any) => {
         // 只計算有佣金率設定的介紹人
-        const commissionRateRecord = commissionRatesData.find(r => r.introducer === customer.introducer)
+        const commissionRateRecord = commissionRatesData.find((r: CommissionRate) => r.introducer === customer.introducer)
         const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
         
         // 包含所有有佣金的客戶：達標的所有人 + 不達標的Steven Kwok
@@ -838,16 +863,16 @@ export default function CommissionsPage() {
       const monthlyStats = new Map()
 
       // 合併客戶和服務數據，同時過濾掉沒有佣金率設定的介紹人
-      const qualifiedCustomers = customerData.filter(customer => {
-        const hasCommissionRate = commissionRates?.some(rate => rate.introducer === customer.introducer)
-        const hasBillingData = filteredBillingData.some(billing => billing.customer_id === customer.customer_id)
+      const qualifiedCustomers = customerData.filter((customer: CustomerData) => {
+        const hasCommissionRate = commissionRates?.some((rate: CommissionRate) => rate.introducer === customer.introducer)
+        const hasBillingData = filteredBillingData.some((billing: BillingData) => billing.customer_id === customer.customer_id)
         return hasCommissionRate && hasBillingData
       })
 
-      qualifiedCustomers.forEach(customer => {
-        const customerBilling = filteredBillingData.filter(b => b.customer_id === customer.customer_id)
+      qualifiedCustomers.forEach((customer: CustomerData) => {
+        const customerBilling = filteredBillingData.filter((b: BillingData) => b.customer_id === customer.customer_id)
         
-        customerBilling.forEach(billing => {
+        customerBilling.forEach((billing: BillingData) => {
           const serviceMonth = new Date(billing.service_date).toISOString().substring(0, 7)
           const key = `${customer.customer_id}-${serviceMonth}`
 
@@ -879,7 +904,7 @@ export default function CommissionsPage() {
 
       Array.from(monthlyStats.values())
         .sort((a, b) => a.service_month.localeCompare(b.service_month))
-        .forEach(monthData => {
+        .forEach((monthData: MonthlyStatsData) => {
           // 修改達標條件：只計算服務費用，超過$6000就有佣金
           const isQualified = monthData.monthly_fee >= 6000
           
@@ -891,7 +916,7 @@ export default function CommissionsPage() {
           customerMonthSequence.set(customerKey, currentSequence)
           monthSequence = currentSequence
 
-          const commissionRate = commissionRates?.find(rate => rate.introducer === monthData.introducer)
+          const commissionRate = commissionRates?.find((rate: CommissionRate) => rate.introducer === monthData.introducer)
 
           if (commissionRate) {
             const baseCommission = currentSequence === 1 
