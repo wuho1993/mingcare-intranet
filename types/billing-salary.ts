@@ -45,6 +45,7 @@ export interface BillingSalaryRecordWithOvernight extends BillingSalaryRecord {
 
 export type ServiceType = 
   | 'ES-護送服務(陪診)'
+  | 'FD-送飯服務'
   | 'HC-家居服務'
   | 'NC-護理服務(專業⼈員)'
   | 'PC-到⼾看顧(輔助⼈員)'
@@ -54,7 +55,10 @@ export type ServiceType =
   | '上門評估服務'
   | '傷口護理'
   | '免費服務體驗'
+  | '外傭培訓服務'
+  | '新員工培訓課師'
   | '社區活動'
+  | '認知障礙訓練'
 
 export type ProjectCategory = 
   | 'MC社區券(醫點）'
@@ -206,6 +210,7 @@ export interface CalendarSelection {
 
 export const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: 'ES-護送服務(陪診)', label: 'ES-護送服務(陪診)' },
+  { value: 'FD-送飯服務', label: 'FD-送飯服務' },
   { value: 'HC-家居服務', label: 'HC-家居服務' },
   { value: 'NC-護理服務(專業⼈員)', label: 'NC-護理服務(專業⼈員)' },
   { value: 'PC-到⼾看顧(輔助⼈員)', label: 'PC-到⼾看顧(輔助⼈員)' },
@@ -215,7 +220,10 @@ export const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: '上門評估服務', label: '上門評估服務' },
   { value: '傷口護理', label: '傷口護理' },
   { value: '免費服務體驗', label: '免費服務體驗' },
-  { value: '社區活動', label: '社區活動' }
+  { value: '外傭培訓服務', label: '外傭培訓服務' },
+  { value: '新員工培訓課師', label: '新員工培訓課師' },
+  { value: '社區活動', label: '社區活動' },
+  { value: '認知障礙訓練', label: '認知障礙訓練' }
 ]
 
 export const PROJECT_CATEGORY_OPTIONS: { value: ProjectCategory; label: string }[] = [
