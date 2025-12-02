@@ -3473,7 +3473,7 @@ export default function ServicesPage() {
     if (user && activeTab === 'overview') {
       loadKPIData()
     }
-  }, [user, filters.dateRange, activeTab])
+  }, [user, filters.dateRange?.start, filters.dateRange?.end, activeTab])
 
   const loadKPIData = async () => {
     setKpiLoading(true)
