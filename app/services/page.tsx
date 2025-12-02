@@ -44,7 +44,36 @@ import {
 } from '../../services/billing-salary-management'
 import { exportCalendar, CalendarExportOptions } from '../../services/calendar-export'
 
+// =============================================================================
+// 日期處理輔助函數
+// =============================================================================
+
+/**
+ * 安全地从 YYYY-MM-DD 格式字符串解析日期，避免时区问题
+ * @param dateString - 格式为 YYYY-MM-DD 的日期字符串
+ * @returns Date 对象（本地时间）
+ */
+function parseDateStringLocal(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/**
+ * 将 Date 对象格式化为 YYYY-MM-DD 字符串，使用本地时间
+ * @param date - Date 对象
+ * @returns YYYY-MM-DD 格式的字符串
+ */
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// =============================================================================
 // 佣金相關類型定義
+// =============================================================================
+
 interface CommissionRate {
   introducer: string
   first_month_commission: number
@@ -1238,10 +1267,16 @@ function OverviewTab({
             {/* 年月選擇器 */}
             <div className="flex items-center gap-2">
               <select
-                value={filters.dateRange?.start ? new Date(filters.dateRange.start).getFullYear() : new Date().getFullYear()}
+                value={filters.dateRange?.start ? (() => {
+                  const [y] = filters.dateRange.start.split('-').map(Number)
+                  return y
+                })() : new Date().getFullYear()}
                 onChange={(e) => {
                   const year = parseInt(e.target.value)
-                  const month = filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()
+                  const month = filters.dateRange?.start ? (() => {
+                    const [, m] = filters.dateRange.start.split('-').map(Number)
+                    return m - 1
+                  })() : new Date().getMonth()
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
 
@@ -1270,9 +1305,15 @@ function OverviewTab({
               </select>
 
               <select
-                value={filters.dateRange?.start ? new Date(filters.dateRange.start).getMonth() : new Date().getMonth()}
+                value={filters.dateRange?.start ? (() => {
+                  const [, m] = filters.dateRange.start.split('-').map(Number)
+                  return m - 1
+                })() : new Date().getMonth()}
                 onChange={(e) => {
-                  const year = filters.dateRange?.start ? new Date(filters.dateRange.start).getFullYear() : new Date().getFullYear()
+                  const year = filters.dateRange?.start ? (() => {
+                    const [y] = filters.dateRange.start.split('-').map(Number)
+                    return y
+                  })() : new Date().getFullYear()
                   const month = parseInt(e.target.value)
                   const startDate = new Date(year, month, 1)
                   const endDate = new Date(year, month + 1, 0)
@@ -3085,18 +3126,10 @@ export default function ServicesPage() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-    // 使用本地日期格式，避免時區轉換問題
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    }
-
     return {
       dateRange: {
-        start: formatLocalDate(startOfMonth),
-        end: formatLocalDate(endOfMonth)
+        start: formatDateLocal(startOfMonth),
+        end: formatDateLocal(endOfMonth)
       },
       projectCategory: [] // 初始化為空陣列
     }
@@ -3603,19 +3636,12 @@ export default function ServicesPage() {
         return
     }
 
-    // 使用本地日期格式，避免時區轉換問題
-    const formatLocalDate = (date: Date) => {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    }
-
+    // 使用统一的日期格式化函数
     setFilters(prev => ({
       ...prev,
       dateRange: {
-        start: formatLocalDate(start),
-        end: formatLocalDate(end)
+        start: formatDateLocal(start),
+        end: formatDateLocal(end)
       }
     }))
   }
