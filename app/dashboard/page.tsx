@@ -114,41 +114,6 @@ export default function Dashboard() {
     }
   ]
 
-  const quickActions = [
-    {
-      title: '新增客戶',
-      description: '快速新增客戶資料',
-      href: '/clients/new',
-      iconType: 'plus',
-      bgColor: 'bg-blue-50 hover:bg-blue-100',
-      iconColor: 'text-blue-600'
-    },
-    {
-      title: '今日排程',
-      description: '查看今日服務安排',
-      href: '/services?tab=reports&date=today',
-      iconType: 'calendar',
-      bgColor: 'bg-emerald-50 hover:bg-emerald-100',
-      iconColor: 'text-emerald-600'
-    },
-    {
-      title: '員工排班',
-      description: '管理護理人員排班',
-      href: '/services?tab=schedule',
-      iconType: 'clock',
-      bgColor: 'bg-purple-50 hover:bg-purple-100',
-      iconColor: 'text-purple-600'
-    },
-    {
-      title: '財務報表',
-      description: '查看業務概覽與財務統計',
-      href: '/services?tab=overview',
-      iconType: 'trending',
-      bgColor: 'bg-orange-50 hover:bg-orange-100',
-      iconColor: 'text-orange-600'
-    }
-  ]
-
   const getIcon = (type: string) => {
     const iconClass = "w-6 h-6"
     
@@ -301,26 +266,6 @@ export default function Dashboard() {
                 {/* 閃爍效果 */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 group-hover:animate-pulse transition-opacity duration-300 rounded-2xl sm:rounded-3xl"></div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 快速操作 */}
-        <div className="card-apple p-4 sm:p-6 lg:p-8 fade-in-apple" style={{ animationDelay: '0.1s' }}>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">快速操作</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            {quickActions.map((action, index) => (
-              <button
-                key={action.href}
-                onClick={() => router.push(action.href)}
-                className={`p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-gray-200 transition-all duration-300 text-left group hover:scale-[1.02] lg:hover:scale-105 hover:shadow-lg active:scale-95 ${action.bgColor}`}
-              >
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform shadow-md ${action.iconColor}`}>
-                  {getIcon(action.iconType)}
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">{action.title}</h3>
-                <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 hidden sm:block">{action.description}</p>
-              </button>
             ))}
           </div>
         </div>

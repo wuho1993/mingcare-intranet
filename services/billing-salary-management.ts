@@ -61,6 +61,41 @@ export async function fetchBillingSalaryRecords(
   pageSize: number = 50
 ): Promise<ApiResponse<PaginatedResponse<BillingSalaryRecordWithCalculated>>> {
   try {
+    // 如果有介紹人篩選，先從 customer_personal_data 獲取符合條件的 customer_id 列表
+    let introducerCustomerIds: string[] | null = null
+    if (filters.introducer) {
+      const { data: customerData, error: customerError } = await supabase
+        .from('customer_personal_data')
+        .select('customer_id')
+        .eq('introducer', filters.introducer)
+
+      if (customerError) {
+        console.error('Error fetching customers by introducer:', customerError)
+        return {
+          success: false,
+          error: customerError.message
+        }
+      }
+
+      introducerCustomerIds = (customerData || [])
+        .map((c: { customer_id: string | null }) => c.customer_id)
+        .filter((id: string | null): id is string => id !== null && id !== undefined)
+
+      // 如果該介紹人沒有任何客戶，直接返回空結果
+      if (introducerCustomerIds && introducerCustomerIds.length === 0) {
+        return {
+          success: true,
+          data: {
+            data: [],
+            total: 0,
+            page,
+            pageSize,
+            totalPages: 0
+          }
+        }
+      }
+    }
+
     let query = supabase
       .from('billing_salary_data')
       .select('*', { count: 'exact' })
@@ -89,8 +124,30 @@ export async function fetchBillingSalaryRecords(
       query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
     }
 
-    // 優先處理多選客戶
-    if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+    // 介紹人篩選 - 使用預先查詢的 customer_id 列表
+    if (introducerCustomerIds && introducerCustomerIds.length > 0) {
+      // 如果同時有選中的客戶，取交集
+      if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+        const intersection = filters.selectedCustomerIds.filter(id => introducerCustomerIds!.includes(id))
+        if (intersection.length === 0) {
+          // 沒有交集，返回空結果
+          return {
+            success: true,
+            data: {
+              data: [],
+              total: 0,
+              page,
+              pageSize,
+              totalPages: 0
+            }
+          }
+        }
+        query = query.in('customer_id', intersection)
+      } else {
+        query = query.in('customer_id', introducerCustomerIds)
+      }
+    } else if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+      // 優先處理多選客戶
       query = query.in('customer_id', filters.selectedCustomerIds)
     } else if (filters.searchTerm && filters.searchTerm.length >= 2) {
       // 只有在沒有選中特定客戶時才使用模糊搜尋
@@ -144,6 +201,36 @@ export async function fetchAllBillingSalaryRecords(
   filters: BillingSalaryFilters
 ): Promise<ApiResponse<BillingSalaryRecordWithCalculated[]>> {
   try {
+    // 如果有介紹人篩選，先從 customer_personal_data 獲取符合條件的 customer_id 列表
+    let introducerCustomerIds: string[] | null = null
+    if (filters.introducer) {
+      const { data: customerData, error: customerError } = await supabase
+        .from('customer_personal_data')
+        .select('customer_id')
+        .eq('introducer', filters.introducer)
+
+      if (customerError) {
+        console.error('Error fetching customers by introducer:', customerError)
+        return {
+          success: false,
+          error: customerError.message
+        }
+      }
+
+      introducerCustomerIds = (customerData || [])
+        .map((c: { customer_id: string | null }) => c.customer_id)
+        .filter((id: string | null): id is string => id !== null && id !== undefined)
+
+      // 如果該介紹人沒有任何客戶，直接返回空結果
+      if (introducerCustomerIds && introducerCustomerIds.length === 0) {
+        return {
+          success: true,
+          data: [],
+          message: '該介紹人沒有相關客戶記錄'
+        }
+      }
+    }
+
     let allRecords: any[] = []
     let page = 0
     const pageSize = 1000
@@ -181,8 +268,25 @@ export async function fetchAllBillingSalaryRecords(
         query = query.ilike('care_staff_name', `%${filters.careStaffName}%`)
       }
 
-      // 優先處理多選客戶
-      if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+      // 介紹人篩選 - 使用預先查詢的 customer_id 列表
+      if (introducerCustomerIds && introducerCustomerIds.length > 0) {
+        // 如果同時有選中的客戶，取交集
+        if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+          const intersection = filters.selectedCustomerIds.filter(id => introducerCustomerIds!.includes(id))
+          if (intersection.length === 0) {
+            // 沒有交集，返回空結果
+            return {
+              success: true,
+              data: [],
+              message: '沒有符合條件的記錄'
+            }
+          }
+          query = query.in('customer_id', intersection)
+        } else {
+          query = query.in('customer_id', introducerCustomerIds)
+        }
+      } else if (filters.selectedCustomerIds && filters.selectedCustomerIds.length > 0) {
+        // 優先處理多選客戶
         query = query.in('customer_id', filters.selectedCustomerIds)
       } else if (filters.searchTerm && filters.searchTerm.length >= 2) {
         query = query.or(`customer_name.ilike.%${filters.searchTerm}%,phone.ilike.%${filters.searchTerm}%,customer_id.ilike.%${filters.searchTerm}%`)

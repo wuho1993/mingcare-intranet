@@ -19,12 +19,14 @@ import type {
   ProjectCategory,
   ProjectManager,
   BusinessKPI,
-  ProjectCategorySummary
+  ProjectCategorySummary,
+  Introducer
 } from '../../types/billing-salary'
 import {
   SERVICE_TYPE_OPTIONS,
   PROJECT_CATEGORY_OPTIONS,
-  PROJECT_MANAGER_OPTIONS
+  PROJECT_MANAGER_OPTIONS,
+  INTRODUCER_OPTIONS
 } from '../../types/billing-salary'
 import {
   getBusinessKPI,
@@ -1672,7 +1674,7 @@ function ScheduleSummaryView({
 }
 
 // 社區券統計組件
-function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
+function VoucherSummaryView({ filters, refreshTrigger }: { filters: BillingSalaryFilters; refreshTrigger?: number }) {
   const [voucherData, setVoucherData] = useState<{
     serviceTypeSummary: {
       service_type: string
@@ -1710,7 +1712,7 @@ function VoucherSummaryView({ filters }: { filters: BillingSalaryFilters }) {
     }
 
     loadVoucherSummary()
-  }, [filters])
+  }, [filters, refreshTrigger])
 
   if (loading) {
     return (
@@ -2808,7 +2810,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           </div>
 
           {/* 第二行：客戶搜尋 + 下拉篩選 - 移動端優化 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 relative">
             <div className="relative z-20 overflow-visible">
               <div className="relative customer-search-container overflow-visible">
                 <svg className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3047,6 +3049,30 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 placeholder="選擇護理人員"
               />
             </div>
+
+            {/* 介紹人篩選 */}
+            <div>
+              <div className="relative">
+                <select
+                  value={filters.introducer || ''}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    introducer: e.target.value as Introducer | undefined || undefined
+                  }))}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                >
+                  <option value="">選擇介紹人</option>
+                  {INTRODUCER_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -3116,7 +3142,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           <div className="mt-8">
             <div className="card-apple border border-border-light fade-in-apple">
               <div className="p-6">
-                <VoucherSummaryView filters={filters} />
+                <VoucherSummaryView filters={filters} refreshTrigger={refreshTrigger} />
               </div>
             </div>
           </div>

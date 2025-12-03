@@ -77,6 +77,30 @@ export type ProjectManager =
 // 篩選和搜尋類型
 // =============================================================================
 
+// 介紹人類型（與 database.ts 保持一致）
+export type Introducer =
+  | 'Kanas Leung' | 'Joe Cheung' | 'Candy Ho' | 'Steven Kwok'
+  | 'Dr.Lee' | 'Annie' | 'Janet' | '陸sir' | '吳翹政' | '余翠英'
+  | '陳小姐MC01' | '曾先生' | '梁曉峰' | 'Raymond';
+
+// 介紹人選項
+export const INTRODUCER_OPTIONS: { value: Introducer; label: string }[] = [
+  { value: 'Kanas Leung', label: 'Kanas Leung' },
+  { value: 'Joe Cheung', label: 'Joe Cheung' },
+  { value: 'Candy Ho', label: 'Candy Ho' },
+  { value: 'Steven Kwok', label: 'Steven Kwok' },
+  { value: 'Dr.Lee', label: 'Dr.Lee' },
+  { value: 'Annie', label: 'Annie' },
+  { value: 'Janet', label: 'Janet' },
+  { value: 'Raymond', label: 'Raymond' },
+  { value: '陸sir', label: '陸sir' },
+  { value: '吳翹政', label: '吳翹政' },
+  { value: '余翠英', label: '余翠英' },
+  { value: '陳小姐MC01', label: '陳小姐MC01' },
+  { value: '曾先生', label: '曾先生' },
+  { value: '梁曉峰', label: '梁曉峰' },
+];
+
 export interface BillingSalaryFilters {
   dateRange: {
     start: string // YYYY-MM-DD
@@ -88,6 +112,7 @@ export interface BillingSalaryFilters {
   careStaffName?: string
   searchTerm?: string // customer_name / phone / customer_id
   selectedCustomerIds?: string[] // 多選客戶的 ID 陣列
+  introducer?: Introducer // 介紹人篩選（通過 customer_personal_data 關聯）
 }
 
 export interface SearchSuggestion {
