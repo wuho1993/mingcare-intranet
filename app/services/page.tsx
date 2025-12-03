@@ -4894,12 +4894,22 @@ export default function ServicesPage() {
       const stampUrl = getAssetPath('images/company-stamp.png')
 
       // 創建可打印的HTML內容
+      // 從日期範圍提取月份作為標題
+      const pdfTitle = (() => {
+        const startDate = filters.dateRange?.start
+        if (startDate) {
+          const [year, month] = startDate.split('-').map(Number)
+          return `${year}年${month}月服務記錄 - 明家居家護理服務`
+        }
+        return '服務記錄 - 明家居家護理服務'
+      })()
+
       const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>茗護護理服務記錄報表</title>
+          <title>${pdfTitle}</title>
           <style>
             @media print {
               @page {
@@ -5137,9 +5147,9 @@ export default function ServicesPage() {
 
           <div class="header">
             <!-- Company Info and Logo Row -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
               <!-- Left: Company Info -->
-              <div style="flex: 1; font-size: 12px; line-height: 1.4; text-align: left;">
+              <div style="flex: 1; font-size: 11px; line-height: 1.4; text-align: left;">
                 <div style="font-weight: bold; color: #2c5aa0;">明家居家護理服護有限公司</div>
                 <div>地址：新界荃灣橫龍街43-47號龍力工業大廈3樓308室</div>
                 <div>電話：+852 2338 1811</div>
@@ -5149,12 +5159,11 @@ export default function ServicesPage() {
 
               <!-- Right: Company Logo -->
               <div style="flex: 0 0 auto; text-align: right;">
-                <img src="${logoUrl}" alt="明家居家護理標誌" style="height: 180px; width: auto;">
+                <img src="${logoUrl}" alt="明家居家護理標誌" style="height: 80px; width: auto;">
               </div>
             </div>
 
-            <h1>明家居家護理服護有限公司</h1>
-            <h2>護理服務記錄報表</h2>
+            <h1>${pdfTitle}</h1>
             ${isAccountingMode ? '<div style="color: #428bca; font-weight: bold; margin-top: 5px;">對數模式</div>' : ''}
             ${exportMode === 'payroll' ? '<div style="color: #28a745; font-weight: bold; margin-top: 5px;">工資模式</div>' : ''}
           </div>
