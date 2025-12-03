@@ -594,6 +594,25 @@ export async function getProjectCategorySummary(
   dateRange: { start: string; end: string }
 ): Promise<ApiResponse<ProjectCategorySummary[]>> {
   try {
+    console.log('📊 項目分類統計開始:', {
+      dateRange,
+      startDate: dateRange.start,
+      endDate: dateRange.end
+    })
+
+    // 先獲取總記錄數進行驗證
+    const { count: totalCount, error: countError } = await supabase
+      .from('billing_salary_data')
+      .select('*', { count: 'exact', head: true })
+      .gte('service_date', dateRange.start)
+      .lte('service_date', dateRange.end)
+
+    if (countError) {
+      console.error('❌ 查詢總記錄數錯誤:', countError)
+    } else {
+      console.log(`📈 日期範圍內總記錄數: ${totalCount}`)
+    }
+
     // 分批獲取所有記錄以避免 Supabase 限制
     const getAllRecords = async () => {
       let allData: any[] = []
@@ -607,7 +626,7 @@ export async function getProjectCategorySummary(
         
         const { data, error } = await supabase
           .from('billing_salary_data')
-          .select('project_category, service_fee, staff_salary, service_hours, customer_name')
+          .select('project_category, service_fee, staff_salary, service_hours, customer_name, service_date')
           .gte('service_date', dateRange.start)
           .lte('service_date', dateRange.end)
           .range(from, to)
@@ -618,6 +637,7 @@ export async function getProjectCategorySummary(
         
         if (data && data.length > 0) {
           allData = allData.concat(data)
+          console.log(`📦 第 ${page + 1} 批: 獲取 ${data.length} 筆記錄，累計 ${allData.length} 筆`)
           hasMore = data.length === pageSize
           page++
         } else {
@@ -629,6 +649,8 @@ export async function getProjectCategorySummary(
     }
     
     const data = await getAllRecords()
+
+    console.log(`✅ 數據完整性檢查: 獲取 ${data.length} / ${totalCount || 'unknown'} 筆記錄`)
 
     // 按項目分類統計
     const summaryMap = new Map<ProjectCategory, ProjectCategorySummary>()
@@ -670,6 +692,12 @@ export async function getProjectCategorySummary(
 
     const summaries = Array.from(summaryMap.values())
       .sort((a, b) => b.totalFee - a.totalFee) // 按收入降序排列
+
+    // 輸出每個項目分類的詳細統計
+    console.log('📊 項目分類統計結果:')
+    summaries.forEach(s => {
+      console.log(`  - ${s.category}: ${s.recordCount} 筆, $${s.totalFee.toLocaleString()}, ${s.totalHours.toFixed(1)}h, ${s.uniqueCustomers} 位客戶`)
+    })
 
     return {
       success: true,

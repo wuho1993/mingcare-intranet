@@ -1432,7 +1432,7 @@ function OverviewTab({
 
           {categorySummary && categorySummary.length > 0 ? (
             <div className="space-y-4">
-              {categorySummary.slice(0, 5).map((summary, index) => (
+              {categorySummary.map((summary, index) => (
                 <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-light">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-mingcare-blue rounded-full mr-3"></div>
@@ -1454,11 +1454,26 @@ function OverviewTab({
                 </div>
               ))}
 
-              {categorySummary && categorySummary.length > 5 && (
-                <div className="text-center text-sm text-text-secondary">
-                  還有 {categorySummary.length - 5} 個項目，請到詳細報表查看
+              {/* 顯示總計 */}
+              <div className="flex items-center justify-between p-4 bg-mingcare-blue/10 rounded-lg border-2 border-mingcare-blue mt-6">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-mingcare-blue rounded-full mr-3"></div>
+                  <div>
+                    <h4 className="font-bold text-text-primary">所有項目總計</h4>
+                    <p className="text-sm text-text-secondary">
+                      {categorySummary.reduce((sum, s) => sum + s.recordCount, 0)} 筆記錄 • {categorySummary.length} 個項目
+                    </p>
+                  </div>
                 </div>
-              )}
+                <div className="text-right">
+                  <div className="text-lg font-bold text-mingcare-blue">
+                    ${categorySummary.reduce((sum, s) => sum + s.totalFee, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-text-secondary">
+                    {categorySummary.reduce((sum, s) => sum + s.totalHours, 0).toFixed(1)}h • 利潤 ${categorySummary.reduce((sum, s) => sum + s.totalProfit, 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
