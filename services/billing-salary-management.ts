@@ -17,6 +17,32 @@ import type {
   SearchSuggestion
 } from '../types/billing-salary'
 
+// =============================================================================
+// 日期處理輔助函數（避免時區問題）
+// =============================================================================
+
+/**
+ * 安全地从 YYYY-MM-DD 格式字符串解析日期，避免时区问题
+ */
+function parseDateStringLocal(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/**
+ * 将 Date 对象格式化为 YYYY-MM-DD 字符串，使用本地时间
+ */
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
 // Helper to normalize project category filters to an array
 function normalizeProjectCategories(
   projectCategory: BillingSalaryFilters['projectCategory']
@@ -468,15 +494,13 @@ export async function getBusinessKPI(
     // 更清楚的調試信息
     console.log(`✅ 數據完整性檢查: 獲取 ${currentData?.length || 0} / ${totalCount || 0} 筆記錄 ${(currentData?.length || 0) === (totalCount || 0) ? '✅ 完整' : '❌ 不完整'}`)
 
-    // 計算上月同期（用於增長率比較）
-    const currentStart = new Date(dateRange.start)
-    const currentEnd = new Date(dateRange.end)
+    // 計算上月同期（用於增長率比較）- 使用安全的日期解析
+    const currentStart = parseDateStringLocal(dateRange.start)
+    const currentEnd = parseDateStringLocal(dateRange.end)
     
     // 計算上個月的同期日期範圍
-    const lastMonthStart = new Date(currentStart)
-    lastMonthStart.setMonth(lastMonthStart.getMonth() - 1)
-    const lastMonthEnd = new Date(currentEnd)
-    lastMonthEnd.setMonth(lastMonthEnd.getMonth() - 1)
+    const lastMonthStart = new Date(currentStart.getFullYear(), currentStart.getMonth() - 1, currentStart.getDate())
+    const lastMonthEnd = new Date(currentEnd.getFullYear(), currentEnd.getMonth() - 1, currentEnd.getDate())
 
     // 分批獲取上月數據
     const getLastMonthRecords = async () => {
@@ -492,8 +516,8 @@ export async function getBusinessKPI(
         const { data, error } = await supabase
           .from('billing_salary_data')
           .select('service_fee, staff_salary, service_hours')
-          .gte('service_date', lastMonthStart.toISOString().split('T')[0])
-          .lte('service_date', lastMonthEnd.toISOString().split('T')[0])
+          .gte('service_date', formatDateLocal(lastMonthStart))
+          .lte('service_date', formatDateLocal(lastMonthEnd))
           .range(from, to)
         
         if (error) {
@@ -533,13 +557,13 @@ export async function getBusinessKPI(
 
     // 計算增長率
     const lastMonthRevenue = lastMonthData?.reduce((sum, record) => sum + (record.service_fee || 0), 0) || 0
-    const revenueGrowthRate = lastMonthRevenue > 0 
+    const revenueGrowthRate = lastMonthRevenue > 0
       ? ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
       : totalRevenue > 0 ? 100 : 0 // 如果上月無數據但本月有，則顯示 100% 增長
 
     console.log('KPI Debug:', {
       currentPeriod: `${dateRange.start} to ${dateRange.end}`,
-      lastMonthPeriod: `${lastMonthStart.toISOString().split('T')[0]} to ${lastMonthEnd.toISOString().split('T')[0]}`,
+      lastMonthPeriod: `${formatDateLocal(lastMonthStart)} to ${formatDateLocal(lastMonthEnd)}`,
       currentRecords: currentData?.length || 0,
       lastMonthRecords: lastMonthData?.length || 0,
       totalRevenue,
