@@ -81,7 +81,7 @@ export type ProjectManager =
 export type Introducer =
   | 'Kanas Leung' | 'Joe Cheung' | 'Candy Ho' | 'Steven Kwok'
   | 'Dr.Lee' | 'Annie' | 'Janet' | '陸sir' | '吳翹政' | '余翠英'
-  | '陳小姐MC01' | '曾先生' | '梁曉峰' | 'Raymond';
+  | '陳小姐MC01' | '曾先生' | '梁曉峰' | 'raymond';
 
 // 介紹人選項
 export const INTRODUCER_OPTIONS: { value: Introducer; label: string }[] = [
@@ -92,7 +92,7 @@ export const INTRODUCER_OPTIONS: { value: Introducer; label: string }[] = [
   { value: 'Dr.Lee', label: 'Dr.Lee' },
   { value: 'Annie', label: 'Annie' },
   { value: 'Janet', label: 'Janet' },
-  { value: 'Raymond', label: 'Raymond' },
+  { value: 'raymond', label: 'raymond' },
   { value: '陸sir', label: '陸sir' },
   { value: '吳翹政', label: '吳翹政' },
   { value: '余翠英', label: '余翠英' },
