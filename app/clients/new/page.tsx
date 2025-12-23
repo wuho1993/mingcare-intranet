@@ -653,7 +653,7 @@ export default function NewCustomerPage() {
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-bg-primary">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
             <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
           </div>
         </div>
@@ -895,7 +895,7 @@ export default function NewCustomerPage() {
                                   value="true"
                                   checked={formData.charity_support === true}
                                   onChange={(e) => updateFormData('charity_support', e.target.value === 'true')}
-                                  className="w-5 h-5 text-mingcare-blue focus:ring-primary"
+                                  className="w-5 h-5 text-primary focus:ring-primary"
                                 />
                                 <span className="ml-3 text-base">是</span>
                               </label>
@@ -906,7 +906,7 @@ export default function NewCustomerPage() {
                                   value="false"
                                   checked={formData.charity_support === false}
                                   onChange={(e) => updateFormData('charity_support', e.target.value === 'false')}
-                                  className="w-5 h-5 text-mingcare-blue focus:ring-primary"
+                                  className="w-5 h-5 text-primary focus:ring-primary"
                                 />
                                 <span className="ml-3 text-base">否</span>
                               </label>
@@ -926,7 +926,7 @@ export default function NewCustomerPage() {
               {formData.customer_type && formData.introducer && (
                 <div className="mt-6 bg-bg-tertiary rounded-apple-sm p-4 fade-in-apple">
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-mingcare-blue rounded-full flex items-center justify-center mr-4">
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-4">
                       <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
@@ -1037,9 +1037,9 @@ export default function NewCustomerPage() {
                             type="button"
                             onClick={openMapSelector}
                             disabled={!isGoogleMapsLoaded}
-                            className={`px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2 ${
+                            className={`px-6 py-3 font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center gap-2 ${
                               isGoogleMapsLoaded 
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-xl transform hover:scale-105' 
+                                ? 'bg-primary hover:bg-primary-dark text-white hover:shadow-xl transform hover:scale-105' 
                                 : 'bg-border-light text-text-secondary cursor-not-allowed'
                             }`}
                           >
@@ -1237,7 +1237,7 @@ export default function NewCustomerPage() {
       {/* 地圖選擇器模態框 */}
       {showMapModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-border-light flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-semibold text-text-primary">選擇服務地址位置</h3>
@@ -1268,7 +1268,7 @@ export default function NewCustomerPage() {
                     value={mapSearchQuery}
                     onChange={(e) => setMapSearchQuery(e.target.value)}
                     placeholder="搜尋地址或地點（例如：旺角彌敦道、銅鑼灣時代廣場）"
-                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   />
                 </div>
                 <p className="text-xs text-text-secondary mt-1.5 ml-1">
@@ -1279,7 +1279,7 @@ export default function NewCustomerPage() {
               {/* 互動式 Google Maps */}
               <div 
                 ref={mapRef}
-                className="h-96 rounded-lg border border-border-medium overflow-hidden mb-4"
+                className="h-96 rounded-xl border border-border-medium overflow-hidden mb-4"
               ></div>
               
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">

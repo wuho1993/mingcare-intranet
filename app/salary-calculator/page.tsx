@@ -134,7 +134,7 @@ export default function SalaryCalculatorPage() {
             <div className="card-apple-content">
               {calculationResult ? (
                 <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="bg-blue-50 p-4 rounded-xl">
                     <h3 className="font-semibold text-blue-900 mb-2">
                       {staffData.name || '護理人員'} 薪資明細
                     </h3>
@@ -192,7 +192,7 @@ export default function SalaryCalculatorPage() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <button 
             onClick={() => router.push('/payroll')}
-            className="card-apple hover:shadow-lg transition-all duration-200 cursor-pointer"
+            className="card-apple hover:shadow-lg transition-all duration-300 cursor-pointer"
           >
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">💰</div>
@@ -203,7 +203,7 @@ export default function SalaryCalculatorPage() {
 
           <button 
             onClick={() => router.push('/care-staff')}
-            className="card-apple hover:shadow-lg transition-all duration-200 cursor-pointer"
+            className="card-apple hover:shadow-lg transition-all duration-300 cursor-pointer"
           >
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">👩‍⚕️</div>
@@ -214,7 +214,7 @@ export default function SalaryCalculatorPage() {
 
           <button 
             onClick={() => router.push('/commissions')}
-            className="card-apple hover:shadow-lg transition-all duration-200 cursor-pointer"
+            className="card-apple hover:shadow-lg transition-all duration-300 cursor-pointer"
           >
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">📊</div>

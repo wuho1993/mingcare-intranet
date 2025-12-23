@@ -1097,7 +1097,7 @@ export default function CommissionsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
           <p className="text-apple-body text-text-secondary mt-4">載入佣金數據中...</p>
         </div>
       </div>
@@ -1236,7 +1236,7 @@ export default function CommissionsPage() {
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.2s' }}>
             <div className="card-apple-content text-center py-3 sm:py-4">
               <h3 className="text-xs sm:text-sm font-medium text-text-secondary mb-1 sm:mb-2">介紹人數量</h3>
-              <p className="text-sm sm:text-xl font-bold text-mingcare-blue">{filteredData.length}</p>
+              <p className="text-sm sm:text-xl font-bold text-primary">{filteredData.length}</p>
             </div>
           </div>
           <div className="card-apple fade-in-apple" style={{ animationDelay: '0.3s' }}>
@@ -1354,7 +1354,7 @@ export default function CommissionsPage() {
               {/* 移動版卡片佈局 */}
               <div className="sm:hidden space-y-3 p-3">
                 {introducerData.customers.map((customer, customerIndex) => (
-                  <div key={`${customer.customer_id}-${customer.service_month}`} className="bg-white border border-border-light rounded-lg p-3 space-y-2">
+                  <div key={`${customer.customer_id}-${customer.service_month}`} className="bg-white border border-border-light rounded-xl p-3 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-medium text-text-primary text-sm">{customer.customer_name}</div>

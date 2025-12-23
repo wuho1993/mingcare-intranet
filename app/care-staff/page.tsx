@@ -627,7 +627,7 @@ export default function CareStaffPage() {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-mingcare-blue"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="mt-4 text-text-secondary">載入中...</p>
         </div>
       </div>
@@ -692,7 +692,7 @@ export default function CareStaffPage() {
                     }, 150)
                   }}
                   placeholder="智慧搜尋：姓名1字/員工編號3字/電話4字..."
-                  className="w-full pl-8 sm:pl-12 pr-8 sm:pr-12 py-2 sm:py-3 border border-border-light rounded-apple-pill bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  className="w-full pl-8 sm:pl-12 pr-8 sm:pr-12 py-2 sm:py-3 border border-border-light rounded-apple-pill bg-white text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all duration-300 text-sm sm:text-base"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4">{
                   searchQuery && (
@@ -951,7 +951,7 @@ export default function CareStaffPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center space-x-6">
                 <span className="text-sm sm:text-base text-text-primary">
-                  共 <span className="font-semibold text-mingcare-blue">{totalCount}</span> 位護理人員
+                  共 <span className="font-semibold text-primary">{totalCount}</span> 位護理人員
                 </span>
               </div>
 
@@ -960,9 +960,9 @@ export default function CareStaffPage() {
                 <div className="flex rounded-apple-sm border border-border-light p-1 bg-bg-tertiary">
                   <button
                     onClick={() => setViewMode('card')}
-                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-300 ${
                       viewMode === 'card'
-                        ? 'bg-white text-mingcare-blue shadow-apple'
+                        ? 'bg-white text-primary shadow-apple'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -976,9 +976,9 @@ export default function CareStaffPage() {
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-apple-xs transition-all duration-300 ${
                       viewMode === 'list'
-                        ? 'bg-white text-mingcare-blue shadow-apple'
+                        ? 'bg-white text-primary shadow-apple'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -1159,7 +1159,7 @@ export default function CareStaffPage() {
                     {careStaff.map((staff, index) => (
                       <div
                         key={staff.id}
-                        className="card-apple group cursor-pointer transition-all duration-200 hover:shadow-apple-card relative"
+                        className="card-apple group cursor-pointer transition-all duration-300 hover:shadow-apple-card relative"
                         style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                         onClick={() => handleEditStaff(staff)}
                       >
@@ -1220,7 +1220,7 @@ export default function CareStaffPage() {
                           <div className="border-t border-border-light pt-3">
                             <div className="flex justify-between items-center text-apple-caption text-text-tertiary">
                               <span>建立於 {new Date(staff.created_at).toLocaleDateString('zh-TW')}</span>
-                              <svg className="h-4 w-4 text-mingcare-blue group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
@@ -1653,7 +1653,7 @@ export default function CareStaffPage() {
                               <input
                                 type="checkbox"
                                 defaultChecked={editingStaff.job_position?.includes(position)}
-                                className="rounded border-border-light text-mingcare-blue focus:ring-primary mr-2"
+                                className="rounded border-border-light text-primary focus:ring-primary mr-2"
                               />
                               <span className="text-sm text-text-secondary">{position}</span>
                             </label>
@@ -1689,7 +1689,7 @@ export default function CareStaffPage() {
                                     language: newLanguages
                                   })
                                 }}
-                                className="rounded border-border-light text-mingcare-blue focus:ring-primary mr-2"
+                                className="rounded border-border-light text-primary focus:ring-primary mr-2"
                               />
                               <span className="text-sm text-text-secondary">{language}</span>
                             </label>
@@ -1766,7 +1766,7 @@ export default function CareStaffPage() {
                       }}
                       disabled={saveLoading}
                       type="button"
-                      className="px-4 py-2 bg-mingcare-blue text-white rounded-apple-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-primary text-white rounded-apple-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
                     >
                       {saveLoading ? '保存中...' : '保存'}
                     </button>

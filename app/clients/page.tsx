@@ -138,7 +138,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
         {/* Total Customers */}
         <div className="card-apple fade-in-apple">
           <div className="card-apple-content text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-mingcare-blue mb-2">
+            <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
               {totalCustomers}
             </div>
             <div className="text-sm text-text-secondary">總客戶數</div>
@@ -222,7 +222,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                   <div className="flex items-center space-x-2">
                     <div className="w-20 bg-bg-tertiary rounded-full h-2">
                       <div 
-                        className="bg-mingcare-blue h-2 rounded-full transition-all duration-300"
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(count / Math.max(...Object.values(districtStats))) * 100}%` }}
                       ></div>
                     </div>
@@ -257,7 +257,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                     <div key={introducer} className="border-b border-divider-light last:border-b-0 pb-3 last:pb-0">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-text-primary truncate">{introducer}</span>
-                        <span className="text-sm font-semibold text-mingcare-blue">{totalCount}</span>
+                        <span className="text-sm font-semibold text-primary">{totalCount}</span>
                       </div>
                       <div className="pl-2 space-y-1">
                         {Object.entries(customerTypes).map(([customerType, count]) => (
@@ -298,10 +298,10 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                 {Object.entries(monthlyServiceUsage)
                   .sort(([,a], [,b]) => (b as number) - (a as number))
                   .map(([projectCategory, count]) => (
-                  <div key={projectCategory} className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                  <div key={projectCategory} className="flex justify-between items-center p-3 bg-bg-secondary rounded-xl">
                     <span className="text-sm text-text-primary font-medium">{projectCategory}</span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-semibold text-mingcare-blue">{count as number}</span>
+                      <span className="text-sm font-semibold text-primary">{count as number}</span>
                       <span className="text-xs text-text-secondary">人次</span>
                     </div>
                   </div>
@@ -309,7 +309,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                 <div className="mt-4 pt-3 border-t border-border-primary">
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-medium text-text-primary">總服務人次</span>
-                    <span className="font-bold text-mingcare-blue">
+                    <span className="font-bold text-primary">
                       {Object.values(monthlyServiceUsage).reduce((sum, count) => sum + count, 0)}
                     </span>
                   </div>
@@ -333,7 +333,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                 .filter(([status]) => status !== '未設定') // Exclude undefined/null entries
                 .map(([status, count]) => (
                 <div key={status}>
-                  <div className="flex justify-between items-center p-3 bg-bg-secondary rounded-lg">
+                  <div className="flex justify-between items-center p-3 bg-bg-secondary rounded-xl">
                     <div className="flex items-center space-x-2">
                       <div className={`w-3 h-3 rounded-full ${
                         status === '已經持有' ? 'bg-emerald-500' :
@@ -341,7 +341,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                       }`}></div>
                       <span className="text-sm font-medium text-text-primary">{status}</span>
                     </div>
-                    <span className="text-lg font-bold text-mingcare-blue">{count}</span>
+                    <span className="text-lg font-bold text-primary">{count}</span>
                   </div>
                   
                   {/* Show LDS breakdown for 申請中 customers */}
@@ -360,7 +360,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                             }`}></div>
                             <span className="text-text-secondary">{ldsStatus}</span>
                           </div>
-                          <span className="text-mingcare-blue font-semibold">{ldsCount}</span>
+                          <span className="text-primary font-semibold">{ldsCount}</span>
                         </div>
                       ))}
                     </div>
@@ -381,7 +381,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
           <div className="card-apple-content">
             <div className="flex flex-wrap gap-2">
               {Object.entries(filters).map(([key, value]) => (
-                <span key={key} className="px-3 py-1 bg-mingcare-blue text-white rounded-full text-xs">
+                <span key={key} className="px-3 py-1 bg-primary text-white rounded-full text-xs">
                   {key.replace('_', ' ')}: {value}
                 </span>
               ))}
@@ -745,7 +745,7 @@ export default function ClientsPage() {
                     }
                   }}
                   placeholder="搜尋客戶姓名、電話或項目編號..."
-                  className="w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-2 sm:py-3 bg-bg-secondary border-transparent focus:bg-white focus:border-mingcare-blue focus:shadow-apple-focus rounded-apple-sm text-sm transition-all duration-200"
+                  className="w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-2 sm:py-3 bg-bg-secondary border-transparent focus:bg-white focus:border-primary focus:shadow-apple-focus rounded-apple-sm text-sm transition-all duration-300"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -811,7 +811,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
@@ -841,7 +841,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="中西區">中西區</option>
@@ -885,7 +885,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="Kanas Leung">Kanas Leung</option>
@@ -925,7 +925,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="Kanas Leung">Kanas Leung</option>
@@ -954,7 +954,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="待社工評估">待社工評估</option>
@@ -983,7 +983,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="申請中">申請中</option>
@@ -1019,7 +1019,7 @@ export default function ClientsPage() {
                       setLoading(false)
                     }
                   }}
-                  className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all border border-red-200 hover:border-red-300"
+                  className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl flex items-center space-x-1 transition-all border border-red-200 hover:border-red-300"
                 >
                   <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1038,9 +1038,9 @@ export default function ClientsPage() {
               {/* 客戶列表 Tab */}
               <button
                 onClick={() => setActiveTab('list')}
-                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 ${
                   activeTab === 'list'
-                    ? 'bg-mingcare-blue text-white shadow-lg'
+                    ? 'bg-primary text-white shadow-lg'
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                 }`}
               >
@@ -1054,9 +1054,9 @@ export default function ClientsPage() {
               {/* 客戶總結 Tab */}
               <button
                 onClick={() => setActiveTab('summary')}
-                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1 sm:space-x-2 ${
                   activeTab === 'summary'
-                    ? 'bg-mingcare-blue text-white shadow-lg'
+                    ? 'bg-primary text-white shadow-lg'
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                 }`}
               >
@@ -1077,7 +1077,7 @@ export default function ClientsPage() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
               <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <span className="text-sm text-text-primary">
-                  共 <span className="font-semibold text-mingcare-blue">{totalCount}</span> 位客戶
+                  共 <span className="font-semibold text-primary">{totalCount}</span> 位客戶
                 </span>
                 {Object.keys(filters).length > 0 && (
                   <div className="flex items-center space-x-2">
@@ -1117,7 +1117,7 @@ export default function ClientsPage() {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => router.push('/clients/new')}
-                  className="text-xs sm:text-sm bg-blue-600 hover:bg-primary-dark text-white px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all"
+                  className="text-xs sm:text-sm bg-blue-600 hover:bg-primary-dark text-white px-3 py-1.5 rounded-xl flex items-center space-x-1 transition-all"
                 >
                   <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1419,7 +1419,7 @@ export default function ClientsPage() {
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCancelExport}>
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-text-primary mb-4">導出客戶報表</h3>
             
             <div className="space-y-4">
@@ -1488,7 +1488,7 @@ export default function ClientsPage() {
               <button
                 onClick={handleExportConfirm}
                 disabled={exportLoading}
-                className="px-4 py-2 bg-mingcare-blue text-white rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exportLoading ? '導出中...' : '確認導出'}
               </button>

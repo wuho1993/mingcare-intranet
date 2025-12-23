@@ -28,7 +28,7 @@ export default function PayrollPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
           <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function PayrollPage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6 lg:mt-8">
               <div className="p-3 sm:p-4 lg:p-6 border border-border-light rounded-xl">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-blue-500/10 rounded-lg mb-2 sm:mb-3 mx-auto flex items-center justify-center">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-blue-500/10 rounded-xl mb-2 sm:mb-3 mx-auto flex items-center justify-center">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -75,7 +75,7 @@ export default function PayrollPage() {
               </div>
               
               <div className="p-3 sm:p-4 lg:p-6 border border-border-light rounded-xl">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-green-500/10 rounded-lg mb-2 sm:mb-3 mx-auto flex items-center justify-center">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-green-500/10 rounded-xl mb-2 sm:mb-3 mx-auto flex items-center justify-center">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
@@ -85,7 +85,7 @@ export default function PayrollPage() {
               </div>
               
               <div className="p-3 sm:p-4 lg:p-6 border border-border-light rounded-xl sm:col-span-2 lg:col-span-1">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-purple-500/10 rounded-lg mb-2 sm:mb-3 mx-auto flex items-center justify-center">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-purple-500/10 rounded-xl mb-2 sm:mb-3 mx-auto flex items-center justify-center">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
