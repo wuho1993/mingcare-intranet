@@ -70,6 +70,7 @@ export default function Dashboard() {
   const [hkoWeather, setHkoWeather] = useState<HkoWeatherSnapshot | null>(null)
   const [hkoForecast, setHkoForecast] = useState<HkoForecastDay[]>([])
   const [expandedForecastIndex, setExpandedForecastIndex] = useState<number | null>(null)
+  const [expandedWarningIndex, setExpandedWarningIndex] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -406,8 +407,8 @@ export default function Dashboard() {
   }
 
   const formatRainfall = (value?: string, unit?: string) => {
-    if (!value) return '暫不可用'
-    if (value.trim().toUpperCase() === 'M') return '暫不可用'
+    if (!value) return '暫無記錄'
+    if (value.trim().toUpperCase() === 'M') return '暫無記錄'
     return `${value}${unit ?? ''}`
   }
 
@@ -425,7 +426,7 @@ export default function Dashboard() {
         <div className="max-w-screen-2xl mx-auto px-3 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <div className="w-24 h-24 -my-4">
+              <div className="w-36 h-36 -my-8">
                 <Image
                   src={getAssetPath('images/mingcare-logo.png')}
                   alt="明家護理服務"
@@ -478,14 +479,7 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              <div className="hidden sm:flex flex-col items-end">
-                <div className="text-4xl font-light text-text-primary tabular-nums leading-none">
-                  {formatTime(currentTime)}
-                </div>
-                <div className="mt-1 text-sm text-text-tertiary">
-                  {formatDate(currentTime)}
-                </div>
-              </div>
+
             </div>
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -564,7 +558,7 @@ export default function Dashboard() {
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.rainfall
                           ? formatRainfall(hkoWeather.rainfall.value, hkoWeather.rainfall.unit)
-                          : '暫不可用'}
+                          : '暫無記錄'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
                     </div>
@@ -632,11 +626,27 @@ export default function Dashboard() {
                       <div className="text-xs font-semibold text-text-primary">天氣警告</div>
                       <div className="text-xs text-text-tertiary">{hkoWeather?.warnings.length ? `${hkoWeather.warnings.length} 則` : '暫無'}</div>
                     </div>
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 space-y-3">
                       {hkoWeather?.warnings.length ? (
-                        hkoWeather.warnings.slice(0, 3).map((m, idx) => (
-                          <div key={idx} className="text-sm text-text-secondary leading-relaxed">
-                            {m}
+                        hkoWeather.warnings.slice(0, 5).map((m, idx) => (
+                          <div key={idx} className="rounded-xl border border-border-light bg-bg-primary p-3">
+                            <div
+                              className={
+                                `text-sm text-text-secondary leading-relaxed ` +
+                                (expandedWarningIndex === idx ? '' : 'line-clamp-2')
+                              }
+                            >
+                              {m}
+                            </div>
+                            {m.length > 50 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedWarningIndex(expandedWarningIndex === idx ? null : idx)}
+                                className="mt-2 text-xs text-primary hover:underline"
+                              >
+                                {expandedWarningIndex === idx ? '收起' : '展開'}
+                              </button>
+                            )}
                           </div>
                         ))
                       ) : (
