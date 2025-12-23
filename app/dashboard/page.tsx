@@ -15,15 +15,15 @@ type HkoRhrreadResponse = {
   updateTime?: string
   warningMessage?: string[]
   temperature?: {
-    data?: Array<{ place: string; value: string; unit: string }>
+    data?: Array<{ place?: string; value?: string; unit?: string }>
     recordTime?: string
   }
   humidity?: {
-    data?: Array<{ place: string; value: string; unit: string }>
+    data?: Array<{ place?: string; value?: string; unit?: string }>
     recordTime?: string
   }
   rainfall?: {
-    data?: Array<{ place: string; max?: string; max1?: string; value?: string; value1?: string; min?: string; min1?: string; unit?: string; unit1?: string; place?: string }>
+    data?: Array<{ place?: string; max?: string; max1?: string; value?: string; value1?: string; min?: string; min1?: string; unit?: string; unit1?: string }>
     startTime?: string
     endTime?: string
   }
@@ -70,9 +70,13 @@ export default function Dashboard() {
 
     const preferredPlaces = ['香港天文台', '京士柏', '香港公園', '黃大仙', '深水埗']
 
-    const pickReading = <T extends { place: string }>(data?: T[]) => {
+    const pickReading = <T extends { place?: string }>(data?: T[]) => {
       if (!data || data.length === 0) return undefined
-      return data.find((row) => preferredPlaces.includes(row.place)) ?? data[0]
+      return (
+        data.find((row) => row.place && preferredPlaces.includes(row.place)) ??
+        data.find((row) => row.place) ??
+        data[0]
+      )
     }
 
     const fetchHko = async () => {
@@ -105,15 +109,15 @@ export default function Dashboard() {
         const snapshot: HkoWeatherSnapshot = {
           updatedAt: json.updateTime ?? json.temperature?.recordTime ?? json.humidity?.recordTime ?? json.rainfall?.endTime,
           temperature: temp
-            ? { place: temp.place, value: temp.value, unit: temp.unit }
+            ? { place: temp.place ?? '—', value: temp.value ?? '—', unit: temp.unit ?? '' }
             : undefined,
           humidity: humidity
-            ? { place: humidity.place, value: humidity.value, unit: humidity.unit }
+            ? { place: humidity.place ?? '—', value: humidity.value ?? '—', unit: humidity.unit ?? '' }
             : undefined,
           rainfall:
             rainfallRow && typeof rainfallValue === 'string'
               ? {
-                  place: rainfallRow.place,
+                  place: rainfallRow.place ?? '—',
                   value: rainfallValue,
                   unit: rainfallRow.unit ?? rainfallRow.unit1 ?? 'mm',
                 }
@@ -318,10 +322,10 @@ export default function Dashboard() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border-light bg-bg-primary/80 backdrop-blur-glass">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="max-w-screen-2xl mx-auto px-3 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <div className="w-28 h-28 -my-4">
+              <div className="w-20 h-20 -my-2">
                 <Image
                   src={getAssetPath('images/mingcare-logo.png')}
                   alt="明家護理服務"
@@ -362,7 +366,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main */}
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <main className="relative max-w-screen-2xl mx-auto px-3 sm:px-6 py-6">
         {/* Hero */}
         <div className="card-apple mb-4 animate-fade-in">
           <div className="card-apple-content">
@@ -445,21 +449,21 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">氣溫</div>
-                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.temperature ? `${hkoWeather.temperature.value}${hkoWeather.temperature.unit}` : '—'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.temperature?.place ?? ''}</div>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">濕度</div>
-                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.humidity ? `${hkoWeather.humidity.value}${hkoWeather.humidity.unit}` : '—'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.humidity?.place ?? ''}</div>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
-                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.rainfall ? `${hkoWeather.rainfall.value}${hkoWeather.rainfall.unit}` : '—'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
@@ -507,10 +511,10 @@ export default function Dashboard() {
                 <div className="card-apple-content">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <div className={`w-12 h-12 rounded-2xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-14 h-14 rounded-2xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                         {item.icon}
                       </div>
-                      <h3 className="text-xl font-semibold text-text-primary group-hover:text-primary transition-colors">
+                      <h3 className="text-2xl font-semibold text-text-primary group-hover:text-primary transition-colors">
                         {item.title}
                       </h3>
                       <p className="mt-1 text-sm text-text-secondary line-clamp-2">
