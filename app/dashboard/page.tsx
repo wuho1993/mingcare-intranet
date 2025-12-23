@@ -69,6 +69,7 @@ export default function Dashboard() {
   const [hkoStatus, setHkoStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [hkoWeather, setHkoWeather] = useState<HkoWeatherSnapshot | null>(null)
   const [hkoForecast, setHkoForecast] = useState<HkoForecastDay[]>([])
+  const [expandedForecastIndex, setExpandedForecastIndex] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -404,6 +405,12 @@ export default function Dashboard() {
     return `${value}${u}`
   }
 
+  const formatRainfall = (value?: string, unit?: string) => {
+    if (!value) return '暫不可用'
+    if (value.trim().toUpperCase() === 'M') return '暫不可用'
+    return `${value}${unit ?? ''}`
+  }
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* 背景光暈（不影響白底，但更有質感） */}
@@ -418,7 +425,7 @@ export default function Dashboard() {
         <div className="max-w-screen-2xl mx-auto px-3 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 -my-2">
+              <div className="w-24 h-24 -my-4">
                 <Image
                   src={getAssetPath('images/mingcare-logo.png')}
                   alt="明家護理服務"
@@ -439,11 +446,6 @@ export default function Dashboard() {
                 <div className="text-right">
                   <p className="text-xs text-text-tertiary">{getGreeting()}</p>
                   <p className="text-sm text-text-secondary truncate max-w-[220px]">{user?.email}</p>
-                </div>
-                <div className="h-8 w-px bg-border-light" />
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-text-primary tabular-nums">{formatTime(currentTime)}</p>
-                  <p className="text-xs text-text-tertiary">{formatDate(currentTime)}</p>
                 </div>
               </div>
 
@@ -486,7 +488,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => router.push('/clients/new')}
                 className="btn-apple-primary w-full"
@@ -494,16 +496,10 @@ export default function Dashboard() {
                 新增客戶
               </button>
               <button
-                onClick={() => router.push('/services')}
+                onClick={() => router.push('/services?tab=schedule')}
                 className="btn-apple-secondary w-full"
               >
                 新增服務記錄
-              </button>
-              <button
-                onClick={() => router.push('/care-staff-apply')}
-                className="btn-apple-secondary w-full"
-              >
-                新增護理人員
               </button>
             </div>
           </div>
@@ -566,7 +562,9 @@ export default function Dashboard() {
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
-                        {hkoWeather?.rainfall ? `${hkoWeather.rainfall.value}${hkoWeather.rainfall.unit}` : '—'}
+                        {hkoWeather?.rainfall
+                          ? formatRainfall(hkoWeather.rainfall.value, hkoWeather.rainfall.unit)
+                          : '暫不可用'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
                     </div>
@@ -576,7 +574,7 @@ export default function Dashboard() {
                     <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold text-text-primary">未來天氣預報</div>
-                        <div className="text-xs text-text-tertiary">九天天氣預報（節錄）</div>
+                        <div className="text-xs text-text-tertiary">4 天預報</div>
                       </div>
 
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -596,7 +594,23 @@ export default function Dashboard() {
                               ) : null}
                             </div>
 
-                            <div className="mt-2 text-sm font-semibold text-text-primary line-clamp-2">{d.weather ?? '—'}</div>
+                            <div
+                              className={
+                                `mt-2 text-sm font-semibold text-text-primary ` +
+                                (expandedForecastIndex === idx ? '' : 'line-clamp-2')
+                              }
+                            >
+                              {d.weather ?? '—'}
+                            </div>
+                            {(d.weather?.length ?? 0) > 28 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedForecastIndex(expandedForecastIndex === idx ? null : idx)}
+                                className="mt-2 text-xs text-primary hover:underline"
+                              >
+                                {expandedForecastIndex === idx ? '收起' : '展開'}
+                              </button>
+                            )}
                             <div className="mt-2 flex items-end justify-between">
                               <div className="text-sm text-text-secondary tabular-nums">
                                 {d.minTemp ?? '—'}

@@ -3215,6 +3215,19 @@ export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'reports'>('reports')
   const router = useRouter()
 
+  // 支援 Dashboard 深連結：/services?tab=schedule
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab === 'overview' || tab === 'schedule' || tab === 'reports') {
+        setActiveTab(tab)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
   // 狀態管理
   const [filters, setFilters] = useState<BillingSalaryFilters>(() => {
     const now = new Date()
