@@ -44,6 +44,7 @@ export default function NewCustomerPage() {
   const [showMapModal, setShowMapModal] = useState(false)
   const [tempMarkerPosition, setTempMarkerPosition] = useState<{ lat: number; lng: number } | null>(null)
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false)
+  const [isGoogleMapsLoading, setIsGoogleMapsLoading] = useState(true) // 新增載入中狀態
   const [mapSearchQuery, setMapSearchQuery] = useState('')
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<any>(null)
@@ -51,6 +52,38 @@ export default function NewCustomerPage() {
   const mapSearchInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
   const router = useRouter()
+
+  // 檢查 Google Maps 是否已經載入（頁面重載後可能已經在 cache 中）
+  useEffect(() => {
+    const checkGoogleMapsLoaded = () => {
+      if ((window as any).google?.maps) {
+        setIsGoogleMapsLoaded(true)
+        setIsGoogleMapsLoading(false)
+        return true
+      }
+      return false
+    }
+
+    // 立即檢查一次
+    if (checkGoogleMapsLoaded()) return
+
+    // 如果還沒載入，每 200ms 檢查一次，最多 30 秒
+    const interval = setInterval(() => {
+      if (checkGoogleMapsLoaded()) {
+        clearInterval(interval)
+      }
+    }, 200)
+
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+      setIsGoogleMapsLoading(false)
+    }, 30000)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
+    }
+  }, [])
 
   useEffect(() => {
     const getUser = async () => {
@@ -418,12 +451,30 @@ export default function NewCustomerPage() {
       alert('請先輸入服務地址')
       return
     }
+    
+    // 檢查 Google Maps 是否已載入
+    if (!isGoogleMapsLoaded) {
+      // 不用 alert，因為按鈕已經被禁用了
+      console.warn('Google Maps 尚未載入')
+      return
+    }
+    
     setShowMapModal(true)
     // 延遲初始化地圖，確保 modal 已經渲染
     setTimeout(() => {
       initializeMap()
-    }, 100)
+    }, 150) // 稍微增加延遲以確保 DOM 完全渲染
   }
+
+  // 當 modal 打開且 Google Maps 載入完成時，重新初始化地圖
+  useEffect(() => {
+    if (showMapModal && isGoogleMapsLoaded && mapRef.current && !googleMapRef.current) {
+      console.log('🗺️ Modal 已打開，重新初始化地圖...')
+      setTimeout(() => {
+        initializeMap()
+      }, 150)
+    }
+  }, [showMapModal, isGoogleMapsLoaded])
 
   // 確認地圖上選擇的位置
   const confirmMapLocation = () => {
@@ -588,7 +639,15 @@ export default function NewCustomerPage() {
       {/* Google Maps Script - 只載入一次 */}
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=AIzaSyBFBLFI1GhfRuSwyZXO4-kS9YYg2eJ694I&libraries=places`}
-        onLoad={() => setIsGoogleMapsLoaded(true)}
+        onLoad={() => {
+          console.log('✅ Google Maps API 已載入')
+          setIsGoogleMapsLoaded(true)
+          setIsGoogleMapsLoading(false)
+        }}
+        onError={() => {
+          console.error('❌ Google Maps API 載入失敗')
+          setIsGoogleMapsLoading(false)
+        }}
       />
       
       {loading ? (
@@ -957,18 +1016,50 @@ export default function NewCustomerPage() {
                             服務地址定位
                           </label>
                           <span className="text-red-600 text-sm font-bold">*必填</span>
+                          {isGoogleMapsLoading && (
+                            <span className="text-xs text-blue-600 flex items-center gap-1">
+                              <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              地圖載入中...
+                            </span>
+                          )}
+                          {!isGoogleMapsLoading && isGoogleMapsLoaded && (
+                            <span className="text-xs text-green-600">✓ 地圖已就緒</span>
+                          )}
+                          {!isGoogleMapsLoading && !isGoogleMapsLoaded && (
+                            <span className="text-xs text-red-600">⚠️ 地圖載入失敗</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
                             onClick={openMapSelector}
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform hover:scale-105"
+                            disabled={!isGoogleMapsLoaded}
+                            className={`px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2 ${
+                              isGoogleMapsLoaded 
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-xl transform hover:scale-105' 
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
                           >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            📍 在地圖上標記位置
+                            {isGoogleMapsLoading ? (
+                              <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                載入中...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                📍 在地圖上標記位置
+                              </>
+                            )}
                           </button>
                           {formData.location_latitude && formData.location_longitude ? (
                             <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
