@@ -1063,15 +1063,14 @@ body {
     padding-bottom: 5rem !important;
   }
   
-  /* Better tap targets */
-  a, button, [role="button"], input, select, textarea {
+  /* Better tap targets - only for interactive elements, not inside cards */
+  button:not(.forecast-card *),
+  [role="button"]:not(.forecast-card *) {
     min-height: 44px;
-    min-width: 44px;
   }
   
-  /* Grid fixes for mobile */
-  .grid {
-    gap: 0.75rem;
+  input, select, textarea {
+    min-height: 44px;
   }
   
   /* Card spacing on mobile */
