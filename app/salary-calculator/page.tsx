@@ -141,28 +141,28 @@ export default function SalaryCalculatorPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-600">基本薪資:</span>
+                    <div className="flex justify-between py-2 border-b border-border-light">
+                      <span className="text-text-secondary">基本薪資:</span>
                       <span className="font-semibold">NT$ {calculationResult.baseSalary.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-600">加班費:</span>
+                    <div className="flex justify-between py-2 border-b border-border-light">
+                      <span className="text-text-secondary">加班費:</span>
                       <span className="font-semibold">NT$ {calculationResult.overtimePay.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-600">津貼補助:</span>
+                    <div className="flex justify-between py-2 border-b border-border-light">
+                      <span className="text-text-secondary">津貼補助:</span>
                       <span className="font-semibold text-green-600">+ NT$ {calculationResult.allowances.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-600">扣款項目:</span>
+                    <div className="flex justify-between py-2 border-b border-border-light">
+                      <span className="text-text-secondary">扣款項目:</span>
                       <span className="font-semibold text-red-600">- NT$ {calculationResult.deductions.toLocaleString()}</span>
                     </div>
 
                     <div className="flex justify-between py-3 border-t-2 border-border-medium mt-4">
-                      <span className="text-lg font-bold text-gray-900">實領薪資:</span>
+                      <span className="text-lg font-bold text-text-primary">實領薪資:</span>
                       <span className="text-2xl font-bold text-green-600">
                         NT$ {calculationResult.totalSalary.toLocaleString()}
                       </span>
@@ -181,7 +181,7 @@ export default function SalaryCalculatorPage() {
               ) : (
                 <div className="text-center py-8">
                   <div className="text-6xl mb-4">🧮</div>
-                  <p className="text-gray-500">請填寫左側資料並點擊計算</p>
+                  <p className="text-text-secondary">請填寫左側資料並點擊計算</p>
                 </div>
               )}
             </div>
@@ -197,7 +197,7 @@ export default function SalaryCalculatorPage() {
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">💰</div>
               <h3 className="font-semibold">薪資管理</h3>
-              <p className="text-sm text-gray-600">查看薪資記錄</p>
+              <p className="text-sm text-text-secondary">查看薪資記錄</p>
             </div>
           </button>
 
@@ -208,7 +208,7 @@ export default function SalaryCalculatorPage() {
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">👩‍⚕️</div>
               <h3 className="font-semibold">護理人員</h3>
-              <p className="text-sm text-gray-600">管理護理人員資料</p>
+              <p className="text-sm text-text-secondary">管理護理人員資料</p>
             </div>
           </button>
 
@@ -219,7 +219,7 @@ export default function SalaryCalculatorPage() {
             <div className="card-apple-content text-center">
               <div className="text-3xl mb-2">📊</div>
               <h3 className="font-semibold">佣金管理</h3>
-              <p className="text-sm text-gray-600">查看佣金統計</p>
+              <p className="text-sm text-text-secondary">查看佣金統計</p>
             </div>
           </button>
         </div>

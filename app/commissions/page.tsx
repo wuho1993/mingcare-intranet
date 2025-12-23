@@ -1340,7 +1340,7 @@ export default function CommissionsPage() {
                               {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
                             </span>
                           ) : (
-                            <span className="text-gray-500">
+                            <span className="text-text-secondary">
                               $0
                             </span>
                           )}
@@ -1398,7 +1398,7 @@ export default function CommissionsPage() {
                             {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
                           </span>
                         ) : (
-                          <span className="text-gray-500">$0</span>
+                          <span className="text-text-secondary">$0</span>
                         )}
                       </div>
                     </div>

@@ -1294,7 +1294,7 @@ export default function EditClientPage() {
                     value={mapSearchQuery}
                     onChange={(e) => setMapSearchQuery(e.target.value)}
                     placeholder="搜尋地址或地點（例如：旺角彌敦道、銅鑼灣時代廣場）"
-                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   />
                 </div>
                 <p className="text-xs text-text-secondary mt-1.5 ml-1">
@@ -1334,7 +1334,7 @@ export default function EditClientPage() {
                       lng: tempMarkerPosition?.lng || 0
                     })}
                     placeholder="例如: 22.302711"
-                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div>
@@ -1350,7 +1350,7 @@ export default function EditClientPage() {
                       lng: parseFloat(e.target.value) || 0
                     })}
                     placeholder="例如: 114.177216"
-                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -1372,7 +1372,7 @@ export default function EditClientPage() {
               <button
                 type="button"
                 onClick={cancelMapSelection}
-                className="px-4 py-2 text-text-primary bg-bg-tertiary rounded-md hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-text-primary bg-bg-tertiary rounded-md hover:bg-bg-tertiary transition-colors"
               >
                 取消
               </button>

@@ -412,7 +412,7 @@ function ReportsCalendarView({
                           )
                         })()}
                         
-                        <div className="font-medium text-gray-800 mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
+                        <div className="font-medium text-text-primary mb-0.5 sm:mb-1 leading-tight text-xs sm:text-sm">
                           <span className="hidden sm:inline">{record.customer_name}/{record.care_staff_name}</span>
                           <span className="sm:hidden">{record.customer_name.substring(0, 6)}/{record.care_staff_name.substring(0, 6)}</span>
                         </div>
@@ -519,7 +519,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="w-full mt-3 bg-gray-200 text-text-secondary py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+                className="w-full mt-3 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-lg hover:bg-border-light transition-colors"
               >
                 取消
               </button>
@@ -568,7 +568,7 @@ function ReportsCalendarView({
               {/* 卡片內容 */}
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-semibold text-gray-800 truncate">
+                  <h3 className="font-semibold text-text-primary truncate">
                     {record.customer_name}
                   </h3>
                   <span className="text-xs text-text-secondary bg-bg-tertiary px-2 py-1 rounded">
@@ -663,7 +663,7 @@ function ReportsCalendarView({
                 setShowRecordMenu(false)
                 setSelectedRecord(null)
               }}
-              className="w-full mt-3 bg-gray-200 text-text-secondary py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              className="w-full mt-3 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-lg hover:bg-border-light transition-colors"
             >
               取消
             </button>
@@ -914,12 +914,12 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
           <div key={i} className="border border-border-light rounded-lg p-4 animate-pulse">
             <div className="space-y-3">
               <div className="flex justify-between">
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                <div className="h-4 bg-bg-tertiary rounded w-1/4"></div>
+                <div className="h-4 bg-bg-tertiary rounded w-1/6"></div>
               </div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-bg-tertiary rounded w-3/4"></div>
+              <div className="h-4 bg-bg-tertiary rounded w-2/3"></div>
+              <div className="h-4 bg-bg-tertiary rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -2406,7 +2406,7 @@ function ScheduleTab({
                           className="text-base bg-white border border-border-light rounded p-3 shadow-sm"
                         >
                           {/* 第一行：客戶名稱/護理人員名稱 - 允許換行 */}
-                          <div className="font-medium text-gray-800 mb-2 text-base break-words leading-tight">
+                          <div className="font-medium text-text-primary mb-2 text-base break-words leading-tight">
                             {schedule.customer_name}/{schedule.care_staff_name}
                           </div>
 
@@ -2438,7 +2438,7 @@ function ScheduleTab({
                           </div>
 
                           {/* 第一行：客戶名稱/護理人員名稱 - 允許換行 */}
-                          <div className="font-medium text-gray-800 mb-2 text-base break-words leading-tight">
+                          <div className="font-medium text-text-primary mb-2 text-base break-words leading-tight">
                             {schedule.customer_name}/{schedule.care_staff_name}
                           </div>
 

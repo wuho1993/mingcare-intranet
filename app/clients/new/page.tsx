@@ -1040,7 +1040,7 @@ export default function NewCustomerPage() {
                             className={`px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2 ${
                               isGoogleMapsLoaded 
                                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-xl transform hover:scale-105' 
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-border-light text-text-secondary cursor-not-allowed'
                             }`}
                           >
                             {isGoogleMapsLoading ? (
@@ -1258,7 +1258,7 @@ export default function NewCustomerPage() {
               <div className="mb-3">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -1268,10 +1268,10 @@ export default function NewCustomerPage() {
                     value={mapSearchQuery}
                     onChange={(e) => setMapSearchQuery(e.target.value)}
                     placeholder="搜尋地址或地點（例如：旺角彌敦道、銅鑼灣時代廣場）"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                <p className="text-xs text-text-secondary mt-1.5 ml-1">
                   💡 在搜尋欄輸入地址或地點名稱，選擇建議項目後地圖會自動移動到該位置
                 </p>
               </div>
@@ -1279,7 +1279,7 @@ export default function NewCustomerPage() {
               {/* 互動式 Google Maps */}
               <div 
                 ref={mapRef}
-                className="h-96 rounded-lg border border-gray-300 overflow-hidden mb-4"
+                className="h-96 rounded-lg border border-border-medium overflow-hidden mb-4"
               ></div>
               
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">

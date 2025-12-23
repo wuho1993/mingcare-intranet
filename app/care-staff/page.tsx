@@ -144,7 +144,7 @@ export default function CareStaffPage() {
       '職業治療助理': 'bg-violet-100 text-violet-800'
     }
 
-    return colorMap[simplifiedPosition] || 'bg-bg-tertiary text-gray-800'
+    return colorMap[simplifiedPosition] || 'bg-bg-tertiary text-text-primary'
   }
 
   // 簡化職位名稱
@@ -1128,7 +1128,7 @@ export default function CareStaffPage() {
                                     </span>
                                   ))
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-gray-800">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-text-primary">
                                     沒有提供
                                   </span>
                                 )}
@@ -1140,7 +1140,7 @@ export default function CareStaffPage() {
                                   ? 'bg-green-100 text-green-800'
                                   : staff.contract_status === '不同意'
                                   ? 'bg-red-100 text-red-800'
-                                  : 'bg-bg-tertiary text-gray-800'
+                                  : 'bg-bg-tertiary text-text-primary'
                               }`}>
                                 {staff.contract_status || '沒有提供'}
                               </span>
@@ -1210,7 +1210,7 @@ export default function CareStaffPage() {
                                   </span>
                                 ))
                               ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-gray-800">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-text-primary">
                                   沒有提供
                                 </span>
                               )}

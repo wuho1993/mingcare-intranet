@@ -211,7 +211,7 @@ export default function Dashboard() {
               </div>
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 sm:px-6 sm:py-3 bg-bg-tertiary hover:bg-gray-200 text-text-primary rounded-xl font-medium transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                className="px-3 py-2 sm:px-6 sm:py-3 bg-bg-tertiary hover:bg-bg-tertiary text-text-primary rounded-xl font-medium transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
               >
                 <span className="hidden sm:inline">登出</span>
                 <span className="sm:hidden">

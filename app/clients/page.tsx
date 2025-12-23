@@ -220,7 +220,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                 <div key={district} className="flex justify-between items-center">
                   <span className="text-sm text-text-primary">{district}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                    <div className="w-20 bg-bg-tertiary rounded-full h-2">
                       <div 
                         className="bg-mingcare-blue h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(count / Math.max(...Object.values(districtStats))) * 100}%` }}
@@ -356,7 +356,7 @@ function CustomerSummary({ customers, filters, onExportPDF, exportLoading }: Cus
                             <div className={`w-2 h-2 rounded-full ${
                               ldsStatus === '已經持有' ? 'bg-emerald-400' :
                               ldsStatus === '已完成評估' ? 'bg-blue-400' :
-                              ldsStatus === '待社工評估' ? 'bg-amber-400' : 'bg-gray-300'
+                              ldsStatus === '待社工評估' ? 'bg-amber-400' : 'bg-border-light'
                             }`}></div>
                             <span className="text-text-secondary">{ldsStatus}</span>
                           </div>
@@ -811,7 +811,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
@@ -1296,7 +1296,7 @@ export default function ClientsPage() {
                                     <span className={`px-2 py-1 rounded-full text-xs ${
                                       customer.lds_status === '已完成評估' || customer.lds_status === '已經持有'
                                         ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-bg-tertiary text-gray-800'
+                                        : 'bg-bg-tertiary text-text-primary'
                                     }`}>
                                       {customer.lds_status}
                                     </span>
