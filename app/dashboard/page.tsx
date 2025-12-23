@@ -409,9 +409,9 @@ export default function Dashboard() {
   }
 
   const formatRainfall = (value?: string, unit?: string) => {
-    if (!value) return '暫無記錄'
-    if (value.trim().toUpperCase() === 'M') return '暫無記錄'
-    return `${value}${unit ?? ''}`
+    if (!value) return '0mm'
+    if (value.trim().toUpperCase() === 'M') return '0mm'
+    return `${value}${unit ?? 'mm'}`
   }
 
   return (
@@ -560,7 +560,7 @@ export default function Dashboard() {
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.rainfall
                           ? formatRainfall(hkoWeather.rainfall.value, hkoWeather.rainfall.unit)
-                          : '暫無記錄'}
+                          : '0mm'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
                     </div>
@@ -598,7 +598,7 @@ export default function Dashboard() {
                             >
                               {d.weather ?? '—'}
                             </div>
-                            {(d.weather?.length ?? 0) > 28 && (
+                            {(d.weather?.length ?? 0) > 18 && (
                               <button
                                 type="button"
                                 onClick={() => setExpandedForecastIndex(expandedForecastIndex === idx ? null : idx)}
