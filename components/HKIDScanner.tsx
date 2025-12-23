@@ -181,7 +181,7 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
           </div>
 
           {/* Instructions */}
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <div className="mb-6 p-4 bg-blue-50 rounded-xl">
             <h4 className="font-medium text-blue-900 mb-2">使用說明：</h4>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• 請將身份證正面完整顯示在鏡頭內</li>
@@ -195,7 +195,7 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
           <div className="mb-6">
             {!capturedImage ? (
               <div>
-                <div className="mb-4 bg-black rounded-lg overflow-hidden relative">
+                <div className="mb-4 bg-black rounded-xl overflow-hidden relative">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -207,7 +207,7 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
                   
                   {/* Overlay guide for HKID positioning */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="border-2 border-white border-dashed rounded-lg w-80 h-48 flex items-center justify-center bg-black bg-opacity-20">
+                    <div className="border-2 border-white border-dashed rounded-xl w-80 h-48 flex items-center justify-center bg-black bg-opacity-20">
                       <span className="text-white text-sm">將身份證置於此框內</span>
                     </div>
                   </div>
@@ -245,7 +245,7 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
                   <img
                     src={capturedImage}
                     alt="Captured HKID"
-                    className="w-full h-64 object-contain bg-bg-tertiary rounded-lg"
+                    className="w-full h-64 object-contain bg-bg-tertiary rounded-xl"
                   />
                 </div>
                 
@@ -257,7 +257,7 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
                 )}
                 
                 {detectionResult && !isCapturing && (
-                  <div className={`border rounded-lg p-4 mb-4 ${
+                  <div className={`border rounded-xl p-4 mb-4 ${
                     detectionResult.detected 
                       ? 'bg-green-50 border-green-200' 
                       : 'bg-yellow-50 border-yellow-200'

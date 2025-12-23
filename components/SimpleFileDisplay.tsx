@@ -85,8 +85,8 @@ export function SimpleFileDisplay({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 {/* 檔案圖示 */}
-                <div className="w-8 h-8 bg-mingcare-blue bg-opacity-10 rounded flex items-center justify-center">
-                  <svg className="w-4 h-4 text-mingcare-blue" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-8 h-8 bg-primary bg-opacity-10 rounded flex items-center justify-center">
+                  <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -97,7 +97,7 @@ export function SimpleFileDisplay({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="點擊查看"
-                    className="text-sm font-medium text-mingcare-blue hover:text-blue-700 hover:underline"
+                    className="text-sm font-medium text-primary hover:text-blue-700 hover:underline"
                   >
                     {getFileName(currentUrl)}
                   </a>
@@ -108,7 +108,7 @@ export function SimpleFileDisplay({
           </div>
         ) : (
           /* 未有檔案 - 顯示上載區域 */
-          <div className="border-2 border-dashed border-border-light rounded-apple-sm p-4 text-center hover:border-mingcare-blue transition-colors">
+          <div className="border-2 border-dashed border-border-light rounded-apple-sm p-4 text-center hover:border-primary transition-colors">
             <svg className="mx-auto h-8 w-8 text-text-tertiary" stroke="currentColor" fill="none" viewBox="0 0 48 48">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -118,7 +118,7 @@ export function SimpleFileDisplay({
                 type="button"
                 onClick={handleUploadClick}
                 disabled={disabled || isUploading}
-                className="px-3 py-1 bg-mingcare-blue text-white rounded-apple-sm text-xs hover:bg-blue-600 transition-colors disabled:opacity-50"
+                className="px-3 py-1 bg-primary text-white rounded-apple-sm text-xs hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
                 {isUploading ? '上載中...' : '上載檔案'}
               </button>
@@ -131,7 +131,7 @@ export function SimpleFileDisplay({
             {isUploading && (
               <div className="w-full bg-bg-tertiary rounded-full h-1 mt-2">
                 <div 
-                  className="bg-mingcare-blue h-1 rounded-full transition-all duration-300"
+                  className="bg-primary h-1 rounded-full transition-all duration-300"
                   style={{ width: `${progress?.progress || 0}%` }}
                 />
               </div>

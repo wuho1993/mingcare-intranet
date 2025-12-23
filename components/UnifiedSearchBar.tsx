@@ -62,7 +62,7 @@ export default function UnifiedSearchBar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 150)}
           placeholder={placeholder}
-          className="w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-2 sm:py-3 bg-bg-secondary border-transparent focus:bg-white focus:border-mingcare-blue focus:shadow-apple-focus rounded-apple-sm text-sm transition-all duration-200"
+          className="w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-2 sm:py-3 bg-bg-secondary border-transparent focus:bg-white focus:border-primary focus:shadow-apple-focus rounded-apple-sm text-sm transition-all duration-200"
         />
         
         {/* Search Icon */}
@@ -76,7 +76,7 @@ export default function UnifiedSearchBar({
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 space-x-1 sm:space-x-2">
           {/* Loading indicator */}
           {loading && (
-            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-mingcare-blue border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-primary border-t-transparent"></div>
           )}
           
           {/* Clear button */}

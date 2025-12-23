@@ -108,14 +108,14 @@ export default function SearchableSelect({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled || loading}
-          className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white pr-10 text-text-primary placeholder-text-secondary"
+          className="w-full px-4 py-3 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent bg-white pr-10 text-text-primary placeholder-text-secondary"
           autoComplete="off"
         />
         
         {/* 下拉箭頭 */}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
           {loading ? (
-            <div className="w-4 h-4 border-2 border-mingcare-blue border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg 
               className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
@@ -131,7 +131,7 @@ export default function SearchableSelect({
 
       {/* 下拉選單 */}
       {isOpen && !disabled && !loading && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-border-light rounded-lg shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-border-light rounded-xl shadow-lg max-h-60 overflow-auto">
           {filteredOptions.length > 0 ? (
             <>
               {/* 清除選擇選項 */}
@@ -156,7 +156,7 @@ export default function SearchableSelect({
                   onClick={() => handleOptionClick(option.value)}
                   className={`w-full px-4 py-3 text-left hover:bg-bg-secondary transition-colors duration-200 ${
                     value === option.value 
-                      ? 'bg-mingcare-blue bg-opacity-10 text-mingcare-blue font-medium' 
+                      ? 'bg-primary bg-opacity-10 text-primary font-medium' 
                       : 'text-text-primary'
                   }`}
                 >
