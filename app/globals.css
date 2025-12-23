@@ -410,9 +410,9 @@ body {
    Legacy Apple Styles (kept for compatibility)
    ============================================ */
 
-/* Apple Button Styles */
+/* Apple Button Styles - Clean & Modern */
 .btn-apple-primary {
-  background: linear-gradient(135deg, var(--mingcare-blue), var(--mingcare-blue-hover));
+  background: var(--mingcare-blue);
   color: white;
   border: none;
   border-radius: var(--radius-lg);
@@ -424,7 +424,7 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: var(--shadow-md), var(--shadow-glow);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -436,14 +436,14 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   transition: left 0.5s;
 }
 
 .btn-apple-primary:hover {
-  background: linear-gradient(135deg, var(--mingcare-blue-hover), var(--primary-700));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl), var(--shadow-glow-lg);
+  background: var(--mingcare-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 .btn-apple-primary:hover::before {

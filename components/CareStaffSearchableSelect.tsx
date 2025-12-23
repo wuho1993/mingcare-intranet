@@ -84,7 +84,7 @@ export const CareStaffSearchableSelect: React.FC<CareStaffSearchableSelectProps>
           onFocus={handleInputFocus}
           placeholder={loading ? '載入中...' : placeholder}
           disabled={loading}
-          className="w-full px-4 py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white pr-20"
+          className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary bg-bg-secondary text-sm transition-all duration-300 pr-20"
         />
         
         {/* 清除按鈕 */}
@@ -92,7 +92,7 @@ export const CareStaffSearchableSelect: React.FC<CareStaffSearchableSelectProps>
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-8 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary hover:text-text-primary"
+            className="absolute right-8 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary hover:text-text-primary transition-colors"
           >
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -113,18 +113,18 @@ export const CareStaffSearchableSelect: React.FC<CareStaffSearchableSelectProps>
 
       {/* 下拉選單 */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-bg-primary border border-border-light rounded-xl shadow-xl z-[100] max-h-60 overflow-y-auto">
           {loading ? (
-            <div className="px-4 py-3 text-text-secondary">載入中...</div>
+            <div className="px-4 py-3 text-text-secondary text-sm">載入中...</div>
           ) : filteredStaff.length === 0 ? (
-            <div className="px-4 py-3 text-text-secondary">
+            <div className="px-4 py-3 text-text-secondary text-sm">
               {searchQuery ? '未找到匹配的護理人員' : '沒有可選的護理人員'}
             </div>
           ) : (
             <>
               {/* 清空選項 */}
               <div
-                className="px-4 py-3 cursor-pointer hover:bg-bg-secondary text-text-secondary border-b border-border-light"
+                className="px-4 py-3 cursor-pointer hover:bg-bg-secondary text-text-secondary border-b border-border-light transition-colors text-sm"
                 onClick={handleClear}
               >
                 <span className="italic">清除選擇</span>
@@ -136,14 +136,14 @@ export const CareStaffSearchableSelect: React.FC<CareStaffSearchableSelectProps>
                 return (
                   <div
                     key={index}
-                    className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between ${
-                      isSelected ? 'bg-mingcare-blue/5 text-mingcare-blue' : 'text-text-primary'
+                    className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between transition-colors text-sm ${
+                      isSelected ? 'bg-primary/5 text-primary' : 'text-text-primary'
                     }`}
                     onClick={() => handleSelectStaff(staff.name_chinese)}
                   >
                     <span>{staff.name_chinese}</span>
                     {isSelected && (
-                      <svg className="w-4 h-4 text-mingcare-blue" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}

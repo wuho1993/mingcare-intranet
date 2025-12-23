@@ -300,7 +300,7 @@ function ReportsCalendarView({
             onClick={() => setViewMode('cards')}
             className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
               viewMode === 'cards'
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/25'
+                ? 'bg-primary text-white shadow-lg'
                 : 'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
             }`}
           >
@@ -313,7 +313,7 @@ function ReportsCalendarView({
             onClick={() => setViewMode('calendar')}
             className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
               viewMode === 'calendar'
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/25'
+                ? 'bg-primary text-white shadow-lg'
                 : 'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
             }`}
           >
@@ -467,16 +467,16 @@ function ReportsCalendarView({
 
         {/* 記錄操作模態框 */}
         {showRecordMenu && selectedRecord && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 fade-in-apple">
-            <div className="card-apple p-6 w-96 max-w-sm mx-4 shadow-2xl">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
               {/* 記錄詳情 */}
-              <div className="bg-bg-secondary/60 rounded-xl p-4 mb-5 border border-border-light">
-                <div className="text-sm text-text-secondary mb-1.5">
+              <div className="bg-bg-secondary rounded-xl p-4 mb-5">
+                <div className="text-sm text-text-tertiary mb-1">
                   {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
                 </div>
-                <div className="font-semibold text-text-primary text-base">
+                <div className="font-semibold text-text-primary">
                   {selectedRecord.customer_name}
                 </div>
                 <div className="text-sm text-text-secondary mt-1">
@@ -488,7 +488,7 @@ function ReportsCalendarView({
               </div>
 
               {/* 操作按鈕 */}
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <button
                   onClick={() => {
                     console.log('📝 編輯按鈕被點擊:', selectedRecord)
@@ -496,7 +496,7 @@ function ReportsCalendarView({
                     setShowRecordMenu(false)
                     setSelectedRecord(null)
                   }}
-                  className="btn-apple-primary flex-1"
+                  className="flex-1 py-2.5 px-4 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors"
                 >
                   編輯
                 </button>
@@ -507,7 +507,7 @@ function ReportsCalendarView({
                     setShowRecordMenu(false)
                     setSelectedRecord(null)
                   }}
-                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium"
+                  className="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
                 >
                   刪除
                 </button>
@@ -519,7 +519,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="btn-apple-secondary w-full mt-4"
+                className="w-full mt-3 py-2.5 px-4 text-text-secondary bg-bg-secondary rounded-xl font-medium hover:bg-bg-tertiary transition-colors"
               >
                 取消
               </button>
@@ -559,7 +559,7 @@ function ReportsCalendarView({
                   const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
                   console.log('🎯 渲染30分鐘提示:', { recordId: record.id, diff, label })
                   return (
-                    <div className="text-center mb-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-xs py-1.5 rounded-lg shadow-sm">
+                    <div className="text-center mb-3 bg-green-500 text-white font-semibold text-xs py-1.5 rounded-lg shadow-sm">
                       ✓ {label}更新
                     </div>
                   )
@@ -611,8 +611,8 @@ function ReportsCalendarView({
 
       {/* 記錄操作模態框 - 共用 */}
       {showRecordMenu && selectedRecord && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 fade-in-apple">
-          <div className="card-apple p-6 w-96 max-w-sm mx-4 shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
+          <div className="card-apple p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
             {/* 記錄詳情 */}
@@ -651,7 +651,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium"
+                className="flex-1 bg-red-500 text-white py-2.5 px-4 rounded-xl hover:bg-red-600 transition-all duration-300 font-medium"
               >
                 刪除
               </button>
@@ -938,7 +938,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         <p className="text-red-600 font-medium mb-2">{error}</p>
         <button
           onClick={loadRecords}
-          className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:bg-opacity-90 transition-colors"
+          className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-colors"
         >
           重新載入
         </button>
@@ -974,7 +974,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
             onClick={() => handleSort('service_date')}
             className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'service_date'
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                ? 'bg-primary text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -998,7 +998,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
             onClick={() => handleSort('customer_name')}
             className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_name'
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                ? 'bg-primary text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -1023,7 +1023,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
             onClick={() => handleSort('customer_id')}
             className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_id'
-                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                ? 'bg-primary text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -1100,7 +1100,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
                   {record.customer_name} ({record.customer_id})
                 </span>
               </div>
-              <span className="text-xs sm:text-sm bg-gradient-to-r from-primary to-primary-dark text-white px-2 sm:px-3 py-1 rounded-full self-start sm:self-center">
+              <span className="text-xs sm:text-sm bg-primary text-white px-2 sm:px-3 py-1 rounded-full self-start sm:self-center">
                 {record.service_type}
               </span>
             </div>
@@ -2236,7 +2236,7 @@ function ScheduleTab({
               <button
                 onClick={onCalendarExport}
                 disabled={calendarExportLoading}
-                className="btn-apple-secondary bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="btn-apple-secondary bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 title="導出 PDF 日曆報表"
               >
                 {calendarExportLoading ? (
@@ -2278,7 +2278,7 @@ function ScheduleTab({
                 }}
                 className={`px-4 py-2 rounded-xl border transition-all duration-300 ${
                   isMultiSelectMode
-                    ? 'bg-gradient-to-r from-primary to-primary-dark text-white border-primary'
+                    ? 'bg-primary text-white border-primary'
                     : 'border-border-light hover:bg-bg-secondary text-text-secondary'
                 }`}
               >
@@ -2750,43 +2750,14 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
   }
 
   return (
-    <div className="space-y-8">
-      {/* 搜尋與篩選 */}
-      <div className="card-apple mb-4 sm:mb-6 fade-in-apple" style={{ overflow: 'visible' }}>
-        <div className="card-apple-header">
-          <h3 className="text-lg sm:text-xl font-semibold text-text-primary">搜尋與篩選</h3>
-        </div>
-        <div className="card-apple-content" style={{ overflow: 'visible' }}>
-          <h2 className="text-apple-heading text-text-primary mb-6">篩選條件</h2>
-
-          {/* 第一行：日期區間 + 快捷按鈕 - 移動端優化 */}
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
-            <div className="flex items-center space-x-2 bg-bg-secondary/50 border border-border-light rounded-xl px-4 py-2.5 w-full sm:w-auto backdrop-blur-sm">
-              <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <input
-                type="date"
-                value={filters.dateRange?.start || ''}
-                onChange={(e) => setFilters(prev => ({
-                  ...prev,
-                  dateRange: { ...prev.dateRange, start: e.target.value }
-                }))}
-                className="form-input-apple border-none bg-transparent text-sm min-w-0 flex-1 focus:ring-0"
-              />
-              <span className="text-text-secondary font-medium">→</span>
-              <input
-                type="date"
-                value={filters.dateRange?.end || ''}
-                onChange={(e) => setFilters(prev => ({
-                  ...prev,
-                  dateRange: { ...prev.dateRange, end: e.target.value }
-                }))}
-                className="form-input-apple border-none bg-transparent text-sm min-w-0 flex-1 focus:ring-0"
-              />
-            </div>
-
-            <div className="flex space-x-2 sm:space-x-3">
+    <div className="space-y-6">
+      {/* 搜尋與篩選 - 提升 z-index 確保下拉選單不被覆蓋 */}
+      <div className="card-apple mb-4 sm:mb-6 fade-in-apple relative z-50" style={{ overflow: 'visible' }}>
+        <div className="card-apple-header border-b border-border-light">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg sm:text-xl font-semibold text-text-primary">搜尋與篩選</h3>
+            {/* 快捷按鈕移到右邊 */}
+            <div className="flex space-x-2">
               <button
                 onClick={() => {
                   const today = formatDateSafely(new Date())
@@ -2795,37 +2766,64 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     dateRange: { start: today, end: today }
                   }))
                 }}
-                className="btn-apple-secondary text-xs sm:text-sm whitespace-nowrap flex-1 sm:flex-none"
+                className="btn-apple-secondary text-xs sm:text-sm"
               >
-                今日記錄
+                今日
               </button>
-
               <button
                 onClick={() => updateDateRange('thisMonth')}
-                className="btn-apple-primary text-xs sm:text-sm whitespace-nowrap flex-1 sm:flex-none"
+                className="btn-apple-primary text-xs sm:text-sm"
               >
-                本月記錄
+                本月
               </button>
             </div>
           </div>
+        </div>
+        <div className="card-apple-content" style={{ overflow: 'visible' }}>
+          {/* 日期區間 - 獨立一行更清晰 */}
+          <div className="flex flex-wrap items-center gap-3 mb-5 pb-5 border-b border-border-light">
+            <span className="text-sm font-medium text-text-secondary">日期範圍</span>
+            <div className="flex items-center gap-2 bg-bg-secondary rounded-xl px-4 py-2">
+              <input
+                type="date"
+                value={filters.dateRange?.start || ''}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  dateRange: { ...prev.dateRange, start: e.target.value }
+                }))}
+                className="bg-transparent border-none text-sm text-text-primary focus:outline-none focus:ring-0"
+              />
+              <span className="text-text-tertiary">至</span>
+              <input
+                type="date"
+                value={filters.dateRange?.end || ''}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  dateRange: { ...prev.dateRange, end: e.target.value }
+                }))}
+                className="bg-transparent border-none text-sm text-text-primary focus:outline-none focus:ring-0"
+              />
+            </div>
+          </div>
 
-          {/* 第二行：客戶搜尋 + 下拉篩選 - 移動端優化 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 relative">
-            <div className="relative z-20 overflow-visible">
-              <div className="relative customer-search-container overflow-visible">
-                <svg className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          {/* 篩選條件 - 網格佈局 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" style={{ overflow: 'visible' }}>
+            {/* 客戶搜尋 */}
+            <div className="relative z-50" style={{ overflow: 'visible' }}>
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">客戶</label>
+              <div className="relative customer-search-container" style={{ overflow: 'visible' }}>
+                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="搜尋客戶（姓名/編號/電話）"
+                  placeholder="姓名/編號/電話"
                   value={customerSearchTerm}
                   onChange={(e) => handleCustomerSearchChange(e.target.value)}
                   onFocus={() => {
-                    console.log('輸入框被點擊') // 除錯輸出
-                    updateDropdownPosition() // 更新位置
-                    // 點擊輸入框時，如果有搜尋詞就重新搜尋，或顯示現有建議
+                    console.log('輸入框被點擊')
+                    updateDropdownPosition()
                     if (customerSearchTerm.length >= 1) {
                       if (customerSuggestions.length > 0) {
                         setShowCustomerSuggestions(true)
@@ -2835,13 +2833,12 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     }
                   }}
                   onBlur={() => {
-                    console.log('輸入框失去焦點') // 除錯輸出
-                    // 延遲隱藏下拉選單，讓點擊事件有時間執行
+                    console.log('輸入框失去焦點')
                     setTimeout(() => {
                       setShowCustomerSuggestions(false)
                     }, 150)
                   }}
-                  className="form-input-apple w-full pl-10 sm:pl-12 pr-4"
+                  className="w-full pl-9 pr-4 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
 
                 {/* 客戶搜尋建議下拉選單 - 使用 Portal + 移動端優化 */}
@@ -2900,22 +2897,22 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                 )}
               </div>
 
-              {/* 選中客戶的 chips 顯示 - 移動端優化 */}
+              {/* 選中客戶的 chips 顯示 */}
               {selectedCustomers && selectedCustomers.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1 sm:gap-2">
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {selectedCustomers && selectedCustomers.map((customer) => (
                     <div
                       key={customer.customer_id}
-                      className="inline-flex items-center bg-gradient-to-r from-primary to-primary-dark text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full"
+                      className="inline-flex items-center bg-primary text-white text-xs px-2.5 py-1 rounded-full"
                     >
-                      <span className="mr-1 sm:mr-2 truncate max-w-[120px] sm:max-w-none">
-                        {customer.customer_name} ({customer.customer_id})
+                      <span className="mr-1.5 truncate max-w-[100px]">
+                        {customer.customer_name}
                       </span>
                       <button
                         onClick={() => removeSelectedCustomer(customer)}
-                        className="hover:bg-white hover:bg-opacity-20 rounded-full p-0.5 sm:p-1 ml-1"
+                        className="hover:bg-white/20 rounded-full p-0.5"
                       >
-                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -2925,22 +2922,24 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               )}
             </div>
 
-            <div>
+            {/* 所屬項目 */}
+            <div className="relative z-40" style={{ overflow: 'visible' }}>
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">所屬項目</label>
               <div className="relative project-category-dropdown">
                 <div
-                  className="form-input-apple w-full px-4 py-3 min-h-[48px] cursor-pointer flex items-center"
+                  className="w-full px-3 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-sm cursor-pointer flex items-center min-h-[42px]"
                   onClick={() => setIsProjectCategoryDropdownOpen(!isProjectCategoryDropdownOpen)}
                 >
-                  <div className="flex flex-wrap gap-1.5 flex-1">
+                  <div className="flex flex-wrap gap-1 flex-1">
                     {selectedProjectCategories.length > 0 ? (
                       selectedProjectCategories.map(category => {
                         const option = PROJECT_CATEGORY_OPTIONS.find(opt => opt.value === category)
                         return (
                           <span
                             key={category}
-                            className="inline-flex items-center px-2.5 py-1 bg-primary/10 text-primary text-xs sm:text-sm rounded-xl font-medium"
+                            className="inline-flex items-center px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-lg font-medium"
                           >
-                            <span className="truncate max-w-[80px] sm:max-w-none">{option?.label}</span>
+                            <span className="truncate max-w-[60px]">{option?.label}</span>
                             <button
                               type="button"
                               onClick={(e) => {
@@ -2957,7 +2956,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                                   }
                                 })
                               }}
-                              className="ml-1.5 text-primary hover:text-red-500 transition-colors"
+                              className="ml-1 text-primary hover:text-red-500"
                             >
                               ×
                             </button>
@@ -2965,23 +2964,23 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         )
                       })
                     ) : (
-                      <span className="text-text-tertiary text-sm">選擇所屬項目（可多選）</span>
+                      <span className="text-text-tertiary text-sm">可多選</span>
                     )}
                   </div>
                 </div>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none transition-transform duration-200" style={{ transform: isProjectCategoryDropdownOpen ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none transition-transform duration-200" style={{ transform: isProjectCategoryDropdownOpen ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
 
                 {isProjectCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-bg-primary border border-border-light rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto backdrop-blur-sm">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-xl shadow-2xl z-[100] max-h-56 overflow-y-auto">
                     {PROJECT_CATEGORY_OPTIONS.map(option => {
                       const isSelected = selectedProjectCategories.includes(option.value)
                       return (
                         <div
                           key={option.value}
-                          className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between text-sm transition-all duration-300 ${
-                            isSelected ? 'bg-primary/5 text-primary' : 'text-text-primary'
+                          className={`px-3 py-2.5 cursor-pointer hover:bg-bg-secondary flex items-center justify-between text-sm transition-colors ${
+                            isSelected ? 'bg-primary/5 text-primary font-medium' : 'text-text-primary'
                           }`}
                           onClick={() => {
                             setFilters(prev => {
@@ -3014,7 +3013,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </div>
             </div>
 
-            <div>
+            {/* 服務類型 */}
+            <div className="relative z-30">
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">服務類型</label>
               <div className="relative">
                 <select
                   value={filters.serviceType || ''}
@@ -3022,22 +3023,24 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     ...prev,
                     serviceType: e.target.value as ServiceType | undefined
                   }))}
-                  className="form-input-apple w-full pr-10 appearance-none cursor-pointer"
+                  className="w-full px-3 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 >
-                  <option value="">選擇服務類型</option>
+                  <option value="">全部</option>
                   {SERVICE_TYPE_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
 
-            <div>
+            {/* 護理人員 */}
+            <div className="relative z-20">
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">護理人員</label>
               <CareStaffSearchableSelect
                 careStaffList={careStaffList}
                 value={filters.careStaffName || ''}
@@ -3046,12 +3049,13 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   careStaffName: value
                 }))}
                 loading={careStaffLoading}
-                placeholder="選擇護理人員"
+                placeholder="全部"
               />
             </div>
 
             {/* 介紹人篩選 */}
-            <div>
+            <div className="relative z-10">
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">介紹人</label>
               <div className="relative">
                 <select
                   value={filters.introducer || ''}
@@ -3059,16 +3063,16 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     ...prev,
                     introducer: e.target.value as Introducer | undefined || undefined
                   }))}
-                  className="form-input-apple w-full pr-10 appearance-none cursor-pointer"
+                  className="w-full px-3 py-2.5 bg-bg-secondary border border-border-light rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 >
-                  <option value="">選擇介紹人</option>
+                  <option value="">全部</option>
                   {INTRODUCER_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -3077,50 +3081,53 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
         </div>
       </div>
 
-      {/* 詳細列表 */}
-      <div className="card-apple border border-border-light fade-in-apple">
+      {/* 服務記錄列表 - z-index 設為 10，確保低於搜尋區域的下拉選單 */}
+      <div className="card-apple border border-border-light fade-in-apple relative z-10">
         <div className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
-            <h3 className="text-apple-heading text-text-primary">服務記錄列表</h3>
+          {/* 標題和操作按鈕 - 改進佈局 */}
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 gap-4">
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-semibold text-text-primary">服務記錄</h3>
+              <span className="text-sm text-text-tertiary">2025年12月</span>
+            </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              {/* 日曆導出按鈕 */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* 導出按鈕 */}
               <button
                 onClick={onCalendarExport}
                 disabled={calendarExportLoading}
-                className="btn-apple-secondary bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-primary bg-white border border-border-light rounded-xl hover:bg-bg-secondary transition-colors disabled:opacity-50"
                 title="導出 PDF 日曆報表"
               >
                 {calendarExportLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
                     <span>產生中...</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7m12 4l-4 4-4-4m4 4V3" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>導出日曆 PDF</span>
                   </>
                 )}
               </button>
 
-              {/* 導出報表按鈕 */}
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
-                className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                className="btn-apple-primary text-sm disabled:opacity-50"
               >
                 {exportLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                     <span>導出中...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>導出報表</span>
                   </>
@@ -5501,7 +5508,7 @@ export default function ServicesPage() {
                     className={`px-6 py-2 rounded-xl font-medium transition-all duration-300 flex items-center space-x-2 ${
                       Object.values(staffDownloadStatus).some(status => status === 'downloading')
                         ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
-                        : 'bg-gradient-to-r from-primary to-primary-dark text-white hover:bg-primary-dark active:bg-primary-dark'
+                        : 'bg-primary text-white hover:bg-primary-dark active:bg-primary-dark'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5617,7 +5624,7 @@ export default function ServicesPage() {
                               className={`px-6 py-2 rounded-xl font-medium transition-all duration-300 ${
                                 isDownloading
                                 ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
-                                : 'bg-gradient-to-r from-primary to-primary-dark text-white hover:bg-primary-dark active:bg-primary-dark'
+                                : 'bg-primary text-white hover:bg-primary-dark active:bg-primary-dark'
                               }`}
                             >
                               {isDownloading ? '下載中...' : '下載'}
@@ -5664,14 +5671,14 @@ export default function ServicesPage() {
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <div className="card-apple border border-border-light fade-in-apple">
             <div className="p-3 sm:p-4">
-              <nav className="flex space-x-2 sm:space-x-3 bg-bg-secondary/50 p-1.5 rounded-xl">
+              <nav className="flex space-x-2 sm:space-x-3 bg-bg-tertiary/60 p-1.5 rounded-2xl">
                 {/* 1. 詳細報表 */}
                 <button
                   onClick={() => setActiveTab('reports')}
                   className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'reports'
-                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
+                      ? 'bg-white text-primary shadow-md'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
                   }`}
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5686,8 +5693,8 @@ export default function ServicesPage() {
                   onClick={() => setActiveTab('schedule')}
                   className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'schedule'
-                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
+                      ? 'bg-white text-primary shadow-md'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
                   }`}
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5702,8 +5709,8 @@ export default function ServicesPage() {
                   onClick={() => setActiveTab('overview')}
                   className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'overview'
-                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
+                      ? 'bg-white text-primary shadow-md'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/50'
                   }`}
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5768,7 +5775,7 @@ export default function ServicesPage() {
 
       {/* 導出選項模態框 */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in-apple">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
           <div className="card-apple w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             {/* Header */}
             <div className="p-6 border-b border-border-light flex-shrink-0 bg-bg-secondary/30">
@@ -6346,8 +6353,8 @@ function ScheduleFormModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-bg-primary rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
+      <div className="bg-bg-primary rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
@@ -6928,7 +6935,7 @@ function ScheduleFormModal({
                 type="submit"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:bg-opacity-90 transition-all duration-300 disabled:opacity-50"
+                className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all duration-300 disabled:opacity-50"
               >
                 {submitting ? '處理中...' : existingRecord ? '儲存修改' : (isMultipleDays ? '批量新增' : '新增排班')}
               </button>
@@ -6961,8 +6968,8 @@ function LocalScheduleEditModal({
   if (!isOpen || !schedule) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-bg-primary rounded-xl w-full max-w-md max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
+      <div className="bg-bg-primary rounded-xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
