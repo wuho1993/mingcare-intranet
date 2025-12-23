@@ -11,17 +11,38 @@ interface User {
   email?: string
 }
 
-type DashboardStats = {
-  customers: number | null
-  careStaff: number | null
-  notifications: number | null
+type HkoRhrreadResponse = {
+  updateTime?: string
+  warningMessage?: string[]
+  temperature?: {
+    data?: Array<{ place: string; value: string; unit: string }>
+    recordTime?: string
+  }
+  humidity?: {
+    data?: Array<{ place: string; value: string; unit: string }>
+    recordTime?: string
+  }
+  rainfall?: {
+    data?: Array<{ place: string; max?: string; max1?: string; value?: string; value1?: string; min?: string; min1?: string; unit?: string; unit1?: string; place?: string }>
+    startTime?: string
+    endTime?: string
+  }
+}
+
+type HkoWeatherSnapshot = {
+  updatedAt?: string
+  temperature?: { place: string; value: string; unit: string }
+  humidity?: { place: string; value: string; unit: string }
+  rainfall?: { place: string; value: string; unit: string }
+  warnings: string[]
 }
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [stats, setStats] = useState<DashboardStats>({ customers: null, careStaff: null, notifications: null })
+  const [hkoStatus, setHkoStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [hkoWeather, setHkoWeather] = useState<HkoWeatherSnapshot | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -43,37 +64,82 @@ export default function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // Dashboard 統計（失敗時不影響使用）
+  // 香港天文台（開放數據）即時天氣
   useEffect(() => {
-    if (!user) return
+    const controller = new AbortController()
 
-    let isCancelled = false
-    const loadStats = async () => {
+    const preferredPlaces = ['香港天文台', '京士柏', '香港公園', '黃大仙', '深水埗']
+
+    const pickReading = <T extends { place: string }>(data?: T[]) => {
+      if (!data || data.length === 0) return undefined
+      return data.find((row) => preferredPlaces.includes(row.place)) ?? data[0]
+    }
+
+    const fetchHko = async () => {
       try {
-        const [customersRes, staffRes, notificationsRes] = await Promise.all([
-          supabase.from('customers').select('id', { count: 'exact', head: true }),
-          supabase.from('care_staff_profiles').select('id', { count: 'exact', head: true }),
-          supabase.from('notifications').select('id', { count: 'exact', head: true }),
-        ])
+        setHkoStatus('loading')
+        const res = await fetch(
+          'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc',
+          { signal: controller.signal }
+        )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
-        if (isCancelled) return
+        const json = (await res.json()) as HkoRhrreadResponse
 
-        setStats({
-          customers: customersRes.error ? null : (customersRes.count ?? null),
-          careStaff: staffRes.error ? null : (staffRes.count ?? null),
-          notifications: notificationsRes.error ? null : (notificationsRes.count ?? null),
-        })
-      } catch {
-        if (isCancelled) return
-        setStats({ customers: null, careStaff: null, notifications: null })
+        const temp = pickReading(json.temperature?.data)
+        const humidity = pickReading(json.humidity?.data)
+
+        const rainfallRow = pickReading(json.rainfall?.data)
+        const rainfallValue =
+          rainfallRow?.max ??
+          rainfallRow?.max1 ??
+          rainfallRow?.value ??
+          rainfallRow?.value1 ??
+          rainfallRow?.min ??
+          rainfallRow?.min1
+
+        const warnings = Array.isArray(json.warningMessage)
+          ? json.warningMessage.filter((m) => typeof m === 'string' && m.trim().length > 0)
+          : []
+
+        const snapshot: HkoWeatherSnapshot = {
+          updatedAt: json.updateTime ?? json.temperature?.recordTime ?? json.humidity?.recordTime ?? json.rainfall?.endTime,
+          temperature: temp
+            ? { place: temp.place, value: temp.value, unit: temp.unit }
+            : undefined,
+          humidity: humidity
+            ? { place: humidity.place, value: humidity.value, unit: humidity.unit }
+            : undefined,
+          rainfall:
+            rainfallRow && typeof rainfallValue === 'string'
+              ? {
+                  place: rainfallRow.place,
+                  value: rainfallValue,
+                  unit: rainfallRow.unit ?? rainfallRow.unit1 ?? 'mm',
+                }
+              : undefined,
+          warnings,
+        }
+
+        setHkoWeather(snapshot)
+        setHkoStatus('ready')
+      } catch (err) {
+        if ((err as any)?.name === 'AbortError') return
+        console.error('HKO 天氣載入失敗:', err)
+        setHkoStatus('error')
       }
     }
 
-    loadStats()
+    fetchHko()
+    const refresh = setInterval(fetchHko, 5 * 60 * 1000)
+
     return () => {
-      isCancelled = true
+      controller.abort()
+      clearInterval(refresh)
     }
-  }, [user])
+  }, [])
+
+  // （已移除）今日摘要：用戶不需要
 
   const handleLogout = async () => {
     try {
@@ -120,7 +186,7 @@ export default function Dashboard() {
         </svg>
       ),
       accent: 'primary',
-      layout: 'xl:col-span-6'
+      layout: 'xl:col-span-7'
     },
     {
       title: '護理服務',
@@ -132,7 +198,7 @@ export default function Dashboard() {
         </svg>
       ),
       accent: 'success',
-      layout: 'xl:col-span-6'
+      layout: 'xl:col-span-5'
     },
     {
       title: '護理人員',
@@ -180,7 +246,7 @@ export default function Dashboard() {
         </svg>
       ),
       accent: 'primary',
-      layout: 'xl:col-span-8'
+      layout: 'xl:col-span-12'
     }
   ]
 
@@ -228,6 +294,19 @@ export default function Dashboard() {
     return date.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
   }
 
+  const formatHkoUpdateTime = (iso?: string) => {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso
+    return d.toLocaleString('zh-HK', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* 背景光暈（不影響白底，但更有質感） */}
@@ -239,7 +318,7 @@ export default function Dashboard() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border-light bg-bg-primary/80 backdrop-blur-glass">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <div className="w-28 h-28 -my-4">
@@ -283,109 +362,135 @@ export default function Dashboard() {
       </header>
 
       {/* Main */}
-      <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* Hero + Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 animate-fade-in">
-          <div className="lg:col-span-8 card-apple">
-            <div className="card-apple-content">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                    2026 High-Tech • Apple Minimal
-                  </div>
-                  <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
-                    {getGreeting()}，開始今天的管理工作
-                  </h1>
-                  <p className="mt-2 text-text-secondary">
-                    快速進入常用模組、查看摘要與待辦。
-                  </p>
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Hero */}
+        <div className="card-apple mb-4 animate-fade-in">
+          <div className="card-apple-content">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  2026 High-Tech • Apple Minimal
                 </div>
-
-                <div className="hidden sm:flex flex-col items-end">
-                  <div className="text-4xl font-light text-text-primary tabular-nums leading-none">
-                    {formatTime(currentTime)}
-                  </div>
-                  <div className="mt-1 text-sm text-text-tertiary">
-                    {formatDate(currentTime)}
-                  </div>
-                </div>
+                <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
+                  {getGreeting()}，開始今天的管理工作
+                </h1>
+                <p className="mt-2 text-text-secondary">
+                  直接進入模組，快速完成日常管理。
+                </p>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  onClick={() => router.push('/clients/new')}
-                  className="btn-apple-primary w-full"
-                >
-                  新增客戶
-                </button>
-                <button
-                  onClick={() => router.push('/services')}
-                  className="btn-apple-secondary w-full"
-                >
-                  新增服務記錄
-                </button>
-                <button
-                  onClick={() => router.push('/care-staff-apply')}
-                  className="btn-apple-secondary w-full"
-                >
-                  新增護理人員
-                </button>
+              <div className="hidden sm:flex flex-col items-end">
+                <div className="text-4xl font-light text-text-primary tabular-nums leading-none">
+                  {formatTime(currentTime)}
+                </div>
+                <div className="mt-1 text-sm text-text-tertiary">
+                  {formatDate(currentTime)}
+                </div>
               </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => router.push('/clients/new')}
+                className="btn-apple-primary w-full"
+              >
+                新增客戶
+              </button>
+              <button
+                onClick={() => router.push('/services')}
+                className="btn-apple-secondary w-full"
+              >
+                新增服務記錄
+              </button>
+              <button
+                onClick={() => router.push('/care-staff-apply')}
+                className="btn-apple-secondary w-full"
+              >
+                新增護理人員
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="lg:col-span-4 card-apple">
-            <div className="card-apple-content">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-text-primary">今日摘要</h2>
-                <div className="h-2 w-2 rounded-full bg-success shadow-glow-success" title="系統正常" />
+        {/* 香港天文台天氣 */}
+        <div className="card-apple mb-4">
+          <div className="card-apple-content">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-text-primary">香港天文台</div>
+                <div className="text-xs text-text-tertiary">即時天氣（開放數據）</div>
               </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
-                  <div className="text-xs text-text-tertiary">客戶</div>
-                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
-                    {stats.customers ?? '—'}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
-                  <div className="text-xs text-text-tertiary">護理員</div>
-                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
-                    {stats.careStaff ?? '—'}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
-                  <div className="text-xs text-text-tertiary">通知</div>
-                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
-                    {stats.notifications ?? '—'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-border-light bg-white p-4">
-                <div className="text-sm font-semibold text-text-primary">快速建議</div>
-                <div className="mt-2 space-y-2">
-                  <button
-                    onClick={() => router.push('/services')}
-                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    1) 查看今日服務排程
-                  </button>
-                  <button
-                    onClick={() => router.push('/clock-records')}
-                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    2) 檢查打卡記錄與異常
-                  </button>
-                  <button
-                    onClick={() => router.push('/notifications')}
-                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    3) 處理系統通知
-                  </button>
-                </div>
+              <div className="text-right">
+                <div className="text-xs text-text-tertiary">更新：{formatHkoUpdateTime(hkoWeather?.updatedAt)}</div>
               </div>
             </div>
+
+            {hkoStatus === 'loading' && (
+              <div className="mt-4 flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-border-light border-t-primary rounded-full animate-spin" />
+                <div className="text-sm text-text-secondary">載入天氣資料中…</div>
+              </div>
+            )}
+
+            {hkoStatus === 'error' && (
+              <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
+                <div className="text-sm text-text-secondary">暫時無法讀取天文台資料。</div>
+                <div className="mt-1 text-xs text-text-tertiary">請稍後再試（或檢查網絡連線）。</div>
+              </div>
+            )}
+
+            {hkoStatus === 'ready' && (
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="lg:col-span-7">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
+                      <div className="text-xs text-text-tertiary">氣溫</div>
+                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                        {hkoWeather?.temperature ? `${hkoWeather.temperature.value}${hkoWeather.temperature.unit}` : '—'}
+                      </div>
+                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.temperature?.place ?? ''}</div>
+                    </div>
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
+                      <div className="text-xs text-text-tertiary">濕度</div>
+                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                        {hkoWeather?.humidity ? `${hkoWeather.humidity.value}${hkoWeather.humidity.unit}` : '—'}
+                      </div>
+                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.humidity?.place ?? ''}</div>
+                    </div>
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
+                      <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
+                      <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                        {hkoWeather?.rainfall ? `${hkoWeather.rainfall.value}${hkoWeather.rainfall.unit}` : '—'}
+                      </div>
+                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5">
+                  <div className="rounded-2xl border border-border-light bg-bg-secondary p-4 h-full">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-semibold text-text-primary">天氣警告</div>
+                      <div className="text-xs text-text-tertiary">{hkoWeather?.warnings.length ? `${hkoWeather.warnings.length} 則` : '暫無'}</div>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {hkoWeather?.warnings.length ? (
+                        hkoWeather.warnings.slice(0, 3).map((m, idx) => (
+                          <div key={idx} className="text-sm text-text-secondary leading-relaxed">
+                            {m}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-text-secondary">暫無天氣警告。</div>
+                      )}
+                    </div>
+                    <div className="mt-3 text-xs text-text-tertiary">
+                      資料來源：香港天文台開放數據
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
