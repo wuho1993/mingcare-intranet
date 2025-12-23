@@ -396,8 +396,10 @@ export default function Dashboard() {
 
   const formatTemp = (value?: string, unit?: string) => {
     if (!value) return '—'
+    const rawValue = String(value).trim()
+    const cleanedValue = rawValue.replace(/\s*°?c\s*$/i, '').trim()
     const u = (unit ?? '').trim()
-    if (u === '°C' || u.toLowerCase() === 'c') return `${value}°C`
+    if (u === '°C' || u.toLowerCase() === 'c') return `${cleanedValue}°C`
     if (!u) return value
     return `${value}${u}`
   }
