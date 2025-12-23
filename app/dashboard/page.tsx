@@ -164,7 +164,9 @@ export default function Dashboard() {
 
         const warnings = Array.isArray(json.warningMessage)
           ? json.warningMessage.filter((m) => typeof m === 'string' && m.trim().length > 0)
-          : []
+          : typeof json.warningMessage === 'string' && json.warningMessage.trim().length > 0
+            ? [json.warningMessage]
+            : []
 
         const snapshot: HkoWeatherSnapshot = {
           updatedAt: json.updateTime ?? json.temperature?.recordTime ?? json.humidity?.recordTime ?? json.rainfall?.endTime,
@@ -175,10 +177,10 @@ export default function Dashboard() {
             ? { place: humidity.place ?? '—', value: humidity.value ?? '—', unit: normalizeUnit(humidity.unit) }
             : undefined,
           rainfall:
-            rainfallRow && typeof rainfallValue === 'string'
+            rainfallRow && rainfallValue !== undefined && rainfallValue !== null
               ? {
                   place: rainfallRow.place ?? '—',
-                  value: rainfallValue,
+                  value: String(rainfallValue),
                   unit: normalizeUnit(rainfallRow.unit ?? rainfallRow.unit1 ?? 'mm'),
                 }
               : undefined,
