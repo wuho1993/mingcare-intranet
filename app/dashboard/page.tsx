@@ -11,10 +11,17 @@ interface User {
   email?: string
 }
 
+type DashboardStats = {
+  customers: number | null
+  careStaff: number | null
+  notifications: number | null
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [stats, setStats] = useState<DashboardStats>({ customers: null, careStaff: null, notifications: null })
   const router = useRouter()
 
   useEffect(() => {
@@ -36,6 +43,38 @@ export default function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
+  // Dashboard 統計（失敗時不影響使用）
+  useEffect(() => {
+    if (!user) return
+
+    let isCancelled = false
+    const loadStats = async () => {
+      try {
+        const [customersRes, staffRes, notificationsRes] = await Promise.all([
+          supabase.from('customers').select('id', { count: 'exact', head: true }),
+          supabase.from('care_staff_profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('notifications').select('id', { count: 'exact', head: true }),
+        ])
+
+        if (isCancelled) return
+
+        setStats({
+          customers: customersRes.error ? null : (customersRes.count ?? null),
+          careStaff: staffRes.error ? null : (staffRes.count ?? null),
+          notifications: notificationsRes.error ? null : (notificationsRes.count ?? null),
+        })
+      } catch {
+        if (isCancelled) return
+        setStats({ customers: null, careStaff: null, notifications: null })
+      }
+    }
+
+    loadStats()
+    return () => {
+      isCancelled = true
+    }
+  }, [user])
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
@@ -54,10 +93,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-gray-500 text-sm">載入中...</p>
+          <div className="w-12 h-12 border-4 border-border-light border-t-primary rounded-full animate-spin"></div>
+          <p className="text-text-secondary text-sm">載入中...</p>
         </div>
       </div>
     )
@@ -80,9 +119,8 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
         </svg>
       ),
-      color: 'bg-blue-500',
-      lightColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
+      accent: 'primary',
+      layout: 'xl:col-span-6'
     },
     {
       title: '護理服務',
@@ -93,9 +131,8 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
         </svg>
       ),
-      color: 'bg-emerald-500',
-      lightColor: 'bg-emerald-50',
-      textColor: 'text-emerald-600'
+      accent: 'success',
+      layout: 'xl:col-span-6'
     },
     {
       title: '護理人員',
@@ -106,9 +143,8 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
         </svg>
       ),
-      color: 'bg-purple-500',
-      lightColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
+      accent: 'info',
+      layout: 'xl:col-span-4'
     },
     {
       title: '佣金計算',
@@ -119,9 +155,8 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
         </svg>
       ),
-      color: 'bg-amber-500',
-      lightColor: 'bg-amber-50',
-      textColor: 'text-amber-600'
+      accent: 'warning',
+      layout: 'xl:col-span-4'
     },
     {
       title: '打卡記錄',
@@ -132,9 +167,8 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      color: 'bg-pink-500',
-      lightColor: 'bg-pink-50',
-      textColor: 'text-pink-600'
+      accent: 'error',
+      layout: 'xl:col-span-4'
     },
     {
       title: '系統通知',
@@ -145,11 +179,46 @@ export default function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
         </svg>
       ),
-      color: 'bg-indigo-500',
-      lightColor: 'bg-indigo-50',
-      textColor: 'text-indigo-600'
+      accent: 'primary',
+      layout: 'xl:col-span-8'
     }
   ]
+
+  const accentClasses = (accent: string) => {
+    switch (accent) {
+      case 'success':
+        return {
+          iconBg: 'bg-success-light',
+          iconText: 'text-success',
+          ring: 'ring-success/20',
+        }
+      case 'warning':
+        return {
+          iconBg: 'bg-warning-light',
+          iconText: 'text-warning',
+          ring: 'ring-warning/20',
+        }
+      case 'error':
+        return {
+          iconBg: 'bg-error-light',
+          iconText: 'text-error',
+          ring: 'ring-error/20',
+        }
+      case 'info':
+        return {
+          iconBg: 'bg-info-light',
+          iconText: 'text-info',
+          ring: 'ring-info/20',
+        }
+      case 'primary':
+      default:
+        return {
+          iconBg: 'bg-primary-50',
+          iconText: 'text-primary',
+          ring: 'ring-primary/20',
+        }
+    }
+  }
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
@@ -160,34 +229,51 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-primary">
+      {/* 背景光暈（不影響白底，但更有質感） */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-24 -right-24 h-72 w-72 rounded-full bg-info/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-success/10 blur-3xl" />
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="sticky top-0 z-50 border-b border-border-light bg-bg-primary/80 backdrop-blur-glass">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <div className="w-28 h-28 -my-4">
-                <Image 
-                  src={getAssetPath("images/mingcare-logo.png")}
-                  alt="明家護理服務" 
+                <Image
+                  src={getAssetPath('images/mingcare-logo.png')}
+                  alt="明家護理服務"
                   width={256}
                   height={256}
                   className="w-full h-full object-contain"
                   priority
                 />
               </div>
+              <div className="hidden md:block">
+                <div className="text-sm font-semibold text-text-primary leading-tight">管理控制台</div>
+                <div className="text-xs text-text-tertiary leading-tight">MingCare Intranet</div>
+              </div>
             </div>
 
-            {/* 右側 */}
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:block text-right">
-                <p className="text-xs text-gray-400">{getGreeting()}</p>
-                <p className="text-sm text-gray-600 truncate max-w-[180px]">{user?.email}</p>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-xs text-text-tertiary">{getGreeting()}</p>
+                  <p className="text-sm text-text-secondary truncate max-w-[220px]">{user?.email}</p>
+                </div>
+                <div className="h-8 w-px bg-border-light" />
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-text-primary tabular-nums">{formatTime(currentTime)}</p>
+                  <p className="text-xs text-text-tertiary">{formatDate(currentTime)}</p>
+                </div>
               </div>
+
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="btn-apple-secondary"
               >
                 登出
               </button>
@@ -197,60 +283,160 @@ export default function Dashboard() {
       </header>
 
       {/* Main */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* 歡迎區塊 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">管理控制台</h1>
-              <p className="text-gray-500 mt-1">選擇模組開始管理</p>
+      <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        {/* Hero + Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 animate-fade-in">
+          <div className="lg:col-span-8 card-apple">
+            <div className="card-apple-content">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                    2026 High-Tech • Apple Minimal
+                  </div>
+                  <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
+                    {getGreeting()}，開始今天的管理工作
+                  </h1>
+                  <p className="mt-2 text-text-secondary">
+                    快速進入常用模組、查看摘要與待辦。
+                  </p>
+                </div>
+
+                <div className="hidden sm:flex flex-col items-end">
+                  <div className="text-4xl font-light text-text-primary tabular-nums leading-none">
+                    {formatTime(currentTime)}
+                  </div>
+                  <div className="mt-1 text-sm text-text-tertiary">
+                    {formatDate(currentTime)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  onClick={() => router.push('/clients/new')}
+                  className="btn-apple-primary w-full"
+                >
+                  新增客戶
+                </button>
+                <button
+                  onClick={() => router.push('/services')}
+                  className="btn-apple-secondary w-full"
+                >
+                  新增服務記錄
+                </button>
+                <button
+                  onClick={() => router.push('/care-staff-apply')}
+                  className="btn-apple-secondary w-full"
+                >
+                  新增護理人員
+                </button>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-light text-gray-700 tabular-nums">{formatTime(currentTime)}</p>
-              <p className="text-sm text-gray-400">{formatDate(currentTime)}</p>
+          </div>
+
+          <div className="lg:col-span-4 card-apple">
+            <div className="card-apple-content">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-text-primary">今日摘要</h2>
+                <div className="h-2 w-2 rounded-full bg-success shadow-glow-success" title="系統正常" />
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
+                  <div className="text-xs text-text-tertiary">客戶</div>
+                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                    {stats.customers ?? '—'}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
+                  <div className="text-xs text-text-tertiary">護理員</div>
+                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                    {stats.careStaff ?? '—'}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-bg-secondary p-4 border border-border-light">
+                  <div className="text-xs text-text-tertiary">通知</div>
+                  <div className="mt-1 text-2xl font-semibold text-text-primary tabular-nums">
+                    {stats.notifications ?? '—'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-border-light bg-white p-4">
+                <div className="text-sm font-semibold text-text-primary">快速建議</div>
+                <div className="mt-2 space-y-2">
+                  <button
+                    onClick={() => router.push('/services')}
+                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    1) 查看今日服務排程
+                  </button>
+                  <button
+                    onClick={() => router.push('/clock-records')}
+                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    2) 檢查打卡記錄與異常
+                  </button>
+                  <button
+                    onClick={() => router.push('/notifications')}
+                    className="w-full text-left text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    3) 處理系統通知
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 導航卡片 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {navigationItems.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => router.push(item.href)}
-              className="group bg-white rounded-2xl p-6 text-left border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              {/* 圖標 */}
-              <div className={`w-12 h-12 ${item.lightColor} ${item.textColor} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                {item.icon}
-              </div>
+        {/* Bento Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4">
+          {navigationItems.map((item) => {
+            const accent = accentClasses(item.accent)
+            return (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className={`group ${item.layout} card-apple text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 bg-white hover:shadow-apple-hover transition-all duration-300`}
+              >
+                <div className="card-apple-content">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className={`w-12 h-12 rounded-2xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                        {item.icon}
+                      </div>
+                      <h3 className="text-xl font-semibold text-text-primary group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-text-secondary line-clamp-2">
+                        {item.description}
+                      </p>
+                    </div>
 
-              {/* 標題 */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-primary transition-colors">
-                {item.title}
-              </h3>
+                    <div className="flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-bg-secondary border border-border-light flex items-center justify-center text-text-tertiary group-hover:text-primary group-hover:border-border-medium transition-all">
+                        <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* 描述 */}
-              <p className="text-sm text-gray-500">
-                {item.description}
-              </p>
-
-              {/* 箭頭 */}
-              <div className="mt-4 flex items-center text-gray-400 group-hover:text-primary transition-colors">
-                <span className="text-sm font-medium">進入</span>
-                <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </button>
-          ))}
+                  <div className="mt-5 flex items-center gap-2 text-xs text-text-tertiary">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-bg-secondary border border-border-light">
+                      快速進入
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden sm:inline">更新與資料同步</span>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-gray-400">
-            © 2025 明家居家護理服務有限公司
-          </p>
+        <div className="mt-10 text-center">
+          <p className="text-sm text-text-tertiary">© 2025 明家居家護理服務有限公司</p>
         </div>
       </main>
     </div>
