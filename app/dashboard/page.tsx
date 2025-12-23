@@ -512,16 +512,16 @@ export default function Dashboard() {
 
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3">
               <button
                 onClick={() => router.push('/clients/new')}
-                className="btn-apple-primary w-full"
+                className="btn-apple-primary w-full py-3 min-h-[48px] text-sm sm:text-base"
               >
                 新增客戶
               </button>
               <button
                 onClick={() => router.push('/services?tab=schedule')}
-                className="btn-apple-secondary w-full"
+                className="btn-apple-secondary w-full py-3 min-h-[48px] text-sm sm:text-base"
               >
                 新增服務記錄
               </button>
@@ -568,10 +568,10 @@ export default function Dashboard() {
             {hkoStatus === 'ready' && (
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div className="lg:col-span-7">
-                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0">
-                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
-                      <div className="text-xs text-text-tertiary">氣溫</div>
-                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
+                      <div className="text-[10px] sm:text-xs text-text-tertiary">氣溫</div>
+                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatTemp(
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
@@ -587,9 +587,9 @@ export default function Dashboard() {
                         ))}
                       </select>
                     </div>
-                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
-                      <div className="text-xs text-text-tertiary">濕度</div>
-                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
+                      <div className="text-[10px] sm:text-xs text-text-tertiary">濕度</div>
+                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatHumidity(
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.value ?? hkoWeather?.humidity?.value,
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.unit ?? hkoWeather?.humidity?.unit
@@ -605,9 +605,9 @@ export default function Dashboard() {
                         ))}
                       </select>
                     </div>
-                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
-                      <div className="text-xs text-text-tertiary">雨量(1hr)</div>
-                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
+                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
+                      <div className="text-[10px] sm:text-xs text-text-tertiary">雨量</div>
+                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatRainfall(
                           allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
                           allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
