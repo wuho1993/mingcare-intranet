@@ -129,7 +129,7 @@ export function SimpleFileDisplay({
             
             {/* 進度條 */}
             {isUploading && (
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+              <div className="w-full bg-bg-tertiary rounded-full h-1 mt-2">
                 <div 
                   className="bg-mingcare-blue h-1 rounded-full transition-all duration-300"
                   style={{ width: `${progress?.progress || 0}%` }}

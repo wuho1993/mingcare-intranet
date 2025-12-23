@@ -170,10 +170,10 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">身份證掃描器</h3>
+            <h3 className="text-xl font-semibold text-text-primary">身份證掃描器</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              className="text-text-tertiary hover:text-text-secondary text-2xl font-bold"
               aria-label="關閉"
             >
               ×
@@ -245,14 +245,14 @@ export default function HKIDScanner({ onImageCaptured, onClose, isOpen }: HKIDSc
                   <img
                     src={capturedImage}
                     alt="Captured HKID"
-                    className="w-full h-64 object-contain bg-gray-100 rounded-lg"
+                    className="w-full h-64 object-contain bg-bg-tertiary rounded-lg"
                   />
                 </div>
                 
                 {isCapturing && (
                   <div className="text-center p-4">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-                    <p className="text-gray-600">正在分析圖像...</p>
+                    <p className="text-text-secondary">正在分析圖像...</p>
                   </div>
                 )}
                 

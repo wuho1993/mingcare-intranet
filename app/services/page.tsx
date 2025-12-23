@@ -419,7 +419,7 @@ function ReportsCalendarView({
                         <div className="text-blue-600 mb-0.5 sm:mb-1 leading-tight text-xs">
                           {record.service_type}
                         </div>
-                        <div className="text-gray-600 text-xs flex items-center gap-1">
+                        <div className="text-text-secondary text-xs flex items-center gap-1">
                           {/* 跨夜更標記 */}
                           {record.start_time && record.end_time && record.start_time > record.end_time && (
                             <span title="跨夜更" className="text-orange-500">🌙</span>
@@ -496,7 +496,7 @@ function ReportsCalendarView({
                     setShowRecordMenu(false)
                     setSelectedRecord(null)
                   }}
-                  className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors"
                 >
                   編輯
                 </button>
@@ -571,20 +571,20 @@ function ReportsCalendarView({
                   <h3 className="font-semibold text-gray-800 truncate">
                     {record.customer_name}
                   </h3>
-                  <span className="text-xs text-text-secondary bg-gray-100 px-2 py-1 rounded">
+                  <span className="text-xs text-text-secondary bg-bg-tertiary px-2 py-1 rounded">
                     {record.service_date}
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     {record.care_staff_name}
                   </div>
 
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -640,7 +640,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors"
               >
                 編輯
               </button>
@@ -949,8 +949,8 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
   if (!records || records.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 bg-bg-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
@@ -1660,7 +1660,7 @@ function ScheduleSummaryView({
           <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
           <div className="bg-bg-secondary rounded-lg p-6 text-center">
             <div className="text-text-secondary">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto mb-3 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <p className="text-lg font-medium text-text-primary mb-2">尚無排班資料</p>
@@ -2416,7 +2416,7 @@ function ScheduleTab({
                           </div>
 
                           {/* 第三行：開始時間-結束時間 */}
-                          <div className="text-gray-600 text-base font-medium">
+                          <div className="text-text-secondary text-base font-medium">
                             {schedule.start_time}-{schedule.end_time}
                           </div>
                         </div>
@@ -2448,7 +2448,7 @@ function ScheduleTab({
                           </div>
 
                           {/* 第三行：開始時間-結束時間 */}
-                          <div className="text-gray-600 text-base font-medium">
+                          <div className="text-text-secondary text-base font-medium">
                             {schedule.start_time}-{schedule.end_time}
                           </div>
                         </div>
@@ -5500,8 +5500,8 @@ export default function ServicesPage() {
                     disabled={Object.values(staffDownloadStatus).some(status => status === 'downloading')}
                     className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
                       Object.values(staffDownloadStatus).some(status => status === 'downloading')
-                        ? 'bg-gray-100 text-text-secondary border border-border-medium cursor-not-allowed'
-                        : 'bg-mingcare-blue text-white hover:bg-blue-600 active:bg-blue-700'
+                        ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
+                        : 'bg-mingcare-blue text-white hover:bg-primary-dark active:bg-primary-dark'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5616,8 +5616,8 @@ export default function ServicesPage() {
                               disabled={isDownloading}
                               className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
                                 isDownloading
-                                ? 'bg-gray-100 text-text-secondary border border-border-medium cursor-not-allowed'
-                                : 'bg-mingcare-blue text-white hover:bg-blue-600 active:bg-blue-700'
+                                ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
+                                : 'bg-mingcare-blue text-white hover:bg-primary-dark active:bg-primary-dark'
                               }`}
                             >
                               {isDownloading ? '下載中...' : '下載'}
@@ -6957,22 +6957,22 @@ function LocalScheduleEditModal({
         <div className="p-6">
           {/* 排程詳情 */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-text-secondary mb-2">
               <strong>日期：</strong> {schedule.service_date}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-text-secondary mb-2">
               <strong>客戶：</strong> {schedule.customer_name}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-text-secondary mb-2">
               <strong>護理人員：</strong> {schedule.care_staff_name}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-text-secondary mb-2">
               <strong>護理員編號：</strong> {schedule.staff_id || '—'}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-text-secondary mb-2">
               <strong>服務類型：</strong> {schedule.service_type}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-text-secondary">
               <strong>時間：</strong> {schedule.start_time} - {schedule.end_time}
             </div>
           </div>
@@ -6981,7 +6981,7 @@ function LocalScheduleEditModal({
           <div className="space-y-3">
             <button
               onClick={onEdit}
-              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-left"
+              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-primary-dark transition-colors text-left"
             >
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

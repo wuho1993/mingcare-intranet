@@ -29,9 +29,9 @@ export default function CareServicesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
+        <div className="text-center fade-in-apple">
+          <div className="loading-spinner mx-auto mb-4"></div>
           <p className="text-text-secondary">載入中...</p>
         </div>
       </div>
@@ -61,11 +61,11 @@ export default function CareServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
-      <div className="card-apple border-b border-border-light">
+      <div className="card-apple border-b border-border-light rounded-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <img 
@@ -75,36 +75,36 @@ export default function CareServicesPage() {
                 />
               </div>
               <div className="ml-4">
-                <h1 className="text-2xl font-bold text-gray-900">護理服務管理</h1>
-                <p className="text-sm text-gray-500">Care Service Management System</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-text-primary">護理服務管理</h1>
+                <p className="text-sm text-text-secondary hidden sm:block">Care Service Management System</p>
               </div>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="btn-apple-secondary"
             >
-              返回儀表板
+              ← 返回儀表板
             </button>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-bg-primary shadow-sm border-b border-border-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8" aria-label="Tabs">
+          <nav className="flex space-x-1 sm:space-x-4 overflow-x-auto scrollbar-hide py-1" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                    ? 'border-primary text-primary bg-primary/5'
+                    : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                } whitespace-nowrap py-3 px-3 sm:px-4 border-b-2 font-medium text-sm flex items-center gap-2 rounded-t-lg transition-all duration-200`}
               >
                 <span>{tab.icon}</span>
-                <span>{tab.name}</span>
+                <span className="hidden sm:inline">{tab.name}</span>
               </button>
             ))}
           </nav>
@@ -112,7 +112,7 @@ export default function CareServicesPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {renderTabContent()}
       </div>
     </div>
@@ -122,143 +122,150 @@ export default function CareServicesPage() {
 // Component for 詳細報表 (Detailed Reports)
 function DetailedReportsComponent() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">詳細報表</h2>
-        <div className="flex space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <span className="mr-2">📄</span>
-            匯出報表
-          </button>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <span className="mr-2">🔍</span>
-            進階篩選
-          </button>
+    <div className="space-y-6 fade-in-apple">
+      {/* Header Actions */}
+      <div className="card-apple">
+        <div className="card-apple-content">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold text-text-primary">詳細報表</h2>
+            <div className="flex flex-wrap gap-3">
+              <button className="btn-apple-secondary text-sm">
+                <span className="mr-2">📄</span>
+                匯出報表
+              </button>
+              <button className="btn-apple-primary text-sm">
+                <span className="mr-2">🔍</span>
+                進階篩選
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Filters Section */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">篩選條件</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">服務日期</label>
-            <input
-              type="date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">客戶姓名</label>
-            <input
-              type="text"
-              placeholder="搜尋客戶"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">護理人員</label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-              <option value="">全部</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">服務類型</label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-              <option value="">全部</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              搜尋
-            </button>
+      <div className="card-apple" style={{ animationDelay: '0.1s' }}>
+        <div className="card-apple-content">
+          <h3 className="text-sm font-semibold text-text-primary mb-4">篩選條件</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">服務日期</label>
+              <input
+                type="date"
+                className="form-input-apple w-full text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">客戶姓名</label>
+              <input
+                type="text"
+                placeholder="搜尋客戶"
+                className="form-input-apple w-full text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">護理人員</label>
+              <select className="form-select-apple w-full text-sm">
+                <option value="">全部</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-text-secondary mb-2">服務類型</label>
+              <select className="form-select-apple w-full text-sm">
+                <option value="">全部</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button className="btn-apple-primary w-full text-sm">
+                🔍 搜尋
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm">👥</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '0.2s' }}>
+        <div className="card-apple card-hover-float bg-gradient-to-br from-primary/10 to-primary/5">
+          <div className="card-apple-content">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center shadow-glow">
+                <span className="text-white text-lg sm:text-xl">👥</span>
               </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-blue-900">總服務次數</p>
-              <p className="text-2xl font-semibold text-blue-600">0</p>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-text-secondary">總服務次數</p>
+                <p className="text-xl sm:text-2xl font-bold text-primary">0</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm">⏰</span>
+        <div className="card-apple card-hover-float bg-gradient-to-br from-success/10 to-success/5">
+          <div className="card-apple-content">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-success rounded-xl flex items-center justify-center">
+                <span className="text-white text-lg sm:text-xl">⏰</span>
               </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-900">總服務時數</p>
-              <p className="text-2xl font-semibold text-green-600">0 小時</p>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-text-secondary">總服務時數</p>
+                <p className="text-xl sm:text-2xl font-bold text-success">0 小時</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm">💰</span>
+        <div className="card-apple card-hover-float bg-gradient-to-br from-warning/10 to-warning/5">
+          <div className="card-apple-content">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-warning rounded-xl flex items-center justify-center">
+                <span className="text-white text-lg sm:text-xl">💰</span>
               </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-yellow-900">總服務費用</p>
-              <p className="text-2xl font-semibold text-yellow-600">$0</p>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-text-secondary">總服務費用</p>
+                <p className="text-xl sm:text-2xl font-bold text-warning">$0</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm">👨‍⚕️</span>
+        <div className="card-apple card-hover-float bg-gradient-to-br from-mingcare-purple/10 to-mingcare-purple/5">
+          <div className="card-apple-content">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-mingcare-purple rounded-xl flex items-center justify-center">
+                <span className="text-white text-lg sm:text-xl">👨‍⚕️</span>
               </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-purple-900">活躍護理人員</p>
-              <p className="text-2xl font-semibold text-purple-600">0</p>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-text-secondary">活躍護理人員</p>
+                <p className="text-xl sm:text-2xl font-bold text-mingcare-purple">0</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Data Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">服務記錄詳細列表</h3>
+      <div className="card-apple" style={{ animationDelay: '0.3s' }}>
+        <div className="card-apple-header border-b border-border-light">
+          <h3 className="text-lg font-semibold text-text-primary">服務記錄詳細列表</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="table-2026 w-full">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服務日期</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客戶姓名</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">護理人員</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服務類型</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服務時數</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服務費用</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                <th className="text-left">服務日期</th>
+                <th className="text-left">客戶姓名</th>
+                <th className="text-left hidden sm:table-cell">護理人員</th>
+                <th className="text-left hidden md:table-cell">服務類型</th>
+                <th className="text-left hidden lg:table-cell">服務時數</th>
+                <th className="text-left hidden lg:table-cell">服務費用</th>
+                <th className="text-center">操作</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <span className="text-4xl mb-2">📋</span>
-                    <p>暫無服務記錄</p>
+                <td colSpan={7} className="text-center py-16">
+                  <div className="flex flex-col items-center text-text-tertiary">
+                    <span className="text-5xl mb-4 opacity-50">📋</span>
+                    <p className="text-lg font-medium mb-1">暫無服務記錄</p>
                     <p className="text-sm">請調整篩選條件或添加新的服務記錄</p>
                   </div>
                 </td>
@@ -274,11 +281,11 @@ function DetailedReportsComponent() {
 // Placeholder components for other tabs
 function VoucherCalculatorComponent() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">社區券計數機</h2>
-      <div className="text-center py-12">
-        <span className="text-6xl mb-4 block">🧮</span>
-        <p className="text-gray-500">社區券計數機功能開發中...</p>
+    <div className="card-apple fade-in-apple">
+      <div className="card-apple-content text-center py-16">
+        <span className="text-6xl mb-6 block">🧮</span>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">社區券計數機</h2>
+        <p className="text-text-secondary">功能開發中，敬請期待...</p>
       </div>
     </div>
   )
@@ -286,11 +293,11 @@ function VoucherCalculatorComponent() {
 
 function ScheduleManagementComponent() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">排程管理</h2>
-      <div className="text-center py-12">
-        <span className="text-6xl mb-4 block">📅</span>
-        <p className="text-gray-500">排程管理功能開發中...</p>
+    <div className="card-apple fade-in-apple">
+      <div className="card-apple-content text-center py-16">
+        <span className="text-6xl mb-6 block">📅</span>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">排程管理</h2>
+        <p className="text-text-secondary">功能開發中，敬請期待...</p>
       </div>
     </div>
   )
@@ -298,11 +305,11 @@ function ScheduleManagementComponent() {
 
 function BusinessOverviewComponent() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">業務概覽</h2>
-      <div className="text-center py-12">
-        <span className="text-6xl mb-4 block">📈</span>
-        <p className="text-gray-500">業務概覽功能開發中...</p>
+    <div className="card-apple fade-in-apple">
+      <div className="card-apple-content text-center py-16">
+        <span className="text-6xl mb-6 block">📈</span>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">業務概覽</h2>
+        <p className="text-text-secondary">功能開發中，敬請期待...</p>
       </div>
     </div>
   )

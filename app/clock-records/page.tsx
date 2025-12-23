@@ -181,7 +181,7 @@ export default function ClockRecordsPage() {
   }
 
   const getStatusRatingColor = (rating: number | null) => {
-    if (rating === null) return 'text-gray-400'
+    if (rating === null) return 'text-text-tertiary'
     if (rating >= 4) return 'text-green-600'
     if (rating >= 3) return 'text-yellow-600'
     return 'text-red-600'
@@ -227,7 +227,7 @@ export default function ClockRecordsPage() {
               <div className="flex rounded-lg border border-border-light overflow-hidden">
                 <button
                   onClick={() => setViewMode('card')}
-                  className={`px-3 py-1.5 text-sm ${viewMode === 'card' ? 'bg-primary text-white' : 'bg-white text-text-secondary hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 text-sm transition-colors ${viewMode === 'card' ? 'bg-primary text-white' : 'bg-bg-primary text-text-secondary hover:bg-bg-secondary'}`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -235,7 +235,7 @@ export default function ClockRecordsPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('table')}
-                  className={`px-3 py-1.5 text-sm ${viewMode === 'table' ? 'bg-primary text-white' : 'bg-white text-text-secondary hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 text-sm transition-colors ${viewMode === 'table' ? 'bg-primary text-white' : 'bg-bg-primary text-text-secondary hover:bg-bg-secondary'}`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -374,8 +374,8 @@ export default function ClockRecordsPage() {
               <div className="col-span-full">
                 <div className="card-apple">
                   <div className="card-apple-content p-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-bg-tertiary rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                     </div>
@@ -440,7 +440,7 @@ export default function ClockRecordsPage() {
 
                     {/* 服務信息 */}
                     {record.customer_name && (
-                      <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                      <div className="bg-bg-secondary rounded-lg p-3 mb-3">
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
                             <p className="text-text-secondary text-xs mb-1">客戶姓名</p>
@@ -578,8 +578,8 @@ export default function ClockRecordsPage() {
                   {currentRecords.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="text-center py-12">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-bg-tertiary rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                           </svg>
                         </div>
@@ -588,7 +588,7 @@ export default function ClockRecordsPage() {
                     </tr>
                   ) : (
                     currentRecords.map((record) => (
-                      <tr key={record.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelectedRecord(record)}>
+                      <tr key={record.id} className="cursor-pointer hover:bg-bg-secondary" onClick={() => setSelectedRecord(record)}>
                         <td className="whitespace-nowrap text-sm">
                           {formatDateTime(record.clock_time)}
                         </td>
@@ -720,15 +720,15 @@ export default function ClockRecordsPage() {
                   員工信息
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="text-xs text-text-secondary mb-1">姓名</p>
                     <p className="font-medium">{selectedRecord.staff_name}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="text-xs text-text-secondary mb-1">員工編號</p>
                     <p className="font-medium">{selectedRecord.staff_id || '-'}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="text-xs text-text-secondary mb-1">打卡類型</p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       selectedRecord.clock_type === '上班' 
@@ -738,7 +738,7 @@ export default function ClockRecordsPage() {
                       {selectedRecord.clock_type}
                     </span>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="text-xs text-text-secondary mb-1">打卡時間</p>
                     <p className="font-medium text-sm">{formatDateTime(selectedRecord.clock_time)}</p>
                   </div>
@@ -755,38 +755,38 @@ export default function ClockRecordsPage() {
                     服務信息
                   </h3>
                   <div className="space-y-3">
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-bg-secondary rounded-lg p-3">
                       <p className="text-xs text-text-secondary mb-1">客戶姓名</p>
                       <p className="font-medium">{selectedRecord.customer_name}</p>
                     </div>
                     {selectedRecord.service_address && (
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-bg-secondary rounded-lg p-3">
                         <p className="text-xs text-text-secondary mb-1">服務地址</p>
                         <p className="text-sm">{selectedRecord.service_address}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-3 gap-3">
                       {selectedRecord.service_date && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">服務日期</p>
                           <p className="text-sm font-medium">{formatDate(selectedRecord.service_date)}</p>
                         </div>
                       )}
                       {selectedRecord.start_time && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">開始時間</p>
                           <p className="text-sm font-medium">{formatTime(selectedRecord.start_time)}</p>
                         </div>
                       )}
                       {selectedRecord.end_time && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">結束時間</p>
                           <p className="text-sm font-medium">{formatTime(selectedRecord.end_time)}</p>
                         </div>
                       )}
                     </div>
                     {selectedRecord.service_type && (
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-bg-secondary rounded-lg p-3">
                         <p className="text-xs text-text-secondary mb-1">服務類型</p>
                         <p className="font-medium">{selectedRecord.service_type}</p>
                       </div>
@@ -806,7 +806,7 @@ export default function ClockRecordsPage() {
                 </h3>
                 <div className="space-y-3">
                   {selectedRecord.location_address && (
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-bg-secondary rounded-lg p-3">
                       <p className="text-xs text-text-secondary mb-1">打卡地址</p>
                       <p className="text-sm">{selectedRecord.location_address}</p>
                     </div>
@@ -837,7 +837,7 @@ export default function ClockRecordsPage() {
                     </div>
                   )}
                   {(selectedRecord.clock_latitude !== null || selectedRecord.clock_longitude !== null) && (
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-bg-secondary rounded-lg p-3">
                       <p className="text-xs text-text-secondary mb-1">打卡坐標</p>
                       <p className="text-sm font-mono">
                         {selectedRecord.clock_latitude?.toFixed(6)}, {selectedRecord.clock_longitude?.toFixed(6)}
@@ -867,32 +867,32 @@ export default function ClockRecordsPage() {
                     )}
                     <div className="grid grid-cols-3 gap-3">
                       {selectedRecord.customer_emotion && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">情緒狀態</p>
                           <p className="font-medium text-sm">{selectedRecord.customer_emotion}</p>
                         </div>
                       )}
                       {selectedRecord.customer_cooperation && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">配合度</p>
                           <p className="font-medium text-sm">{selectedRecord.customer_cooperation}</p>
                         </div>
                       )}
                       {selectedRecord.customer_health && (
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-bg-secondary rounded-lg p-3">
                           <p className="text-xs text-text-secondary mb-1">健康狀況</p>
                           <p className="font-medium text-sm">{selectedRecord.customer_health}</p>
                         </div>
                       )}
                     </div>
                     {selectedRecord.customer_status_note && (
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-bg-secondary rounded-lg p-3">
                         <p className="text-xs text-text-secondary mb-1">狀態備註</p>
                         <p className="text-sm">{selectedRecord.customer_status_note}</p>
                       </div>
                     )}
                     {selectedRecord.customer_other_notes && (
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-bg-secondary rounded-lg p-3">
                         <p className="text-xs text-text-secondary mb-1">其他備註</p>
                         <p className="text-sm">{selectedRecord.customer_other_notes}</p>
                       </div>
@@ -905,28 +905,28 @@ export default function ClockRecordsPage() {
               <div>
                 <h3 className="text-sm font-semibold text-text-secondary mb-3">系統信息</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs text-text-secondary">
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="mb-1">記錄ID</p>
                     <p className="font-mono">{selectedRecord.id}</p>
                   </div>
                   {selectedRecord.shift_id && (
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-bg-secondary rounded-lg p-3">
                       <p className="mb-1">班次ID</p>
                       <p className="font-mono">{selectedRecord.shift_id}</p>
                     </div>
                   )}
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="mb-1">創建時間</p>
                     <p>{formatDateTime(selectedRecord.created_at)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-bg-secondary rounded-lg p-3">
                     <p className="mb-1">更新時間</p>
                     <p>{formatDateTime(selectedRecord.updated_at)}</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="sticky bottom-0 bg-gray-50 border-t border-border-light px-6 py-4">
+            <div className="sticky bottom-0 bg-bg-secondary border-t border-border-light px-6 py-4">
               <button onClick={() => setSelectedRecord(null)} className="btn-apple-primary w-full">
                 關閉
               </button>

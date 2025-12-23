@@ -68,40 +68,40 @@ export default function CareStaffApply() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="card-apple border-b border-border-light rounded-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-4">
             <div className="flex items-center space-x-4">
               <ResponsiveLogo />
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-gray-900">護理人員申請</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-text-primary">護理人員申請</h1>
                   <LastUpdateIndicator lastUpdateTime={lastUpdateTime} />
                 </div>
-                <p className="text-sm text-gray-600">新增護理人員資料</p>
+                <p className="text-sm text-text-secondary">新增護理人員資料</p>
               </div>
             </div>
             <button
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="btn-apple-secondary"
             >
-              返回
+              ← 返回
             </button>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
-          <form onSubmit={handleSubmit} className="space-y-6 p-6">
+      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <div className="card-apple fade-in-apple">
+          <form onSubmit={handleSubmit} className="card-apple-content space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 基本資料 */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  姓名 <span className="text-red-500">*</span>
+                <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+                  姓名 <span className="text-error">*</span>
                 </label>
                 <input
                   type="text"
@@ -116,7 +116,7 @@ export default function CareStaffApply() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
                   電子郵件
                 </label>
                 <input
@@ -131,8 +131,8 @@ export default function CareStaffApply() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  聯絡電話 <span className="text-red-500">*</span>
+                <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-2">
+                  聯絡電話 <span className="text-error">*</span>
                 </label>
                 <input
                   type="tel"
@@ -147,7 +147,7 @@ export default function CareStaffApply() {
               </div>
 
               <div>
-                <label htmlFor="experience_years" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="experience_years" className="block text-sm font-medium text-text-primary mb-2">
                   工作經驗（年）
                 </label>
                 <input
@@ -165,7 +165,7 @@ export default function CareStaffApply() {
 
             {/* 地址 */}
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="address" className="block text-sm font-medium text-text-primary mb-2">
                 地址
               </label>
               <input
@@ -182,7 +182,7 @@ export default function CareStaffApply() {
             {/* 緊急聯絡人 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-text-primary mb-2">
                   緊急聯絡人姓名
                 </label>
                 <input
@@ -197,7 +197,7 @@ export default function CareStaffApply() {
               </div>
 
               <div>
-                <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-text-primary mb-2">
                   緊急聯絡人電話
                 </label>
                 <input
@@ -214,7 +214,7 @@ export default function CareStaffApply() {
 
             {/* 專業資料 */}
             <div>
-              <label htmlFor="qualifications" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="qualifications" className="block text-sm font-medium text-text-primary mb-2">
                 專業資格
               </label>
               <textarea
@@ -229,7 +229,7 @@ export default function CareStaffApply() {
             </div>
 
             <div>
-              <label htmlFor="specialties" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="specialties" className="block text-sm font-medium text-text-primary mb-2">
                 專長領域
               </label>
               <textarea
@@ -244,7 +244,7 @@ export default function CareStaffApply() {
             </div>
 
             <div>
-              <label htmlFor="availability" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="availability" className="block text-sm font-medium text-text-primary mb-2">
                 可工作時間
               </label>
               <textarea
@@ -259,7 +259,7 @@ export default function CareStaffApply() {
             </div>
 
             <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-medium text-text-primary mb-2">
                 備註
               </label>
               <textarea

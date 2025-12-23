@@ -144,7 +144,7 @@ export default function CareStaffPage() {
       '職業治療助理': 'bg-violet-100 text-violet-800'
     }
 
-    return colorMap[simplifiedPosition] || 'bg-gray-100 text-gray-800'
+    return colorMap[simplifiedPosition] || 'bg-bg-tertiary text-gray-800'
   }
 
   // 簡化職位名稱
@@ -1128,7 +1128,7 @@ export default function CareStaffPage() {
                                     </span>
                                   ))
                                 ) : (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-gray-800">
                                     沒有提供
                                   </span>
                                 )}
@@ -1140,7 +1140,7 @@ export default function CareStaffPage() {
                                   ? 'bg-green-100 text-green-800'
                                   : staff.contract_status === '不同意'
                                   ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  : 'bg-bg-tertiary text-gray-800'
                               }`}>
                                 {staff.contract_status || '沒有提供'}
                               </span>
@@ -1210,7 +1210,7 @@ export default function CareStaffPage() {
                                   </span>
                                 ))
                               ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-tertiary text-gray-800">
                                   沒有提供
                                 </span>
                               )}
@@ -1766,7 +1766,7 @@ export default function CareStaffPage() {
                       }}
                       disabled={saveLoading}
                       type="button"
-                      className="px-4 py-2 bg-mingcare-blue text-white rounded-apple-sm hover:bg-blue-600 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-mingcare-blue text-white rounded-apple-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
                     >
                       {saveLoading ? '保存中...' : '保存'}
                     </button>

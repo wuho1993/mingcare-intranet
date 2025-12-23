@@ -1271,9 +1271,9 @@ export default function EditClientPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* 模態框標題 */}
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">選擇服務位置</h3>
-              <p className="text-sm text-gray-600 mt-1">
+            <div className="px-6 py-4 border-b border-border-light">
+              <h3 className="text-lg font-semibold text-text-primary">選擇服務位置</h3>
+              <p className="text-sm text-text-secondary mt-1">
                 在地圖上搜尋並點擊以標記位置，或手動輸入經緯度
               </p>
             </div>
@@ -1284,7 +1284,7 @@ export default function EditClientPage() {
               <div className="mb-3">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -1294,10 +1294,10 @@ export default function EditClientPage() {
                     value={mapSearchQuery}
                     onChange={(e) => setMapSearchQuery(e.target.value)}
                     placeholder="搜尋地址或地點（例如：旺角彌敦道、銅鑼灣時代廣場）"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                <p className="text-xs text-text-secondary mt-1.5 ml-1">
                   💡 在搜尋欄輸入地址或地點名稱，選擇建議項目後地圖會自動移動到該位置
                 </p>
               </div>
@@ -1305,7 +1305,7 @@ export default function EditClientPage() {
               {/* 互動式 Google Maps */}
               <div 
                 ref={mapRef}
-                className="h-96 mb-4 border border-gray-300 rounded-lg overflow-hidden"
+                className="h-96 mb-4 border border-border-medium rounded-lg overflow-hidden"
               ></div>
               
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
@@ -1322,7 +1322,7 @@ export default function EditClientPage() {
               {/* 手動輸入經緯度 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-primary mb-2">
                     緯度 (Latitude)
                   </label>
                   <input
@@ -1334,11 +1334,11 @@ export default function EditClientPage() {
                       lng: tempMarkerPosition?.lng || 0
                     })}
                     placeholder="例如: 22.302711"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-primary mb-2">
                     經度 (Longitude)
                   </label>
                   <input
@@ -1350,7 +1350,7 @@ export default function EditClientPage() {
                       lng: parseFloat(e.target.value) || 0
                     })}
                     placeholder="例如: 114.177216"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -1368,18 +1368,18 @@ export default function EditClientPage() {
             </div>
 
             {/* 按鈕區域 */}
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-border-light flex justify-end gap-3">
               <button
                 type="button"
                 onClick={cancelMapSelection}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-text-primary bg-bg-tertiary rounded-md hover:bg-gray-200 transition-colors"
               >
                 取消
               </button>
               <button
                 type="button"
                 onClick={confirmMapLocation}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
               >
                 確認位置
               </button>

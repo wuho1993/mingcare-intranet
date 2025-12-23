@@ -44,8 +44,8 @@ export default function Logo({
       />
       {showText && (
         <div className="ml-2 sm:ml-3">
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900">明家護理</h1>
-          <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">居家護理服務</p>
+          <h1 className="text-lg sm:text-xl font-bold text-text-primary">明家護理</h1>
+          <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">居家護理服務</p>
         </div>
       )}
     </div>
@@ -80,8 +80,8 @@ export function ResponsiveLogo({
       />
       {showText && (
         <div className="ml-2 sm:ml-3 min-w-0">
-          <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">明家護理</h1>
-          <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">居家護理服務</p>
+          <h1 className="text-base sm:text-lg lg:text-xl font-bold text-text-primary truncate">明家護理</h1>
+          <p className="text-xs sm:text-sm text-text-secondary hidden sm:block">居家護理服務</p>
         </div>
       )}
     </div>

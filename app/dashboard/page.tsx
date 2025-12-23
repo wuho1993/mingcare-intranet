@@ -206,12 +206,12 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-6">
               <div className="text-right hidden sm:block">
-                <p className="text-xs sm:text-sm text-gray-500">歡迎回來</p>
-                <p className="font-medium text-gray-900 text-sm">{user?.email}</p>
+                <p className="text-xs sm:text-sm text-text-secondary">歡迎回來</p>
+                <p className="font-medium text-text-primary text-sm">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                className="px-3 py-2 sm:px-6 sm:py-3 bg-bg-tertiary hover:bg-gray-200 text-text-primary rounded-xl font-medium transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
               >
                 <span className="hidden sm:inline">登出</span>
                 <span className="sm:hidden">
@@ -228,7 +228,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* 主要模組 */}
         <div className="card-apple p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 fade-in-apple hover:shadow-2xl transition-shadow duration-300">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">主要模組</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6 sm:mb-8">主要模組</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {navigationItems.map((item, index) => (
               <div 
@@ -247,8 +247,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 group-hover:text-gray-700 transition-colors duration-300 line-clamp-2">{item.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed group-hover:text-gray-500 transition-colors duration-300 line-clamp-3">{item.description}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-2 sm:mb-3 group-hover:text-text-primary transition-colors duration-300 line-clamp-2">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-text-secondary mb-4 sm:mb-6 leading-relaxed group-hover:text-text-secondary transition-colors duration-300 line-clamp-3">{item.description}</p>
                   
                   <div className={`flex items-center ${item.textColor} group-hover:translate-x-2 lg:group-hover:translate-x-4 transition-all duration-300`}>
                     <span className="font-semibold text-sm sm:text-base">進入模組</span>
@@ -272,7 +272,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div className="mt-16 text-center">
-          <p className="text-gray-500">
+          <p className="text-text-secondary">
             © 2025 明家居家護理服務有限公司 · 專業護理 · 貼心服務
           </p>
         </div>

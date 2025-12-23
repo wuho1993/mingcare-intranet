@@ -811,7 +811,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="社區券客戶">社區券</option>
@@ -841,7 +841,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="中西區">中西區</option>
@@ -885,7 +885,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="Kanas Leung">Kanas Leung</option>
@@ -925,7 +925,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="Kanas Leung">Kanas Leung</option>
@@ -954,7 +954,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="待社工評估">待社工評估</option>
@@ -983,7 +983,7 @@ export default function ClientsPage() {
                     setFilters(newFilters)
                     setCurrentPage(1)
                   }}
-                  className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  className="w-full text-xs bg-bg-secondary border border-border-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 >
                   <option value="">全部</option>
                   <option value="申請中">申請中</option>
@@ -1104,7 +1104,7 @@ export default function ClientsPage() {
                         </span>
                       )}
                       {filters.search && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                        <span className="px-2 py-0.5 bg-bg-tertiary text-text-primary rounded text-xs">
                           搜尋: {filters.search}
                         </span>
                       )}
@@ -1117,7 +1117,7 @@ export default function ClientsPage() {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => router.push('/clients/new')}
-                  className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all"
+                  className="text-xs sm:text-sm bg-blue-600 hover:bg-primary-dark text-white px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all"
                 >
                   <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1296,7 +1296,7 @@ export default function ClientsPage() {
                                     <span className={`px-2 py-1 rounded-full text-xs ${
                                       customer.lds_status === '已完成評估' || customer.lds_status === '已經持有'
                                         ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-gray-100 text-gray-800'
+                                        : 'bg-bg-tertiary text-gray-800'
                                     }`}>
                                       {customer.lds_status}
                                     </span>
@@ -1429,7 +1429,7 @@ export default function ClientsPage() {
                 <select
                   value={exportCustomerType}
                   onChange={(e) => setExportCustomerType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
                 >
                   <option value="all">全部客戶</option>
                   <option value="mingcare-street">明家街客</option>
@@ -1446,7 +1446,7 @@ export default function ClientsPage() {
                     type="month"
                     value={exportStartMonth}
                     onChange={(e) => setExportStartMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
                     placeholder="2025-09"
                   />
                 </div>
@@ -1456,7 +1456,7 @@ export default function ClientsPage() {
                     type="month"
                     value={exportEndMonth}
                     onChange={(e) => setExportEndMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
                     placeholder="2025-09"
                   />
                 </div>
@@ -1481,14 +1481,14 @@ export default function ClientsPage() {
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={handleCancelExport}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-text-secondary border border-border-medium rounded-md hover:bg-bg-secondary"
               >
                 取消
               </button>
               <button
                 onClick={handleExportConfirm}
                 disabled={exportLoading}
-                className="px-4 py-2 bg-mingcare-blue text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-mingcare-blue text-white rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exportLoading ? '導出中...' : '確認導出'}
               </button>

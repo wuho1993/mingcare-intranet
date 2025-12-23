@@ -39,18 +39,18 @@ export default function SalaryCalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-bg-secondary py-6 sm:py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8 fade-in-apple">
           <button 
             onClick={() => router.push('/dashboard')}
             className="btn-apple-secondary mb-4"
           >
             ← 返回儀表板
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">護理人員工資計算</h1>
-          <p className="text-gray-600 mt-2">計算護理人員薪資、加班費及津貼</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">護理人員工資計算</h1>
+          <p className="text-text-secondary mt-2">計算護理人員薪資、加班費及津貼</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -161,7 +161,7 @@ export default function SalaryCalculatorPage() {
                       <span className="font-semibold text-red-600">- NT$ {calculationResult.deductions.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex justify-between py-3 border-t-2 border-gray-300 mt-4">
+                    <div className="flex justify-between py-3 border-t-2 border-border-medium mt-4">
                       <span className="text-lg font-bold text-gray-900">實領薪資:</span>
                       <span className="text-2xl font-bold text-green-600">
                         NT$ {calculationResult.totalSalary.toLocaleString()}
