@@ -568,10 +568,10 @@ export default function Dashboard() {
             {hkoStatus === 'ready' && (
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div className="lg:col-span-7">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0">
+                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
                       <div className="text-xs text-text-tertiary">氣溫</div>
-                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatTemp(
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
@@ -587,9 +587,9 @@ export default function Dashboard() {
                         ))}
                       </select>
                     </div>
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
+                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
                       <div className="text-xs text-text-tertiary">濕度</div>
-                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatHumidity(
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.value ?? hkoWeather?.humidity?.value,
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.unit ?? hkoWeather?.humidity?.unit
@@ -605,9 +605,9 @@ export default function Dashboard() {
                         ))}
                       </select>
                     </div>
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
-                      <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
-                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
+                    <div className="flex-shrink-0 w-[130px] sm:w-auto rounded-2xl border border-border-light bg-bg-secondary p-3 sm:p-4">
+                      <div className="text-xs text-text-tertiary">雨量(1hr)</div>
+                      <div className="mt-1 text-2xl sm:text-4xl font-semibold text-text-primary tabular-nums">
                         {formatRainfall(
                           allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
                           allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
@@ -632,18 +632,18 @@ export default function Dashboard() {
                         <div className="text-xs text-text-tertiary">4 天預報</div>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="mt-3 flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0">
                         {hkoForecast.map((d, idx) => (
-                          <div key={idx} className="rounded-2xl border border-border-light bg-bg-primary p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="text-xs text-text-tertiary">
+                          <div key={idx} className="flex-shrink-0 w-[140px] sm:w-auto rounded-2xl border border-border-light bg-bg-primary p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-xs text-text-tertiary whitespace-nowrap">
                                 {d.weekLabel ? `${d.weekLabel} ` : ''}{d.dateLabel}
                               </div>
                               {d.iconUrl ? (
                                 <img
                                   src={d.iconUrl}
                                   alt={d.weather ?? '天氣圖示'}
-                                  className="w-8 h-8 object-contain"
+                                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0"
                                   loading="lazy"
                                 />
                               ) : null}
@@ -651,7 +651,7 @@ export default function Dashboard() {
 
                             <div
                               className={
-                                `mt-2 text-sm font-semibold text-text-primary ` +
+                                `mt-1 sm:mt-2 text-xs sm:text-sm font-semibold text-text-primary ` +
                                 (expandedForecastIndex === idx ? '' : 'line-clamp-2')
                               }
                             >
@@ -661,18 +661,18 @@ export default function Dashboard() {
                               <button
                                 type="button"
                                 onClick={() => setExpandedForecastIndex(expandedForecastIndex === idx ? null : idx)}
-                                className="mt-2 text-xs text-primary hover:underline"
+                                className="mt-1 sm:mt-2 text-xs text-primary hover:underline"
                               >
                                 {expandedForecastIndex === idx ? '收起' : '展開'}
                               </button>
                             )}
-                            <div className="mt-2 flex items-end justify-between">
-                              <div className="text-sm text-text-secondary tabular-nums">
+                            <div className="mt-1 sm:mt-2 flex items-end justify-between gap-1">
+                              <div className="text-xs sm:text-sm text-text-secondary tabular-nums whitespace-nowrap">
                                 {d.minTemp ?? '—'}
                                 <span className="text-text-tertiary"> / </span>
                                 {d.maxTemp ?? '—'}
                               </div>
-                              <div className="text-xs text-text-tertiary">{d.psr ? `PSR ${d.psr}` : ''}</div>
+                              <div className="text-xs text-text-tertiary whitespace-nowrap">{d.psr ? `PSR ${d.psr}` : ''}</div>
                             </div>
                           </div>
                         ))}
