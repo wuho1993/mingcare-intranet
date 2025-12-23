@@ -626,24 +626,24 @@ export default function Dashboard() {
                   </div>
 
                   {hkoForecast.length > 0 && (
-                    <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-text-primary">未來天氣預報</div>
-                        <div className="text-xs text-text-tertiary">4 天預報</div>
+                    <div className="mt-3 sm:mt-4 rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <div className="text-[10px] sm:text-xs font-semibold text-text-primary">未來天氣預報</div>
+                        <div className="text-[10px] sm:text-xs text-text-tertiary">4 天預報</div>
                       </div>
 
-                      <div className="mt-3 flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0">
+                      <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
                         {hkoForecast.map((d, idx) => (
-                          <div key={idx} className="flex-shrink-0 w-[140px] sm:w-auto rounded-2xl border border-border-light bg-bg-primary p-3">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="text-xs text-text-tertiary whitespace-nowrap">
-                                {d.weekLabel ? `${d.weekLabel} ` : ''}{d.dateLabel}
+                          <div key={idx} className="rounded-xl sm:rounded-2xl border border-border-light bg-bg-primary p-1.5 sm:p-3">
+                            <div className="flex items-center justify-between gap-0.5 sm:gap-2">
+                              <div className="text-[9px] sm:text-xs text-text-tertiary leading-tight">
+                                {d.dateLabel}
                               </div>
                               {d.iconUrl ? (
                                 <img
                                   src={d.iconUrl}
                                   alt={d.weather ?? '天氣圖示'}
-                                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0"
+                                  className="w-5 h-5 sm:w-8 sm:h-8 object-contain flex-shrink-0"
                                   loading="lazy"
                                 />
                               ) : null}
@@ -651,7 +651,7 @@ export default function Dashboard() {
 
                             <div
                               className={
-                                `mt-1 sm:mt-2 text-xs sm:text-sm font-semibold text-text-primary ` +
+                                `mt-0.5 sm:mt-2 text-[9px] sm:text-sm font-semibold text-text-primary leading-tight ` +
                                 (expandedForecastIndex === idx ? '' : 'line-clamp-2')
                               }
                             >
@@ -661,18 +661,13 @@ export default function Dashboard() {
                               <button
                                 type="button"
                                 onClick={() => setExpandedForecastIndex(expandedForecastIndex === idx ? null : idx)}
-                                className="mt-1 sm:mt-2 text-xs text-primary hover:underline"
+                                className="mt-0.5 sm:mt-2 text-[9px] sm:text-xs text-primary hover:underline"
                               >
                                 {expandedForecastIndex === idx ? '收起' : '展開'}
                               </button>
                             )}
-                            <div className="mt-1 sm:mt-2 flex items-end justify-between gap-1">
-                              <div className="text-xs sm:text-sm text-text-secondary tabular-nums whitespace-nowrap">
-                                {d.minTemp ?? '—'}
-                                <span className="text-text-tertiary"> / </span>
-                                {d.maxTemp ?? '—'}
-                              </div>
-                              <div className="text-xs text-text-tertiary whitespace-nowrap">{d.psr ? `PSR ${d.psr}` : ''}</div>
+                            <div className="mt-0.5 sm:mt-2 text-[9px] sm:text-sm text-text-secondary tabular-nums leading-tight">
+                              {d.minTemp ?? '—'}/{d.maxTemp ?? '—'}
                             </div>
                           </div>
                         ))}
