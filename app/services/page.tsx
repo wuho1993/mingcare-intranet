@@ -3158,7 +3158,11 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               </button>
 
               <button
-                onClick={handleExport}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleExport()
+                }}
                 disabled={exportLoading}
                 className="btn-apple-primary text-sm disabled:opacity-50"
               >
@@ -5818,189 +5822,214 @@ export default function ServicesPage() {
 
       {/* 導出選項模態框 */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => setShowExportModal(false)}>
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple w-[calc(100%-2rem)] max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="p-6 border-b border-border-light flex-shrink-0 bg-bg-secondary/30">
-              <h3 className="text-lg font-semibold text-text-primary">導出設定</h3>
-            </div>
+        <>
+          {typeof window !== 'undefined' && createPortal(
+            <div
+              className="fixed inset-0 z-[9999] overflow-y-auto"
+              onMouseDown={(e) => {
+                if (e.target === e.currentTarget) {
+                  setShowExportModal(false)
+                }
+              }}
+            >
+              {/* 背景遮罩 */}
+              <div className="fixed inset-0 bg-black/60 transition-opacity" />
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* 預設模式選擇 */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-text-primary mb-3">預設模式</label>
-                <div className="space-y-3">
-                  {Object.entries(exportModeConfigs).map(([mode, config]) => (
-                    <label key={mode} className={`flex items-start p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
-                      exportMode === mode 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border-light hover:border-primary/50 hover:bg-bg-secondary'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="exportMode"
-                        value={mode}
-                        checked={exportMode === mode}
-                        onChange={(e) => handleExportModeChange(e.target.value as 'accounting' | 'payroll')}
-                        className="mr-3 mt-1 accent-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-text-primary">{config.name}</div>
-                        <div className="text-sm text-text-secondary">{config.description}</div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* 格式選擇 */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-text-primary mb-3">導出格式</label>
-                <div className="flex space-x-3">
-                  <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    exportFormat === 'pdf' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border-light hover:border-primary/50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="format"
-                      value="pdf"
-                      checked={exportFormat === 'pdf'}
-                      onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
-                      className="mr-2 accent-primary"
-                    />
-                    <span className="font-medium">PDF</span>
-                  </label>
-                  <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    exportFormat === 'csv' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border-light hover:border-primary/50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="format"
-                      value="csv"
-                      checked={exportFormat === 'csv'}
-                      onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
-                      className="mr-2 accent-primary"
-                    />
-                    <span className="font-medium">CSV</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* 工資模式子選項 */}
-              {exportMode === 'payroll' && exportFormat === 'pdf' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-text-primary mb-3">工資導出方式</label>
-                  <div className="space-y-2">
-                    <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
-                      payrollExportType === 'combined' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border-light hover:border-primary/50'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="payrollType"
-                        value="combined"
-                        checked={payrollExportType === 'combined'}
-                        onChange={(e) => setPayrollExportType(e.target.value as 'separate' | 'combined')}
-                        className="mr-2 accent-primary"
-                      />
-                      <span>合併報表 (一個PDF包含所有人員)</span>
-                    </label>
-                    <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
-                      payrollExportType === 'separate' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border-light hover:border-primary/50'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="payrollType"
-                        value="separate"
-                        checked={payrollExportType === 'separate'}
-                        onChange={(e) => setPayrollExportType(e.target.value as 'separate' | 'combined')}
-                        className="mr-2"
-                      />
-                      <span>個別報表 (每人單獨PDF檔案)</span>
-                    </label>
+              {/* Modal 容器 */}
+              <div className="fixed inset-0 flex items-center justify-center p-4">
+                <div
+                  className="relative card-apple w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="p-6 border-b border-border-light flex-shrink-0 bg-bg-secondary/30">
+                    <h3 className="text-lg font-semibold text-text-primary">導出設定</h3>
                   </div>
-                </div>
-              )}
 
-              {/* 欄位選擇 */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-text-primary mb-3">
-                  選擇要導出的欄位
-                  <span className="text-xs text-text-secondary ml-2">
-                    ({exportModeConfigs[exportMode].name} 預設配置，可自由調整)
-                  </span>
-                </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-xl p-3 bg-bg-secondary">
-                  {Object.entries({
-                    service_date: '服務日期',
-                    customer_id: '客戶編號',
-                    customer_name: '客戶姓名',
-                    phone: '客戶電話',
-                    service_address: '服務地址',
-                    start_time: '開始時間',
-                    end_time: '結束時間',
-                    service_hours: '服務時數',
-                    care_staff_name: '護理員姓名',
-                    service_fee: '服務費用',
-                    staff_salary: '護理員工資',
-                    service_profit: '服務利潤',
-                    hourly_rate: '每小時收費',
-                    hourly_salary: '每小時工資',
-                    service_type: '服務類型',
-                    project_category: '所屬項目',
-                    project_manager: '項目經理'
-                  }).map(([key, label]) => {
-                    const isDefaultField = ['service_date', 'customer_name', 'service_address', 'start_time', 'end_time', 'service_hours', 'care_staff_name', 'service_type'].includes(key)
-                    return (
-                      <label key={key} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={exportColumns[key as keyof typeof exportColumns]}
-                          onChange={(e) => {
-                            setExportColumns(prev => ({
-                              ...prev,
-                              [key]: e.target.checked
-                            }))
-                          }}
-                          className="mr-2"
-                        />
-                        <span className={`text-sm ${isDefaultField ? 'font-medium text-primary' : ''}`}>
-                          {label}
-                          {isDefaultField && <span className="text-xs text-primary ml-1">(默認)</span>}
+                  {/* Scrollable Content */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {/* 預設模式選擇 */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-text-primary mb-3">預設模式</label>
+                      <div className="space-y-3">
+                        {Object.entries(exportModeConfigs).map(([mode, config]) => (
+                          <label key={mode} className={`flex items-start p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                            exportMode === mode
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border-light hover:border-primary/50 hover:bg-bg-secondary'
+                          }`}>
+                            <input
+                              type="radio"
+                              name="exportMode"
+                              value={mode}
+                              checked={exportMode === mode}
+                              onChange={(e) => handleExportModeChange(e.target.value as 'accounting' | 'payroll')}
+                              className="mr-3 mt-1 accent-primary"
+                            />
+                            <div>
+                              <div className="font-medium text-text-primary">{config.name}</div>
+                              <div className="text-sm text-text-secondary">{config.description}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 格式選擇 */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-text-primary mb-3">導出格式</label>
+                      <div className="flex space-x-3">
+                        <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                          exportFormat === 'pdf'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border-light hover:border-primary/50'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="format"
+                            value="pdf"
+                            checked={exportFormat === 'pdf'}
+                            onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
+                            className="mr-2 accent-primary"
+                          />
+                          <span className="font-medium">PDF</span>
+                        </label>
+                        <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                          exportFormat === 'csv'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border-light hover:border-primary/50'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="format"
+                            value="csv"
+                            checked={exportFormat === 'csv'}
+                            onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
+                            className="mr-2 accent-primary"
+                          />
+                          <span className="font-medium">CSV</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* 工資模式子選項 */}
+                    {exportMode === 'payroll' && exportFormat === 'pdf' && (
+                      <div className="mb-6">
+                        <label className="block text-sm font-semibold text-text-primary mb-3">工資導出方式</label>
+                        <div className="space-y-2">
+                          <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                            payrollExportType === 'combined'
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border-light hover:border-primary/50'
+                          }`}>
+                            <input
+                              type="radio"
+                              name="payrollType"
+                              value="combined"
+                              checked={payrollExportType === 'combined'}
+                              onChange={(e) => setPayrollExportType(e.target.value as 'separate' | 'combined')}
+                              className="mr-2 accent-primary"
+                            />
+                            <span>合併報表 (一個PDF包含所有人員)</span>
+                          </label>
+                          <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                            payrollExportType === 'separate'
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border-light hover:border-primary/50'
+                          }`}>
+                            <input
+                              type="radio"
+                              name="payrollType"
+                              value="separate"
+                              checked={payrollExportType === 'separate'}
+                              onChange={(e) => setPayrollExportType(e.target.value as 'separate' | 'combined')}
+                              className="mr-2"
+                            />
+                            <span>個別報表 (每人單獨PDF檔案)</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 欄位選擇 */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-text-primary mb-3">
+                        選擇要導出的欄位
+                        <span className="text-xs text-text-secondary ml-2">
+                          ({exportModeConfigs[exportMode].name} 預設配置，可自由調整)
                         </span>
                       </label>
-                    )
-                  })}
+                      <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-xl p-3 bg-bg-secondary">
+                        {Object.entries({
+                          service_date: '服務日期',
+                          customer_id: '客戶編號',
+                          customer_name: '客戶姓名',
+                          phone: '客戶電話',
+                          service_address: '服務地址',
+                          start_time: '開始時間',
+                          end_time: '結束時間',
+                          service_hours: '服務時數',
+                          care_staff_name: '護理員姓名',
+                          service_fee: '服務費用',
+                          staff_salary: '護理員工資',
+                          service_profit: '服務利潤',
+                          hourly_rate: '每小時收費',
+                          hourly_salary: '每小時工資',
+                          service_type: '服務類型',
+                          project_category: '所屬項目',
+                          project_manager: '項目經理'
+                        }).map(([key, label]) => {
+                          const isDefaultField = ['service_date', 'customer_name', 'service_address', 'start_time', 'end_time', 'service_hours', 'care_staff_name', 'service_type'].includes(key)
+                          return (
+                            <label key={key} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={exportColumns[key as keyof typeof exportColumns]}
+                                onChange={(e) => {
+                                  setExportColumns(prev => ({
+                                    ...prev,
+                                    [key]: e.target.checked
+                                  }))
+                                }}
+                                className="mr-2"
+                              />
+                              <span className={`text-sm ${isDefaultField ? 'font-medium text-primary' : ''}`}>
+                                {label}
+                                {isDefaultField && <span className="text-xs text-primary ml-1">(默認)</span>}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Buttons */}
+                  <div className="p-6 border-t border-border-light flex justify-end space-x-3 flex-shrink-0 bg-bg-secondary/30">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => setShowExportModal(false)}
+                      className="btn-apple-secondary"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={handleExportConfirm}
+                      disabled={Object.values(exportColumns).every(v => !v)}
+                      className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      確認導出
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="p-6 border-t border-border-light flex justify-end space-x-3 flex-shrink-0 bg-bg-secondary/30">
-              <button
-                onClick={() => setShowExportModal(false)}
-                className="btn-apple-secondary"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleExportConfirm}
-                disabled={Object.values(exportColumns).every(v => !v)}
-                className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                確認導出
-              </button>
-            </div>
-          </div>
-        </div>
+            </div>,
+            document.body
+          )}
+        </>
       )}
     </div>
   )
