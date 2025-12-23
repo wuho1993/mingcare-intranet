@@ -185,7 +185,7 @@ function DetailedReportsComponent() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '0.2s' }}>
-        <div className="card-apple card-hover-float bg-gradient-to-br from-primary/10 to-primary/5">
+        <div className="card-apple card-hover-float bg-primary/5">
           <div className="card-apple-content">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center shadow-glow">
@@ -199,7 +199,7 @@ function DetailedReportsComponent() {
           </div>
         </div>
 
-        <div className="card-apple card-hover-float bg-gradient-to-br from-success/10 to-success/5">
+        <div className="card-apple card-hover-float bg-success/5">
           <div className="card-apple-content">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-success rounded-xl flex items-center justify-center">
@@ -213,7 +213,7 @@ function DetailedReportsComponent() {
           </div>
         </div>
 
-        <div className="card-apple card-hover-float bg-gradient-to-br from-warning/10 to-warning/5">
+        <div className="card-apple card-hover-float bg-warning/5">
           <div className="card-apple-content">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-warning rounded-xl flex items-center justify-center">
@@ -227,15 +227,15 @@ function DetailedReportsComponent() {
           </div>
         </div>
 
-        <div className="card-apple card-hover-float bg-gradient-to-br from-mingcare-purple/10 to-mingcare-purple/5">
+        <div className="card-apple card-hover-float bg-purple-500/5">
           <div className="card-apple-content">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-mingcare-purple rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                 <span className="text-white text-lg sm:text-xl">👨‍⚕️</span>
               </div>
               <div>
                 <p className="text-xs sm:text-sm font-medium text-text-secondary">活躍護理人員</p>
-                <p className="text-xl sm:text-2xl font-bold text-mingcare-purple">0</p>
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">0</p>
               </div>
             </div>
           </div>
