@@ -566,7 +566,7 @@ export default function Dashboard() {
             )}
 
             {hkoStatus === 'ready' && (
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                 <div className="lg:col-span-7">
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
@@ -632,9 +632,9 @@ export default function Dashboard() {
                         <div className="text-xs text-text-tertiary">4 天預報</div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-1 sm:gap-3">
+                      <div className="grid grid-cols-4 gap-1 sm:gap-3 items-start">
                         {hkoForecast.map((d, idx) => (
-                          <div key={idx} className="rounded-lg sm:rounded-2xl border border-border-light bg-bg-primary p-1.5 sm:p-3">
+                          <div key={idx} className="rounded-lg sm:rounded-2xl border border-border-light bg-bg-primary p-1.5 sm:p-3 h-auto">
                             <div className="flex items-center justify-between">
                               <div className="text-[10px] sm:text-xs text-text-tertiary">
                                 {d.dateLabel}
@@ -677,7 +677,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="lg:col-span-5">
-                  <div className="rounded-2xl border border-border-light bg-bg-secondary p-4 h-full">
+                  <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-semibold text-text-primary">天氣警告</div>
                       <div className="text-xs text-text-tertiary">{hkoWeather?.warnings.length ? `${hkoWeather.warnings.length} 則` : '暫無'}</div>
