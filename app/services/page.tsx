@@ -467,81 +467,79 @@ function ReportsCalendarView({
 
         {/* 記錄操作模態框 */}
         {showRecordMenu && selectedRecord && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-[9999]" 
-            onMouseDown={(e) => {
-              if (e.target === e.currentTarget) {
+          <>
+            {/* 背景遮罩 */}
+            <div 
+              className="fixed inset-0 bg-black/40 z-[9998]"
+              onClick={() => {
                 setShowRecordMenu(false)
                 setSelectedRecord(null)
-              }
-            }}
-          >
-            <div 
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
-
-              {/* 記錄詳情 */}
-              <div className="bg-bg-secondary rounded-xl p-4 mb-5">
-                <div className="text-sm text-text-tertiary mb-1">
-                  {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
-                </div>
-                <div className="font-semibold text-text-primary">
-                  {selectedRecord.customer_name}
-                </div>
-                <div className="text-sm text-text-secondary mt-1">
-                  護理員：{selectedRecord.care_staff_name}
-                </div>
-                <div className="text-sm text-primary font-medium mt-1">
-                  {selectedRecord.service_type}
-                </div>
-              </div>
-
-              {/* 操作按鈕 */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={() => {
-                    console.log('📝 編輯按鈕被點擊:', selectedRecord)
-                    onEdit(selectedRecord)
-                    setShowRecordMenu(false)
-                    setSelectedRecord(null)
-                  }}
-                  className="flex-1 py-2.5 px-4 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors"
-                >
-                  編輯
-                </button>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={() => {
-                    console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
-                    onDelete(selectedRecord.id)
-                    setShowRecordMenu(false)
-                    setSelectedRecord(null)
-                  }}
-                  className="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
-                >
-                  刪除
-                </button>
-              </div>
-
-              {/* 取消按鈕 */}
-              <button
-                type="button"
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  setShowRecordMenu(false)
-                  setSelectedRecord(null)
-                }}
-                className="w-full mt-3 py-2.5 px-4 text-text-secondary bg-bg-secondary rounded-xl font-medium hover:bg-bg-tertiary transition-colors"
+              }}
+            />
+            {/* 模態框內容 */}
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+              <div 
+                className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                取消
-              </button>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">選擇操作</h3>
+
+                {/* 記錄詳情 */}
+                <div className="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-100">
+                  <div className="text-sm text-gray-500 mb-1">
+                    {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
+                  </div>
+                  <div className="font-semibold text-gray-900">
+                    {selectedRecord.customer_name}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    護理員：{selectedRecord.care_staff_name}
+                  </div>
+                  <div className="text-sm text-blue-600 font-medium mt-1">
+                    {selectedRecord.service_type}
+                  </div>
+                </div>
+
+                {/* 操作按鈕 */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEdit(selectedRecord)
+                      setShowRecordMenu(false)
+                      setSelectedRecord(null)
+                    }}
+                    className="flex-1 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    編輯
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDelete(selectedRecord.id)
+                      setShowRecordMenu(false)
+                      setSelectedRecord(null)
+                    }}
+                    className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+                  >
+                    刪除
+                  </button>
+                </div>
+
+                {/* 取消按鈕 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRecordMenu(false)
+                    setSelectedRecord(null)
+                  }}
+                  className="w-full mt-3 py-3 px-4 text-gray-600 bg-gray-100 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                >
+                  取消
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
         </>
       ) : (
@@ -626,83 +624,94 @@ function ReportsCalendarView({
         </div>
       )}
 
-      {/* 記錄操作模態框 - 共用 */}
+      {/* 記錄操作模態框 - 使用 Portal 確保穩定渲染 */}
       {showRecordMenu && selectedRecord && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-[9999]" 
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowRecordMenu(false)
-              setSelectedRecord(null)
-            }
-          }}
-        >
-          <div 
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
-
-            {/* 記錄詳情 */}
-            <div className="bg-bg-secondary/60 rounded-xl p-4 mb-5 border border-border-light">
-              <div className="text-sm text-text-secondary mb-1.5">
-                {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
-              </div>
-              <div className="font-semibold text-text-primary text-base">
-                {selectedRecord.customer_name}
-              </div>
-              <div className="text-sm text-text-secondary mt-1">
-                護理員：{selectedRecord.care_staff_name}
-              </div>
-              <div className="text-sm text-primary font-medium mt-1">
-                {selectedRecord.service_type}
-              </div>
-            </div>
-
-            {/* 操作按鈕 */}
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  console.log('📝 編輯按鈕被點擊:', selectedRecord)
-                  onEdit(selectedRecord)
+        <>
+          {typeof window !== 'undefined' && createPortal(
+            <div 
+              className="fixed inset-0 z-[9999] overflow-y-auto"
+              onMouseDown={(e) => {
+                if (e.target === e.currentTarget) {
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
-                }}
-                className="btn-apple-primary flex-1"
-              >
-                編輯
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
-                  onDelete(selectedRecord.id)
-                  setShowRecordMenu(false)
-                  setSelectedRecord(null)
-                }}
-                className="flex-1 bg-red-500 text-white py-2.5 px-4 rounded-xl hover:bg-red-600 transition-all duration-300 font-medium"
-              >
-                刪除
-              </button>
-            </div>
-
-            {/* 取消按鈕 */}
-            <button
-              type="button"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => {
-                setShowRecordMenu(false)
-                setSelectedRecord(null)
+                }
               }}
-              className="btn-apple-secondary w-full mt-4"
             >
-              取消
-            </button>
-          </div>
-        </div>
+              {/* 背景遮罩 */}
+              <div className="fixed inset-0 bg-black/60 transition-opacity" />
+              
+              {/* 模態框容器 - 使用 flex 居中 */}
+              <div className="fixed inset-0 flex items-center justify-center p-4">
+                <div 
+                  className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform transition-all"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">選擇操作</h3>
+
+                  {/* 記錄詳情 */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-200">
+                    <div className="text-sm text-gray-500 mb-1.5">
+                      {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
+                    </div>
+                    <div className="font-semibold text-gray-900 text-base">
+                      {selectedRecord.customer_name}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      護理員：{selectedRecord.care_staff_name}
+                    </div>
+                    <div className="text-sm text-primary font-medium mt-1">
+                      {selectedRecord.service_type}
+                    </div>
+                  </div>
+
+                  {/* 操作按鈕 */}
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => {
+                        console.log('📝 編輯按鈕被點擊:', selectedRecord)
+                        onEdit(selectedRecord)
+                        setShowRecordMenu(false)
+                        setSelectedRecord(null)
+                      }}
+                      className="btn-apple-primary flex-1"
+                    >
+                      編輯
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => {
+                        console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
+                        onDelete(selectedRecord.id)
+                        setShowRecordMenu(false)
+                        setSelectedRecord(null)
+                      }}
+                      className="flex-1 bg-red-500 text-white py-2.5 px-4 rounded-xl hover:bg-red-600 transition-all duration-300 font-medium"
+                    >
+                      刪除
+                    </button>
+                  </div>
+
+                  {/* 取消按鈕 */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      setShowRecordMenu(false)
+                      setSelectedRecord(null)
+                    }}
+                    className="btn-apple-secondary w-full mt-4"
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+        </>
       )}
     </div>
   )
