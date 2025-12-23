@@ -996,18 +996,15 @@ body {
   }
   
   /* === Critical Mobile Scrolling Fixes === */
-  
+
   /* Ensure all containers allow vertical scrolling */
   .min-h-screen,
   [class*="min-h-screen"] {
     min-height: 100vh;
     min-height: -webkit-fill-available;
-    height: auto !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-  
-  /* Fix drawer/modal scrolling on mobile */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }  /* Fix drawer/modal scrolling on mobile */
   .fixed.inset-0,
   [class*="fixed"][class*="inset-0"] {
     -webkit-overflow-scrolling: touch;
@@ -1063,13 +1060,20 @@ body {
     padding-bottom: 5rem !important;
   }
   
-  /* Better tap targets - only for interactive elements, not inside cards */
-  button:not(.forecast-card *),
-  [role="button"]:not(.forecast-card *) {
+  /* Better tap targets - only for primary action buttons and form inputs */
+  .btn-apple-primary,
+  .btn-apple-secondary {
     min-height: 44px;
   }
   
-  input, select, textarea {
+  /* Form inputs need minimum height for usability */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  textarea {
     min-height: 44px;
   }
   
