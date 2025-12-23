@@ -259,7 +259,7 @@ function ReportsCalendarView({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
         <span className="ml-3 text-text-secondary">載入月曆數據中...</span>
       </div>
     )
@@ -273,7 +273,7 @@ function ReportsCalendarView({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => navigateMonth('prev')}
-            className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+            className="p-2 sm:p-3 rounded-xl border border-border-light hover:bg-bg-secondary transition-all duration-300"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -286,7 +286,7 @@ function ReportsCalendarView({
 
           <button
             onClick={() => navigateMonth('next')}
-            className="p-2 sm:p-3 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+            className="p-2 sm:p-3 rounded-xl border border-border-light hover:bg-bg-secondary transition-all duration-300"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -295,13 +295,13 @@ function ReportsCalendarView({
         </div>
 
         {/* 視圖切換按鈕 */}
-        <div className="flex rounded-lg border border-border-light overflow-hidden">
+        <div className="flex rounded-xl border border-border-light overflow-hidden bg-bg-secondary/50 backdrop-blur-sm">
           <button
             onClick={() => setViewMode('cards')}
-            className={`px-3 py-2 text-sm transition-colors flex items-center space-x-1 ${
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
               viewMode === 'cards'
-                ? 'bg-mingcare-blue text-white'
-                : 'bg-white text-text-secondary hover:bg-bg-secondary'
+                ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/25'
+                : 'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,10 +311,10 @@ function ReportsCalendarView({
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`px-3 py-2 text-sm transition-colors flex items-center space-x-1 ${
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${
               viewMode === 'calendar'
-                ? 'bg-mingcare-blue text-white'
-                : 'bg-white text-text-secondary hover:bg-bg-secondary'
+                ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/25'
+                : 'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,15 +358,15 @@ function ReportsCalendarView({
               key={index}
               style={{ minHeight: `${minHeight}px`, overflow: 'visible' }}
               className={`
-                p-1 sm:p-2 border rounded-lg
+                p-1 sm:p-2 border rounded-xl
                 ${!isCurrentMonth ? 'bg-bg-secondary text-text-tertiary border-border-light' :
                   isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
-                ${isToday ? 'ring-1 sm:ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
+                ${isToday ? 'ring-1 sm:ring-2 ring-primary border-primary' : ''}
               `}
             >
               <div className={`
                 text-xs sm:text-sm font-bold mb-1 sm:mb-2
-                ${isToday ? 'text-mingcare-blue' :
+                ${isToday ? 'text-primary' :
                   isCurrentMonth ? 'text-text-primary' : 'text-text-tertiary'}
               `}>
                 {date.getDate()}
@@ -396,7 +396,7 @@ function ReportsCalendarView({
                           setSelectedRecord(record)
                           setShowRecordMenu(true)
                         }}
-                        className={`text-xs sm:text-sm border border-border-light rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'bg-white'}`}
+                        className={`text-xs sm:text-sm border border-border-light rounded p-1 sm:p-2 shadow-sm cursor-pointer hover:shadow-md hover:border-primary transition-all duration-300 relative overflow-visible ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'bg-white'}`}
                         data-updated={recordUpdateTimes?.[record.id] ? 'true' : 'false'}
                       >
                         {/* 方案1: 大字體更新標題 - 保證能看到 */}
@@ -450,7 +450,7 @@ function ReportsCalendarView({
 
                         setExpandedDates(newExpandedDates)
                       }}
-                      className="w-full text-sm text-mingcare-blue hover:text-blue-700 text-center py-1 rounded hover:bg-blue-50 transition-colors"
+                      className="w-full text-sm text-primary hover:text-blue-700 text-center py-1 rounded hover:bg-blue-50 transition-colors"
                     >
                       {expandedDates.has(formatDateSafely(date))
                         ? '收合記錄'
@@ -467,22 +467,22 @@ function ReportsCalendarView({
 
         {/* 記錄操作模態框 */}
         {showRecordMenu && selectedRecord && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
-              <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 fade-in-apple">
+            <div className="card-apple p-6 w-96 max-w-sm mx-4 shadow-2xl">
+              <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
               {/* 記錄詳情 */}
-              <div className="bg-bg-secondary rounded-lg p-3 mb-4">
-                <div className="text-sm text-text-secondary mb-1">
+              <div className="bg-bg-secondary/60 rounded-xl p-4 mb-5 border border-border-light">
+                <div className="text-sm text-text-secondary mb-1.5">
                   {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
                 </div>
-                <div className="font-medium text-text-primary">
+                <div className="font-semibold text-text-primary text-base">
                   {selectedRecord.customer_name}
                 </div>
-                <div className="text-sm text-text-secondary">
+                <div className="text-sm text-text-secondary mt-1">
                   護理員：{selectedRecord.care_staff_name}
                 </div>
-                <div className="text-sm text-blue-600">
+                <div className="text-sm text-primary font-medium mt-1">
                   {selectedRecord.service_type}
                 </div>
               </div>
@@ -496,7 +496,7 @@ function ReportsCalendarView({
                     setShowRecordMenu(false)
                     setSelectedRecord(null)
                   }}
-                  className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors"
+                  className="btn-apple-primary flex-1"
                 >
                   編輯
                 </button>
@@ -507,7 +507,7 @@ function ReportsCalendarView({
                     setShowRecordMenu(false)
                     setSelectedRecord(null)
                   }}
-                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium"
                 >
                   刪除
                 </button>
@@ -519,7 +519,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="w-full mt-3 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-lg hover:bg-border-light transition-colors"
+                className="btn-apple-secondary w-full mt-4"
               >
                 取消
               </button>
@@ -549,7 +549,7 @@ function ReportsCalendarView({
                   setSelectedRecord(record)
                   setShowRecordMenu(true)
                 }}
-                className={`bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-mingcare-blue transition-all duration-200 relative ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-1 ring-green-400' : 'border-border-light'}`}
+                className={`card-apple border p-5 shadow-sm cursor-pointer hover:shadow-lg hover:border-primary hover:-translate-y-0.5 transition-all duration-300 relative ${recordUpdateTimes?.[record.id] ? 'bg-green-50 border-green-300 ring-2 ring-green-400/30' : 'border-border-light'}`}
               >
                 {/* 30分鐘更新提示 */}
                 {(() => {
@@ -559,8 +559,8 @@ function ReportsCalendarView({
                   const label = diff < 1 ? '剛剛' : (diff === 1 ? '1分鐘前' : `${diff}分鐘前`)
                   console.log('🎯 渲染30分鐘提示:', { recordId: record.id, diff, label })
                   return (
-                    <div className="text-center mb-2 bg-green-600 text-white font-bold text-sm py-1 rounded">
-                      {label}更新
+                    <div className="text-center mb-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-xs py-1.5 rounded-lg shadow-sm">
+                      ✓ {label}更新
                     </div>
                   )
                 })()}
@@ -611,22 +611,22 @@ function ReportsCalendarView({
 
       {/* 記錄操作模態框 - 共用 */}
       {showRecordMenu && selectedRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-sm mx-4">
-            <h3 className="text-lg font-medium text-text-primary mb-4">選擇操作</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 fade-in-apple">
+          <div className="card-apple p-6 w-96 max-w-sm mx-4 shadow-2xl">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
             {/* 記錄詳情 */}
-            <div className="bg-bg-secondary rounded-lg p-3 mb-4">
-              <div className="text-sm text-text-secondary mb-1">
+            <div className="bg-bg-secondary/60 rounded-xl p-4 mb-5 border border-border-light">
+              <div className="text-sm text-text-secondary mb-1.5">
                 {selectedRecord.service_date} {selectedRecord.start_time}-{selectedRecord.end_time}
               </div>
-              <div className="font-medium text-text-primary">
+              <div className="font-semibold text-text-primary text-base">
                 {selectedRecord.customer_name}
               </div>
-              <div className="text-sm text-text-secondary">
+              <div className="text-sm text-text-secondary mt-1">
                 護理員：{selectedRecord.care_staff_name}
               </div>
-              <div className="text-sm text-blue-600">
+              <div className="text-sm text-primary font-medium mt-1">
                 {selectedRecord.service_type}
               </div>
             </div>
@@ -640,7 +640,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="flex-1 bg-mingcare-blue text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition-colors"
+                className="btn-apple-primary flex-1"
               >
                 編輯
               </button>
@@ -651,7 +651,7 @@ function ReportsCalendarView({
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
                 }}
-                className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium"
               >
                 刪除
               </button>
@@ -663,7 +663,7 @@ function ReportsCalendarView({
                 setShowRecordMenu(false)
                 setSelectedRecord(null)
               }}
-              className="w-full mt-3 bg-bg-tertiary text-text-secondary py-2 px-4 rounded-lg hover:bg-border-light transition-colors"
+              className="btn-apple-secondary w-full mt-4"
             >
               取消
             </button>
@@ -911,7 +911,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="border border-border-light rounded-lg p-4 animate-pulse">
+          <div key={i} className="border border-border-light rounded-xl p-4 animate-pulse">
             <div className="space-y-3">
               <div className="flex justify-between">
                 <div className="h-4 bg-bg-tertiary rounded w-1/4"></div>
@@ -938,7 +938,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         <p className="text-red-600 font-medium mb-2">{error}</p>
         <button
           onClick={loadRecords}
-          className="px-4 py-2 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-colors"
+          className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:bg-opacity-90 transition-colors"
         >
           重新載入
         </button>
@@ -972,9 +972,9 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
           {/* 按日期排序 */}
           <button
             onClick={() => handleSort('service_date')}
-            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'service_date'
-                ? 'bg-mingcare-blue text-white'
+                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -996,9 +996,9 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
           {/* 按客戶名稱排序 */}
           <button
             onClick={() => handleSort('customer_name')}
-            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_name'
-                ? 'bg-mingcare-blue text-white'
+                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -1021,9 +1021,9 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
           {/* 按客戶編號排序 */}
           <button
             onClick={() => handleSort('customer_id')}
-            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
               sortConfig.field === 'customer_id'
-                ? 'bg-mingcare-blue text-white'
+                ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
                 : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
             }`}
           >
@@ -1055,7 +1055,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
         {records && records.map((record) => (
           <div
             key={record.id}
-            className="border border-border-light rounded-lg p-3 sm:p-4 hover:shadow-md transition-all duration-200 bg-white"
+            className="border border-border-light rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-300 bg-white"
           >
             {/* 第1行：日期、所屬項目、操作按鈕 - 移動端垂直佈局 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-2 sm:space-y-0">
@@ -1071,7 +1071,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
                     console.log('🖱️ 編輯按鈕被點擊，記錄ID:', record.id)
                     handleEdit(record)
                   }}
-                  className="p-1.5 sm:p-2 text-mingcare-blue hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-primary hover:bg-blue-50 rounded-xl transition-colors"
                   title="編輯記錄"
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1083,7 +1083,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
                     console.log('🖱️ 刪除按鈕被點擊，記錄ID:', record.id)
                     handleDelete(record.id)
                   }}
-                  className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                   title="刪除記錄"
                 >
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1100,7 +1100,7 @@ function DetailedRecordsList({ filters, onRefresh }: DetailedRecordsListProps) {
                   {record.customer_name} ({record.customer_id})
                 </span>
               </div>
-              <span className="text-xs sm:text-sm bg-mingcare-blue text-white px-2 sm:px-3 py-1 rounded-full self-start sm:self-center">
+              <span className="text-xs sm:text-sm bg-gradient-to-r from-primary to-primary-dark text-white px-2 sm:px-3 py-1 rounded-full self-start sm:self-center">
                 {record.service_type}
               </span>
             </div>
@@ -1227,37 +1227,37 @@ function OverviewTab({
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => updateDateRange('thisMonth')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light bg-mingcare-blue text-white transition-all duration-200"
+                className="btn-apple-primary text-sm"
               >
                 本月
               </button>
               <button
                 onClick={() => updateDateRange('lastMonth')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary text-sm"
               >
                 上月
               </button>
               <button
                 onClick={() => updateDateRange('last3months')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary text-sm"
               >
                 最近3個月
               </button>
               <button
                 onClick={() => updateDateRange('last6months')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary text-sm"
               >
                 最近6個月
               </button>
               <button
                 onClick={() => updateDateRange('thisQuarter')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary text-sm"
               >
                 本季度
               </button>
               <button
                 onClick={() => updateDateRange('thisYear')}
-                className="px-4 py-2 text-sm rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary text-sm"
               >
                 本年度
               </button>
@@ -1267,7 +1267,7 @@ function OverviewTab({
           {/* 第二行：年月選擇器 */}
           <div className="flex items-center gap-4 mb-4">
             {/* 年月選擇器 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <select
                 value={filters.dateRange?.start ? (() => {
                   const [y] = filters.dateRange.start.split('-').map(Number)
@@ -1294,7 +1294,7 @@ function OverviewTab({
                     dateRange: { start, end }
                   }))
                 }}
-                className="px-3 py-2 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                className="form-input-apple pr-10 appearance-none cursor-pointer"
               >
                 {Array.from({ length: 5 }, (_, i) => {
                   const year = new Date().getFullYear() - 2 + i
@@ -1332,7 +1332,7 @@ function OverviewTab({
                     dateRange: { start, end }
                   }))
                 }}
-                className="px-3 py-2 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                className="px-3 py-2 text-sm border border-border-light rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i} value={i}>
@@ -1353,7 +1353,7 @@ function OverviewTab({
                 ...prev,
                 dateRange: { ...prev.dateRange, start: e.target.value }
               }))}
-              className="px-3 py-2 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+              className="px-3 py-2 text-sm border border-border-light rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             <span className="text-text-secondary">至</span>
             <input
@@ -1363,7 +1363,7 @@ function OverviewTab({
                 ...prev,
                 dateRange: { ...prev.dateRange, end: e.target.value }
               }))}
-              className="px-3 py-2 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+              className="px-3 py-2 text-sm border border-border-light rounded-xl bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
@@ -1377,7 +1377,7 @@ function OverviewTab({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {kpiLoading ? (
           <div className="col-span-full text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
             <p className="text-sm text-text-secondary mt-3">計算中...</p>
           </div>
         ) : kpiData ? (
@@ -1435,9 +1435,9 @@ function OverviewTab({
           {categorySummary && categorySummary.length > 0 ? (
             <div className="space-y-4">
               {categorySummary.map((summary, index) => (
-                <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-light">
+                <div key={summary.category} className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl border border-border-light">
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-mingcare-blue rounded-full mr-3"></div>
+                    <div className="w-3 h-3 bg-primary rounded-full mr-3"></div>
                     <div>
                       <h4 className="font-medium text-text-primary">{summary.category}</h4>
                       <p className="text-sm text-text-secondary">
@@ -1457,9 +1457,9 @@ function OverviewTab({
               ))}
 
               {/* 顯示總計 */}
-              <div className="flex items-center justify-between p-4 bg-mingcare-blue/10 rounded-lg border-2 border-mingcare-blue mt-6">
+              <div className="flex items-center justify-between p-4 bg-primary/10 rounded-xl border-2 border-primary mt-6">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-mingcare-blue rounded-full mr-3"></div>
+                  <div className="w-3 h-3 bg-primary rounded-full mr-3"></div>
                   <div>
                     <h4 className="font-bold text-text-primary">所有項目總計</h4>
                     <p className="text-sm text-text-secondary">
@@ -1468,7 +1468,7 @@ function OverviewTab({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-mingcare-blue">
+                  <div className="text-lg font-bold text-primary">
                     ${categorySummary.reduce((sum, s) => sum + s.totalFee, 0).toLocaleString()}
                   </div>
                   <div className="text-sm text-text-secondary">
@@ -1593,15 +1593,15 @@ function ScheduleSummaryView({
       <div>
         <h3 className="text-apple-heading text-text-primary mb-4">排班小結</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-mingcare-blue">{summary.totalCount}</div>
+          <div className="bg-blue-50 rounded-xl p-4">
+            <div className="text-2xl font-bold text-primary">{summary.totalCount}</div>
             <div className="text-sm text-text-secondary">總排班數</div>
           </div>
-          <div className="bg-green-50 rounded-lg p-4">
+          <div className="bg-green-50 rounded-xl p-4">
             <div className="text-2xl font-bold text-green-600">{summary.totalHours.toFixed(1)}</div>
             <div className="text-sm text-text-secondary">總時數</div>
           </div>
-          <div className="bg-orange-50 rounded-lg p-4">
+          <div className="bg-orange-50 rounded-xl p-4">
             <div className="text-2xl font-bold text-orange-600">${summary.totalFee.toFixed(2)}</div>
             <div className="text-sm text-text-secondary">總服務費用</div>
           </div>
@@ -1615,22 +1615,22 @@ function ScheduleSummaryView({
 
           {/* 總計卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="bg-purple-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-purple-600">{summary.totalCount}</div>
               <div className="text-sm text-text-secondary">總服務次數</div>
             </div>
-            <div className="bg-indigo-50 rounded-lg p-4">
+            <div className="bg-indigo-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-indigo-600">{summary.totalHours.toFixed(1)}</div>
               <div className="text-sm text-text-secondary">總服務時數</div>
             </div>
-            <div className="bg-pink-50 rounded-lg p-4">
+            <div className="bg-pink-50 rounded-xl p-4">
               <div className="text-2xl font-bold text-pink-600">${totalVoucherAmount.toFixed(2)}</div>
               <div className="text-sm text-text-secondary">總社區券金額</div>
             </div>
           </div>
 
           {/* 服務類型明細表格 */}
-          <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+          <div className="bg-white border border-border-light rounded-xl overflow-hidden">
             <table className="w-full">
               <thead className="bg-bg-secondary">
                 <tr>
@@ -1658,7 +1658,7 @@ function ScheduleSummaryView({
       ) : (
         <div>
           <h3 className="text-apple-heading text-text-primary mb-4">社區券機數統計（當前排班）</h3>
-          <div className="bg-bg-secondary rounded-lg p-6 text-center">
+          <div className="bg-bg-secondary rounded-xl p-6 text-center">
             <div className="text-text-secondary">
               <svg className="w-12 h-12 mx-auto mb-3 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1717,7 +1717,7 @@ function VoucherSummaryView({ filters, refreshTrigger }: { filters: BillingSalar
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
         <span className="ml-3 text-text-secondary">載入統計數據中...</span>
       </div>
     )
@@ -1745,22 +1745,22 @@ function VoucherSummaryView({ filters, refreshTrigger }: { filters: BillingSalar
 
       {/* 總計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-mingcare-blue">{voucherData.grandTotal.total_count}</div>
+        <div className="bg-blue-50 rounded-xl p-4">
+          <div className="text-2xl font-bold text-primary">{voucherData.grandTotal.total_count}</div>
           <div className="text-sm text-text-secondary">總服務次數</div>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
+        <div className="bg-green-50 rounded-xl p-4">
           <div className="text-2xl font-bold text-green-600">{voucherData.grandTotal.total_hours.toFixed(1)}</div>
           <div className="text-sm text-text-secondary">總服務時數</div>
         </div>
-        <div className="bg-orange-50 rounded-lg p-4">
+        <div className="bg-orange-50 rounded-xl p-4">
           <div className="text-2xl font-bold text-orange-600">${voucherData.grandTotal.total_amount.toFixed(2)}</div>
           <div className="text-sm text-text-secondary">總社區券金額</div>
         </div>
       </div>
 
       {/* 服務類型明細表格 */}
-      <div className="bg-white border border-border-light rounded-lg overflow-hidden">
+      <div className="bg-white border border-border-light rounded-xl overflow-hidden">
         <table className="w-full">
           <thead className="bg-bg-secondary">
             <tr>
@@ -2217,7 +2217,7 @@ function ScheduleTab({
                   <select
                     value={selectedCustomerFilter}
                     onChange={(e) => setSelectedCustomerFilter(e.target.value)}
-                    className="px-3 py-1 text-sm border border-border-light rounded-lg bg-bg-primary text-text-primary focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    className="form-input-apple pr-10 appearance-none cursor-pointer"
                   >
                     <option value="all">全部客戶</option>
                     {getLocalCustomerNames().map(customerName => (
@@ -2236,7 +2236,7 @@ function ScheduleTab({
               <button
                 onClick={onCalendarExport}
                 disabled={calendarExportLoading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="btn-apple-secondary bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 title="導出 PDF 日曆報表"
               >
                 {calendarExportLoading ? (
@@ -2276,9 +2276,9 @@ function ScheduleTab({
                   setSelectedDates([])
                   setSelectedDate(null)
                 }}
-                className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+                className={`px-4 py-2 rounded-xl border transition-all duration-300 ${
                   isMultiSelectMode
-                    ? 'bg-mingcare-blue text-white border-mingcare-blue'
+                    ? 'bg-gradient-to-r from-primary to-primary-dark text-white border-primary'
                     : 'border-border-light hover:bg-bg-secondary text-text-secondary'
                 }`}
               >
@@ -2290,7 +2290,7 @@ function ScheduleTab({
                   onClick={() => {
                     setShowAddModal(true)
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200"
+                  className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300"
                 >
                   確認排班
                 </button>
@@ -2301,9 +2301,9 @@ function ScheduleTab({
                 <button
                   onClick={handleSaveLocalSchedules}
                   disabled={formSubmitting}
-                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-xl transition-all duration-300 ${
                     formSubmitting
-                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      ? 'bg-text-tertiary text-white cursor-not-allowed'
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
@@ -2319,7 +2319,7 @@ function ScheduleTab({
           <div className="flex justify-between items-center mb-6">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-2 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              className="p-2 rounded-xl border border-border-light hover:bg-bg-secondary transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2332,7 +2332,7 @@ function ScheduleTab({
 
             <button
               onClick={() => navigateMonth('next')}
-              className="p-2 rounded-lg border border-border-light hover:bg-bg-secondary transition-all duration-200"
+              className="p-2 rounded-xl border border-border-light hover:bg-bg-secondary transition-all duration-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -2343,7 +2343,7 @@ function ScheduleTab({
           {/* 週標題 */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['週日', '週一', '週二', '週三', '週四', '週五', '週六'].map((day) => (
-              <div key={day} className="p-3 text-center text-sm font-medium text-text-secondary bg-bg-secondary rounded-lg">
+              <div key={day} className="p-3 text-center text-sm font-medium text-text-secondary bg-bg-secondary rounded-xl">
                 {day}
               </div>
             ))}
@@ -2374,18 +2374,18 @@ function ScheduleTab({
                   onClick={() => isCurrentMonth && handleDateClick(date)}
                   style={{ minHeight: `${minHeight}px` }}
                   className={`
-                    p-2 border-2 rounded-lg cursor-pointer
-                    transition-all duration-200 hover:shadow-md
+                    p-2 border-2 rounded-xl cursor-pointer
+                    transition-all duration-300 hover:shadow-md
                     ${!isCurrentMonth ? 'bg-bg-secondary text-text-tertiary border-border-light' :
                       isSelected ? 'bg-green-100 border-green-500 border-2' :
                       isWeekend ? 'bg-blue-50 border-blue-200' : 'bg-bg-primary border-border-light'}
-                    ${isToday ? 'ring-2 ring-mingcare-blue border-mingcare-blue' : ''}
-                    hover:border-mingcare-blue
+                    ${isToday ? 'ring-2 ring-primary border-primary' : ''}
+                    hover:border-primary
                   `}
                 >
                   <div className={`
                     text-lg font-bold mb-3 flex justify-between items-center
-                    ${isToday ? 'text-mingcare-blue' :
+                    ${isToday ? 'text-primary' :
                       isCurrentMonth ? 'text-text-primary' : 'text-text-tertiary'}
                   `}>
                     <span>{date.getDate()}</span>
@@ -2472,7 +2472,7 @@ function ScheduleTab({
               <span className="text-text-secondary">週末</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-mingcare-blue rounded"></div>
+              <div className="w-4 h-4 bg-primary rounded"></div>
               <span className="text-text-secondary">已安排服務</span>
             </div>
           </div>
@@ -2761,8 +2761,8 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
 
           {/* 第一行：日期區間 + 快捷按鈕 - 移動端優化 */}
           <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
-            <div className="flex items-center space-x-2 bg-white border border-border-light rounded-lg px-3 py-2 w-full sm:w-auto">
-              <svg className="w-4 h-4 text-text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center space-x-2 bg-bg-secondary/50 border border-border-light rounded-xl px-4 py-2.5 w-full sm:w-auto backdrop-blur-sm">
+              <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <input
@@ -2772,9 +2772,9 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   ...prev,
                   dateRange: { ...prev.dateRange, start: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-sm min-w-0 flex-1"
+                className="form-input-apple border-none bg-transparent text-sm min-w-0 flex-1 focus:ring-0"
               />
-              <span className="text-text-secondary">-</span>
+              <span className="text-text-secondary font-medium">→</span>
               <input
                 type="date"
                 value={filters.dateRange?.end || ''}
@@ -2782,7 +2782,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   ...prev,
                   dateRange: { ...prev.dateRange, end: e.target.value }
                 }))}
-                className="border-none outline-none bg-transparent text-sm min-w-0 flex-1"
+                className="form-input-apple border-none bg-transparent text-sm min-w-0 flex-1 focus:ring-0"
               />
             </div>
 
@@ -2795,14 +2795,14 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     dateRange: { start: today, end: today }
                   }))
                 }}
-                className="px-3 py-2 text-xs sm:text-sm border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200 whitespace-nowrap flex-1 sm:flex-none"
+                className="btn-apple-secondary text-xs sm:text-sm whitespace-nowrap flex-1 sm:flex-none"
               >
                 今日記錄
               </button>
 
               <button
                 onClick={() => updateDateRange('thisMonth')}
-                className="px-3 py-2 text-xs sm:text-sm border border-border-light rounded-lg bg-mingcare-blue text-white whitespace-nowrap flex-1 sm:flex-none"
+                className="btn-apple-primary text-xs sm:text-sm whitespace-nowrap flex-1 sm:flex-none"
               >
                 本月記錄
               </button>
@@ -2813,7 +2813,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 relative">
             <div className="relative z-20 overflow-visible">
               <div className="relative customer-search-container overflow-visible">
-                <svg className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <input
@@ -2841,13 +2841,13 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                       setShowCustomerSuggestions(false)
                     }, 150)
                   }}
-                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent text-xs sm:text-sm"
+                  className="form-input-apple w-full pl-10 sm:pl-12 pr-4"
                 />
 
                 {/* 客戶搜尋建議下拉選單 - 使用 Portal + 移動端優化 */}
                 {showCustomerSuggestions && typeof window !== 'undefined' && createPortal(
                   <div
-                    className="fixed bg-white border border-border-light rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[9999]"
+                    className="fixed bg-white border border-border-light rounded-xl shadow-2xl max-h-48 overflow-y-auto z-[9999]"
                     style={{
                       top: `${Math.min(dropdownPosition.top, window.innerHeight - 250)}px`,
                       left: `${Math.max(8, Math.min(dropdownPosition.left, window.innerWidth - dropdownPosition.width - 8))}px`,
@@ -2862,7 +2862,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   >
                     {customerSearchLoading ? (
                       <div className="p-3 text-center text-text-secondary">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-mingcare-blue border-t-transparent mx-auto"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mx-auto"></div>
                       </div>
                     ) : customerSuggestions && customerSuggestions.length > 0 ? (
                       customerSuggestions.map((customer, index) => (
@@ -2879,7 +2879,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                           <input
                             type="checkbox"
                             checked={selectedCustomers.some(c => c.customer_id === customer.customer_id)}
-                            className="mr-3 rounded border-border-light focus:ring-mingcare-blue pointer-events-none"
+                            className="mr-3 rounded border-border-light focus:ring-primary pointer-events-none"
                             readOnly
                           />
                           <div className="flex-1">
@@ -2906,7 +2906,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                   {selectedCustomers && selectedCustomers.map((customer) => (
                     <div
                       key={customer.customer_id}
-                      className="inline-flex items-center bg-mingcare-blue text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full"
+                      className="inline-flex items-center bg-gradient-to-r from-primary to-primary-dark text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full"
                     >
                       <span className="mr-1 sm:mr-2 truncate max-w-[120px] sm:max-w-none">
                         {customer.customer_name} ({customer.customer_id})
@@ -2928,17 +2928,17 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
             <div>
               <div className="relative project-category-dropdown">
                 <div
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent bg-white min-h-[44px] sm:min-h-[48px] cursor-pointer"
+                  className="form-input-apple w-full px-4 py-3 min-h-[48px] cursor-pointer flex items-center"
                   onClick={() => setIsProjectCategoryDropdownOpen(!isProjectCategoryDropdownOpen)}
                 >
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1.5 flex-1">
                     {selectedProjectCategories.length > 0 ? (
                       selectedProjectCategories.map(category => {
                         const option = PROJECT_CATEGORY_OPTIONS.find(opt => opt.value === category)
                         return (
                           <span
                             key={category}
-                            className="inline-flex items-center px-2 py-0.5 sm:py-1 bg-mingcare-blue/10 text-mingcare-blue text-xs sm:text-sm rounded-md"
+                            className="inline-flex items-center px-2.5 py-1 bg-primary/10 text-primary text-xs sm:text-sm rounded-xl font-medium"
                           >
                             <span className="truncate max-w-[80px] sm:max-w-none">{option?.label}</span>
                             <button
@@ -2957,7 +2957,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                                   }
                                 })
                               }}
-                              className="ml-1 text-mingcare-blue hover:text-red-600"
+                              className="ml-1.5 text-primary hover:text-red-500 transition-colors"
                             >
                               ×
                             </button>
@@ -2965,23 +2965,23 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         )
                       })
                     ) : (
-                      <span className="text-text-secondary text-xs sm:text-sm">選擇所屬項目（可多選）</span>
+                      <span className="text-text-tertiary text-sm">選擇所屬項目（可多選）</span>
                     )}
                   </div>
                 </div>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none transition-transform duration-200" style={{ transform: isProjectCategoryDropdownOpen ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
 
                 {isProjectCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-lg shadow-lg z-50 max-h-48 sm:max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-bg-primary border border-border-light rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto backdrop-blur-sm">
                     {PROJECT_CATEGORY_OPTIONS.map(option => {
                       const isSelected = selectedProjectCategories.includes(option.value)
                       return (
                         <div
                           key={option.value}
-                          className={`px-3 sm:px-4 py-2 sm:py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between text-xs sm:text-sm ${
-                            isSelected ? 'bg-mingcare-blue/5 text-mingcare-blue' : 'text-text-primary'
+                          className={`px-4 py-3 cursor-pointer hover:bg-bg-secondary flex items-center justify-between text-sm transition-all duration-300 ${
+                            isSelected ? 'bg-primary/5 text-primary' : 'text-text-primary'
                           }`}
                           onClick={() => {
                             setFilters(prev => {
@@ -3002,7 +3002,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                         >
                           <span className="truncate">{option.label}</span>
                           {isSelected && (
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-mingcare-blue flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 text-primary flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
@@ -3022,7 +3022,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     ...prev,
                     serviceType: e.target.value as ServiceType | undefined
                   }))}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                  className="form-input-apple w-full pr-10 appearance-none cursor-pointer"
                 >
                   <option value="">選擇服務類型</option>
                   {SERVICE_TYPE_OPTIONS.map(option => (
@@ -3031,7 +3031,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -3059,7 +3059,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     ...prev,
                     introducer: e.target.value as Introducer | undefined || undefined
                   }))}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border-light rounded-lg focus:ring-2 focus:ring-mingcare-blue focus:border-transparent appearance-none bg-white pr-8 sm:pr-10 text-xs sm:text-sm"
+                  className="form-input-apple w-full pr-10 appearance-none cursor-pointer"
                 >
                   <option value="">選擇介紹人</option>
                   {INTRODUCER_OPTIONS.map(option => (
@@ -3068,7 +3068,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
                     </option>
                   ))}
                 </select>
-                <svg className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -3088,7 +3088,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               <button
                 onClick={onCalendarExport}
                 disabled={calendarExportLoading}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                className="btn-apple-secondary bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
                 title="導出 PDF 日曆報表"
               >
                 {calendarExportLoading ? (
@@ -3110,7 +3110,7 @@ function ReportsTab({ filters, setFilters, updateDateRange, exportLoading, handl
               <button
                 onClick={handleExport}
                 disabled={exportLoading}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
+                className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs sm:text-sm"
               >
                 {exportLoading ? (
                   <>
@@ -5459,7 +5459,7 @@ export default function ServicesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mingcare-blue border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
           <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
         </div>
       </div>
@@ -5480,7 +5480,7 @@ export default function ServicesPage() {
               </div>
               <button
                 onClick={() => setShowStaffListPage(false)}
-                className="px-4 py-2 text-mingcare-blue border border-mingcare-blue rounded-lg hover:bg-mingcare-blue hover:text-white transition-all duration-200"
+                className="px-4 py-2 text-primary border border-primary rounded-xl hover:bg-primary hover:text-white transition-all duration-300"
               >
                 返回報表
               </button>
@@ -5498,10 +5498,10 @@ export default function ServicesPage() {
                   <button
                     onClick={downloadAllStaffPDFs}
                     disabled={Object.values(staffDownloadStatus).some(status => status === 'downloading')}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 ${
+                    className={`px-6 py-2 rounded-xl font-medium transition-all duration-300 flex items-center space-x-2 ${
                       Object.values(staffDownloadStatus).some(status => status === 'downloading')
                         ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
-                        : 'bg-mingcare-blue text-white hover:bg-primary-dark active:bg-primary-dark'
+                        : 'bg-gradient-to-r from-primary to-primary-dark text-white hover:bg-primary-dark active:bg-primary-dark'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5536,7 +5536,7 @@ export default function ServicesPage() {
                     const fileName = `${getStaffDisplayName(staff)} ${(filters.dateRange?.start || 'unknown').substring(0, 7)}工資明細`
 
                     return (
-                      <div key={staffKey} className="flex items-center justify-between p-4 border border-border-light rounded-lg">
+                      <div key={staffKey} className="flex items-center justify-between p-4 border border-border-light rounded-xl">
                         <div>
                           <h4 className="font-medium text-text-primary">{fileName}</h4>
                           <p className="text-sm text-text-secondary mt-1">
@@ -5548,7 +5548,7 @@ export default function ServicesPage() {
                           {isDownloaded ? (
                             <>
                               {/* 已下載狀態顯示 */}
-                              <div className="px-4 py-2 bg-green-100 text-green-700 border border-green-300 rounded-lg font-medium">
+                              <div className="px-4 py-2 bg-green-100 text-green-700 border border-green-300 rounded-xl font-medium">
                                 已成功下載
                               </div>
                               {/* 再次下載按鈕 */}
@@ -5579,7 +5579,7 @@ export default function ServicesPage() {
                                   }
                                 }}
                                 disabled={isDownloading}
-                                className="px-4 py-2 bg-blue-100 text-blue-700 border border-blue-300 rounded-lg font-medium hover:bg-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-blue-100 text-blue-700 border border-blue-300 rounded-xl font-medium hover:bg-blue-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 再次下載
                               </button>
@@ -5614,10 +5614,10 @@ export default function ServicesPage() {
                                 }
                               }}
                               disabled={isDownloading}
-                              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                              className={`px-6 py-2 rounded-xl font-medium transition-all duration-300 ${
                                 isDownloading
                                 ? 'bg-bg-tertiary text-text-secondary border border-border-medium cursor-not-allowed'
-                                : 'bg-mingcare-blue text-white hover:bg-primary-dark active:bg-primary-dark'
+                                : 'bg-gradient-to-r from-primary to-primary-dark text-white hover:bg-primary-dark active:bg-primary-dark'
                               }`}
                             >
                               {isDownloading ? '下載中...' : '下載'}
@@ -5664,17 +5664,17 @@ export default function ServicesPage() {
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <div className="card-apple border border-border-light fade-in-apple">
             <div className="p-3 sm:p-4">
-              <nav className="flex space-x-1 sm:space-x-2">
+              <nav className="flex space-x-2 sm:space-x-3 bg-bg-secondary/50 p-1.5 rounded-xl">
                 {/* 1. 詳細報表 */}
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                  className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'reports'
-                      ? 'bg-mingcare-blue text-white shadow-lg'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
                   }`}
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <span className="hidden sm:inline">詳細報表</span>
@@ -5684,13 +5684,13 @@ export default function ServicesPage() {
                 {/* 2. 排程管理 */}
                 <button
                   onClick={() => setActiveTab('schedule')}
-                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                  className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'schedule'
-                      ? 'bg-mingcare-blue text-white shadow-lg'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
                   }`}
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span className="hidden sm:inline">排程管理</span>
@@ -5700,13 +5700,13 @@ export default function ServicesPage() {
                 {/* 3. 業務概覽 */}
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                  className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 flex items-center justify-center space-x-1.5 sm:space-x-2 ${
                     activeTab === 'overview'
-                      ? 'bg-mingcare-blue text-white shadow-lg'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg shadow-primary/30'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary/70'
                   }`}
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                   <span className="hidden sm:inline">業務概覽</span>
@@ -5768,28 +5768,32 @@ export default function ServicesPage() {
 
       {/* 導出選項模態框 */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in-apple">
+          <div className="card-apple w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             {/* Header */}
-            <div className="p-6 border-b border-border-light flex-shrink-0">
-              <h3 className="text-lg font-medium text-text-primary">導出設定</h3>
+            <div className="p-6 border-b border-border-light flex-shrink-0 bg-bg-secondary/30">
+              <h3 className="text-lg font-semibold text-text-primary">導出設定</h3>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
               {/* 預設模式選擇 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-text-primary mb-3">預設模式</label>
+                <label className="block text-sm font-semibold text-text-primary mb-3">預設模式</label>
                 <div className="space-y-3">
                   {Object.entries(exportModeConfigs).map(([mode, config]) => (
-                    <label key={mode} className="flex items-start">
+                    <label key={mode} className={`flex items-start p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                      exportMode === mode 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border-light hover:border-primary/50 hover:bg-bg-secondary'
+                    }`}>
                       <input
                         type="radio"
                         name="exportMode"
                         value={mode}
                         checked={exportMode === mode}
                         onChange={(e) => handleExportModeChange(e.target.value as 'accounting' | 'payroll')}
-                        className="mr-3 mt-1"
+                        className="mr-3 mt-1 accent-primary"
                       />
                       <div>
                         <div className="font-medium text-text-primary">{config.name}</div>
@@ -5802,29 +5806,37 @@ export default function ServicesPage() {
 
               {/* 格式選擇 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-text-primary mb-3">導出格式</label>
-                <div className="space-y-2">
-                  <label className="flex items-center">
+                <label className="block text-sm font-semibold text-text-primary mb-3">導出格式</label>
+                <div className="flex space-x-3">
+                  <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                    exportFormat === 'pdf' 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border-light hover:border-primary/50'
+                  }`}>
                     <input
                       type="radio"
                       name="format"
                       value="pdf"
                       checked={exportFormat === 'pdf'}
                       onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
-                      className="mr-2"
+                      className="mr-2 accent-primary"
                     />
-                    <span>PDF</span>
+                    <span className="font-medium">PDF</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className={`flex-1 flex items-center justify-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                    exportFormat === 'csv' 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border-light hover:border-primary/50'
+                  }`}>
                     <input
                       type="radio"
                       name="format"
                       value="csv"
                       checked={exportFormat === 'csv'}
                       onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv')}
-                      className="mr-2"
+                      className="mr-2 accent-primary"
                     />
-                    <span>CSV</span>
+                    <span className="font-medium">CSV</span>
                   </label>
                 </div>
               </div>
@@ -5832,20 +5844,28 @@ export default function ServicesPage() {
               {/* 工資模式子選項 */}
               {exportMode === 'payroll' && exportFormat === 'pdf' && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-text-primary mb-3">工資導出方式</label>
+                  <label className="block text-sm font-semibold text-text-primary mb-3">工資導出方式</label>
                   <div className="space-y-2">
-                    <label className="flex items-center">
+                    <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                      payrollExportType === 'combined' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border-light hover:border-primary/50'
+                    }`}>
                       <input
                         type="radio"
                         name="payrollType"
                         value="combined"
                         checked={payrollExportType === 'combined'}
                         onChange={(e) => setPayrollExportType(e.target.value as 'separate' | 'combined')}
-                        className="mr-2"
+                        className="mr-2 accent-primary"
                       />
                       <span>合併報表 (一個PDF包含所有人員)</span>
                     </label>
-                    <label className="flex items-center">
+                    <label className={`flex items-center p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
+                      payrollExportType === 'separate' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border-light hover:border-primary/50'
+                    }`}>
                       <input
                         type="radio"
                         name="payrollType"
@@ -5868,7 +5888,7 @@ export default function ServicesPage() {
                     ({exportModeConfigs[exportMode].name} 預設配置，可自由調整)
                   </span>
                 </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-lg p-3 bg-bg-secondary">
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-xl p-3 bg-bg-secondary">
                   {Object.entries({
                     service_date: '服務日期',
                     customer_id: '客戶編號',
@@ -5902,9 +5922,9 @@ export default function ServicesPage() {
                           }}
                           className="mr-2"
                         />
-                        <span className={`text-sm ${isDefaultField ? 'font-medium text-mingcare-blue' : ''}`}>
+                        <span className={`text-sm ${isDefaultField ? 'font-medium text-primary' : ''}`}>
                           {label}
-                          {isDefaultField && <span className="text-xs text-mingcare-blue ml-1">(默認)</span>}
+                          {isDefaultField && <span className="text-xs text-primary ml-1">(默認)</span>}
                         </span>
                       </label>
                     )
@@ -5914,17 +5934,17 @@ export default function ServicesPage() {
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-6 border-t border-border-light flex justify-end space-x-3 flex-shrink-0">
+            <div className="p-6 border-t border-border-light flex justify-end space-x-3 flex-shrink-0 bg-bg-secondary/30">
               <button
                 onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 text-text-secondary border border-border-light rounded-lg hover:bg-bg-secondary transition-all duration-200"
+                className="btn-apple-secondary"
               >
                 取消
               </button>
               <button
                 onClick={handleExportConfirm}
                 disabled={Object.values(exportColumns).every(v => !v)}
-                className="px-4 py-2 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-apple-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 確認導出
               </button>
@@ -6327,7 +6347,7 @@ function ScheduleFormModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-bg-primary rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-bg-primary rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
@@ -6499,7 +6519,7 @@ function ScheduleFormModal({
 
                       {/* 客戶搜尋建議 */}
                       {showCustomerSuggestions && customerSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-xl shadow-lg max-h-48 overflow-y-auto">
                           {customerSuggestions.map((customer: CustomerSearchResult, index: number) => (
                             <div
                               key={customer.customer_id || index}
@@ -6630,7 +6650,7 @@ function ScheduleFormModal({
 
                     {/* 護理人員搜尋建議 */}
                     {showStaffSuggestions && staffSuggestions && staffSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-xl shadow-lg max-h-48 overflow-y-auto">
                         {staffSuggestions.map((staff, index) => (
                           <div
                             key={staff.staff_id || index}
@@ -6820,7 +6840,7 @@ function ScheduleFormModal({
                   </div>
 
                   {/* 第三行：本次利潤（突出顯示） */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                     <div className="flex justify-between items-center">
                       <label className="text-apple-body font-medium text-green-800">
                         本次利潤
@@ -6887,7 +6907,7 @@ function ScheduleFormModal({
                     }
                   }}
                   disabled={submitting}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
+                  className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-300 disabled:opacity-50"
                 >
                   {submitting ? '刪除中...' : '刪除'}
                 </button>
@@ -6899,7 +6919,7 @@ function ScheduleFormModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-text-secondary border border-border-light rounded-lg hover:bg-bg-primary transition-all duration-200"
+                className="px-4 py-2 text-text-secondary border border-border-light rounded-xl hover:bg-bg-primary transition-all duration-300"
                 disabled={submitting}
               >
                 取消
@@ -6908,7 +6928,7 @@ function ScheduleFormModal({
                 type="submit"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-4 py-2 bg-mingcare-blue text-white rounded-lg hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50"
+                className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl hover:bg-opacity-90 transition-all duration-300 disabled:opacity-50"
               >
                 {submitting ? '處理中...' : existingRecord ? '儲存修改' : (isMultipleDays ? '批量新增' : '新增排班')}
               </button>
@@ -6942,7 +6962,7 @@ function LocalScheduleEditModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-bg-primary rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
+      <div className="bg-bg-primary rounded-xl w-full max-w-md max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
@@ -6956,7 +6976,7 @@ function LocalScheduleEditModal({
         {/* Content */}
         <div className="p-6">
           {/* 排程詳情 */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
             <div className="text-sm text-text-secondary mb-2">
               <strong>日期：</strong> {schedule.service_date}
             </div>
@@ -6981,7 +7001,7 @@ function LocalScheduleEditModal({
           <div className="space-y-3">
             <button
               onClick={onEdit}
-              className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-primary-dark transition-colors text-left"
+              className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-primary-dark transition-colors text-left"
             >
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6997,7 +7017,7 @@ function LocalScheduleEditModal({
                   onDelete()
                 }
               }}
-              className="w-full px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-left"
+              className="w-full px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors text-left"
             >
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7013,7 +7033,7 @@ function LocalScheduleEditModal({
         <div className="p-6 border-t border-border-light bg-bg-secondary">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 text-text-secondary border border-border-light rounded-lg hover:bg-bg-primary transition-all duration-200"
+            className="w-full px-4 py-2 text-text-secondary border border-border-light rounded-xl hover:bg-bg-primary transition-all duration-300"
           >
             取消
           </button>
