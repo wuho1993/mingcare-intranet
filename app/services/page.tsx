@@ -467,8 +467,19 @@ function ReportsCalendarView({
 
         {/* 記錄操作模態框 */}
         {showRecordMenu && selectedRecord && (
-          <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="fixed inset-0 bg-black/50 z-[9999]" 
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowRecordMenu(false)
+                setSelectedRecord(null)
+              }
+            }}
+          >
+            <div 
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
               {/* 記錄詳情 */}
@@ -490,6 +501,8 @@ function ReportsCalendarView({
               {/* 操作按鈕 */}
               <div className="flex gap-3">
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     console.log('📝 編輯按鈕被點擊:', selectedRecord)
                     onEdit(selectedRecord)
@@ -501,6 +514,8 @@ function ReportsCalendarView({
                   編輯
                 </button>
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
                     onDelete(selectedRecord.id)
@@ -515,6 +530,8 @@ function ReportsCalendarView({
 
               {/* 取消按鈕 */}
               <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   setShowRecordMenu(false)
                   setSelectedRecord(null)
@@ -611,8 +628,19 @@ function ReportsCalendarView({
 
       {/* 記錄操作模態框 - 共用 */}
       {showRecordMenu && selectedRecord && (
-        <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 bg-black/50 z-[9999]" 
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowRecordMenu(false)
+              setSelectedRecord(null)
+            }
+          }}
+        >
+          <div 
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
             {/* 記錄詳情 */}
@@ -634,6 +662,8 @@ function ReportsCalendarView({
             {/* 操作按鈕 */}
             <div className="flex space-x-3">
               <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   console.log('📝 編輯按鈕被點擊:', selectedRecord)
                   onEdit(selectedRecord)
@@ -645,6 +675,8 @@ function ReportsCalendarView({
                 編輯
               </button>
               <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   console.log('🗑️ 刪除按鈕被點擊:', selectedRecord.id)
                   onDelete(selectedRecord.id)
@@ -659,6 +691,8 @@ function ReportsCalendarView({
 
             {/* 取消按鈕 */}
             <button
+              type="button"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={() => {
                 setShowRecordMenu(false)
                 setSelectedRecord(null)
