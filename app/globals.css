@@ -994,6 +994,90 @@ body {
     min-height: 100vh;
     height: auto;
   }
+  
+  /* === Critical Mobile Scrolling Fixes === */
+  
+  /* Ensure all containers allow vertical scrolling */
+  .min-h-screen,
+  [class*="min-h-screen"] {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Fix drawer/modal scrolling on mobile */
+  .fixed.inset-0,
+  [class*="fixed"][class*="inset-0"] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Tables should scroll horizontally */
+  table,
+  .table-container {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+  
+  /* Fix touch scrolling for all scrollable elements */
+  .overflow-y-auto,
+  .overflow-auto,
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+  
+  /* Ensure select dropdowns work properly */
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+  }
+  
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Fix sticky header height */
+  header.sticky {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  /* Ensure main content has bottom padding for floating buttons */
+  main {
+    padding-bottom: 5rem !important;
+  }
+  
+  /* Better tap targets */
+  a, button, [role="button"], input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Grid fixes for mobile */
+  .grid {
+    gap: 0.75rem;
+  }
+  
+  /* Card spacing on mobile */
+  .card-apple {
+    margin-bottom: 0.75rem;
+  }
 }
 
 /* Landscape mobile optimizations */

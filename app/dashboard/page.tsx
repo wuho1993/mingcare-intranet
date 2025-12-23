@@ -454,9 +454,9 @@ export default function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border-light bg-bg-primary/80 backdrop-blur-glass">
         <div className="max-w-screen-2xl mx-auto px-3 sm:px-6">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <div className="w-36 h-36 -my-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="w-16 h-16 sm:w-28 md:w-36 sm:h-28 md:h-36 -my-2 sm:-my-6 md:-my-8">
                 <Image
                   src={getAssetPath('images/mingcare-logo.png')}
                   alt="明家護理服務"

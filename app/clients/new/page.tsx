@@ -961,10 +961,10 @@ export default function NewCustomerPage() {
 
           {/* 第二階段：詳細表單 (條件顯示 + 滑下動畫) */}
           <div
-            className={`overflow-hidden transition-all duration-700 ease-in-out ${
+            className={`overflow-visible transition-all duration-700 ease-in-out ${
               formStage === 'expanded'
-                ? 'max-h-screen opacity-100 transform translate-y-0'
-                : 'max-h-0 opacity-0 transform -translate-y-4'
+                ? 'max-h-none opacity-100 transform translate-y-0'
+                : 'max-h-0 opacity-0 transform -translate-y-4 overflow-hidden'
             }`}
           >
             <div className="space-y-6 sm:space-y-8">
