@@ -37,12 +37,38 @@ type HkoWeatherSnapshot = {
   warnings: string[]
 }
 
+type HkoFndResponse = {
+  updateTime?: string
+  weatherForecast?: Array<{
+    forecastDate?: string
+    week?: string
+    forecastWeather?: string
+    forecastMaxtemp?: { value?: string; unit?: string }
+    forecastMintemp?: { value?: string; unit?: string }
+    forecastMaxrh?: { value?: string; unit?: string }
+    forecastMinrh?: { value?: string; unit?: string }
+    ForecastIcon?: number | string
+    PSR?: string
+  }>
+}
+
+type HkoForecastDay = {
+  dateLabel: string
+  weekLabel?: string
+  iconUrl?: string
+  weather?: string
+  minTemp?: string
+  maxTemp?: string
+  psr?: string
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [hkoStatus, setHkoStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [hkoWeather, setHkoWeather] = useState<HkoWeatherSnapshot | null>(null)
+  const [hkoForecast, setHkoForecast] = useState<HkoForecastDay[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -79,16 +105,48 @@ export default function Dashboard() {
       )
     }
 
+    const normalizeUnit = (unit?: string) => {
+      const u = (unit ?? '').trim().toLowerCase()
+      if (u === 'percent' || u === '%' || u === 'percentage') return '%'
+      if (u === 'c' || u === '°c') return '°C'
+      if (u === 'mm') return 'mm'
+      return unit ?? ''
+    }
+
+    const hkoForecastIconUrl = (icon?: number | string) => {
+      const raw = typeof icon === 'number' ? String(icon) : (icon ?? '').trim()
+      const n = Number(raw)
+      if (!Number.isFinite(n) || n <= 0) return undefined
+      return `https://www.hko.gov.hk/images/HKOWxIconOutline/pic${n}.png`
+    }
+
+    const formatYmd = (yyyymmdd?: string) => {
+      if (!yyyymmdd || yyyymmdd.length !== 8) return '—'
+      const y = Number(yyyymmdd.slice(0, 4))
+      const m = Number(yyyymmdd.slice(4, 6))
+      const d = Number(yyyymmdd.slice(6, 8))
+      if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '—'
+      const dt = new Date(y, m - 1, d)
+      return dt.toLocaleDateString('zh-HK', { month: 'numeric', day: 'numeric' })
+    }
+
     const fetchHko = async () => {
       try {
         setHkoStatus('loading')
-        const res = await fetch(
-          'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc',
-          { signal: controller.signal }
-        )
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const [rhrRes, fndRes] = await Promise.all([
+          fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc', {
+            signal: controller.signal,
+          }),
+          fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=tc', {
+            signal: controller.signal,
+          }),
+        ])
 
-        const json = (await res.json()) as HkoRhrreadResponse
+        if (!rhrRes.ok) throw new Error(`HKO rhrread HTTP ${rhrRes.status}`)
+        if (!fndRes.ok) throw new Error(`HKO fnd HTTP ${fndRes.status}`)
+
+        const json = (await rhrRes.json()) as HkoRhrreadResponse
+        const fndJson = (await fndRes.json()) as HkoFndResponse
 
         const temp = pickReading(json.temperature?.data)
         const humidity = pickReading(json.humidity?.data)
@@ -109,23 +167,40 @@ export default function Dashboard() {
         const snapshot: HkoWeatherSnapshot = {
           updatedAt: json.updateTime ?? json.temperature?.recordTime ?? json.humidity?.recordTime ?? json.rainfall?.endTime,
           temperature: temp
-            ? { place: temp.place ?? '—', value: temp.value ?? '—', unit: temp.unit ?? '' }
+            ? { place: temp.place ?? '—', value: temp.value ?? '—', unit: normalizeUnit(temp.unit) }
             : undefined,
           humidity: humidity
-            ? { place: humidity.place ?? '—', value: humidity.value ?? '—', unit: humidity.unit ?? '' }
+            ? { place: humidity.place ?? '—', value: humidity.value ?? '—', unit: normalizeUnit(humidity.unit) }
             : undefined,
           rainfall:
             rainfallRow && typeof rainfallValue === 'string'
               ? {
                   place: rainfallRow.place ?? '—',
                   value: rainfallValue,
-                  unit: rainfallRow.unit ?? rainfallRow.unit1 ?? 'mm',
+                  unit: normalizeUnit(rainfallRow.unit ?? rainfallRow.unit1 ?? 'mm'),
                 }
               : undefined,
           warnings,
         }
 
+        const forecastDays: HkoForecastDay[] = Array.isArray(fndJson.weatherForecast)
+          ? fndJson.weatherForecast.slice(0, 4).map((d) => {
+              const minUnit = normalizeUnit(d.forecastMintemp?.unit)
+              const maxUnit = normalizeUnit(d.forecastMaxtemp?.unit)
+              return {
+                dateLabel: formatYmd(d.forecastDate),
+                weekLabel: d.week,
+                iconUrl: hkoForecastIconUrl(d.ForecastIcon),
+                weather: d.forecastWeather,
+                minTemp: d.forecastMintemp?.value ? `${d.forecastMintemp.value}${minUnit}` : undefined,
+                maxTemp: d.forecastMaxtemp?.value ? `${d.forecastMaxtemp.value}${maxUnit}` : undefined,
+                psr: d.PSR,
+              }
+            })
+          : []
+
         setHkoWeather(snapshot)
+        setHkoForecast(forecastDays)
         setHkoStatus('ready')
       } catch (err) {
         if ((err as any)?.name === 'AbortError') return
@@ -311,6 +386,22 @@ export default function Dashboard() {
     })
   }
 
+  const formatHumidity = (value?: string, unit?: string) => {
+    if (!value) return '—'
+    const u = (unit ?? '').trim()
+    if (u === '%' || u.toLowerCase() === 'percent' || u.toLowerCase() === 'percentage') return `${value}%`
+    if (!u) return `${value}%`
+    return `${value}${u}`
+  }
+
+  const formatTemp = (value?: string, unit?: string) => {
+    if (!value) return '—'
+    const u = (unit ?? '').trim()
+    if (u === '°C' || u.toLowerCase() === 'c') return `${value}°C`
+    if (!u) return value
+    return `${value}${u}`
+  }
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* 背景光暈（不影響白底，但更有質感） */}
@@ -421,8 +512,17 @@ export default function Dashboard() {
           <div className="card-apple-content">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold text-text-primary">香港天文台</div>
-                <div className="text-xs text-text-tertiary">即時天氣（開放數據）</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center text-primary">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 014-4 5 5 0 019.8-1.2A4 4 0 1120 15H3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-text-primary">香港天文台</div>
+                    <div className="text-xs text-text-tertiary">即時天氣（開放數據）</div>
+                  </div>
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-xs text-text-tertiary">更新：{formatHkoUpdateTime(hkoWeather?.updatedAt)}</div>
@@ -449,26 +549,65 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">氣溫</div>
-                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
-                        {hkoWeather?.temperature ? `${hkoWeather.temperature.value}${hkoWeather.temperature.unit}` : '—'}
+                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
+                        {formatTemp(hkoWeather?.temperature?.value, hkoWeather?.temperature?.unit)}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.temperature?.place ?? ''}</div>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">濕度</div>
-                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
-                        {hkoWeather?.humidity ? `${hkoWeather.humidity.value}${hkoWeather.humidity.unit}` : '—'}
+                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
+                        {formatHumidity(hkoWeather?.humidity?.value, hkoWeather?.humidity?.unit)}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.humidity?.place ?? ''}</div>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
-                      <div className="mt-1 text-3xl font-semibold text-text-primary tabular-nums">
+                      <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
                         {hkoWeather?.rainfall ? `${hkoWeather.rainfall.value}${hkoWeather.rainfall.unit}` : '—'}
                       </div>
                       <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
                     </div>
                   </div>
+
+                  {hkoForecast.length > 0 && (
+                    <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold text-text-primary">未來天氣預報</div>
+                        <div className="text-xs text-text-tertiary">九天天氣預報（節錄）</div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {hkoForecast.map((d, idx) => (
+                          <div key={idx} className="rounded-2xl border border-border-light bg-bg-primary p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-text-tertiary">
+                                {d.weekLabel ? `${d.weekLabel} ` : ''}{d.dateLabel}
+                              </div>
+                              {d.iconUrl ? (
+                                <img
+                                  src={d.iconUrl}
+                                  alt={d.weather ?? '天氣圖示'}
+                                  className="w-8 h-8 object-contain"
+                                  loading="lazy"
+                                />
+                              ) : null}
+                            </div>
+
+                            <div className="mt-2 text-sm font-semibold text-text-primary line-clamp-2">{d.weather ?? '—'}</div>
+                            <div className="mt-2 flex items-end justify-between">
+                              <div className="text-sm text-text-secondary tabular-nums">
+                                {d.minTemp ?? '—'}
+                                <span className="text-text-tertiary"> / </span>
+                                {d.maxTemp ?? '—'}
+                              </div>
+                              <div className="text-xs text-text-tertiary">{d.psr ? `PSR ${d.psr}` : ''}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="lg:col-span-5">
