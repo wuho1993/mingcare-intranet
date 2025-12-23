@@ -1429,7 +1429,7 @@ export default function ClientsPage() {
                 <select
                   value={exportCustomerType}
                   onChange={(e) => setExportCustomerType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="all">全部客戶</option>
                   <option value="mingcare-street">明家街客</option>
@@ -1446,7 +1446,7 @@ export default function ClientsPage() {
                     type="month"
                     value={exportStartMonth}
                     onChange={(e) => setExportStartMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="2025-09"
                   />
                 </div>
@@ -1456,7 +1456,7 @@ export default function ClientsPage() {
                     type="month"
                     value={exportEndMonth}
                     onChange={(e) => setExportEndMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-mingcare-blue focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="2025-09"
                   />
                 </div>

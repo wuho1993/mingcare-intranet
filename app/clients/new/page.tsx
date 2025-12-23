@@ -895,7 +895,7 @@ export default function NewCustomerPage() {
                                   value="true"
                                   checked={formData.charity_support === true}
                                   onChange={(e) => updateFormData('charity_support', e.target.value === 'true')}
-                                  className="w-5 h-5 text-mingcare-blue focus:ring-mingcare-blue"
+                                  className="w-5 h-5 text-mingcare-blue focus:ring-primary"
                                 />
                                 <span className="ml-3 text-base">是</span>
                               </label>
@@ -906,7 +906,7 @@ export default function NewCustomerPage() {
                                   value="false"
                                   checked={formData.charity_support === false}
                                   onChange={(e) => updateFormData('charity_support', e.target.value === 'false')}
-                                  className="w-5 h-5 text-mingcare-blue focus:ring-mingcare-blue"
+                                  className="w-5 h-5 text-mingcare-blue focus:ring-primary"
                                 />
                                 <span className="ml-3 text-base">否</span>
                               </label>

@@ -467,8 +467,8 @@ function ReportsCalendarView({
 
         {/* 記錄操作模態框 */}
         {showRecordMenu && selectedRecord && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
               {/* 記錄詳情 */}
@@ -611,8 +611,8 @@ function ReportsCalendarView({
 
       {/* 記錄操作模態框 - 共用 */}
       {showRecordMenu && selectedRecord && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
-          <div className="card-apple p-6 w-full max-w-sm shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => { setShowRecordMenu(false); setSelectedRecord(null); }}>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple p-6 w-[calc(100%-2rem)] max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-text-primary mb-4">選擇操作</h3>
 
             {/* 記錄詳情 */}
@@ -5775,8 +5775,8 @@ export default function ServicesPage() {
 
       {/* 導出選項模態框 */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-          <div className="card-apple w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={() => setShowExportModal(false)}>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 card-apple w-[calc(100%-2rem)] max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="p-6 border-b border-border-light flex-shrink-0 bg-bg-secondary/30">
               <h3 className="text-lg font-semibold text-text-primary">導出設定</h3>
@@ -6353,8 +6353,8 @@ function ScheduleFormModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
-      <div className="bg-bg-primary rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={onClose}>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-bg-primary rounded-xl w-[calc(100%-2rem)] max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">
@@ -6968,8 +6968,8 @@ function LocalScheduleEditModal({
   if (!isOpen || !schedule) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4">
-      <div className="bg-bg-primary rounded-xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 z-[9999]" onClick={onClose}>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-bg-primary rounded-xl w-[calc(100%-2rem)] max-w-md max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-6 border-b border-border-light">
           <h3 className="text-lg font-medium text-text-primary">

@@ -1653,7 +1653,7 @@ export default function CareStaffPage() {
                               <input
                                 type="checkbox"
                                 defaultChecked={editingStaff.job_position?.includes(position)}
-                                className="rounded border-border-light text-mingcare-blue focus:ring-mingcare-blue mr-2"
+                                className="rounded border-border-light text-mingcare-blue focus:ring-primary mr-2"
                               />
                               <span className="text-sm text-text-secondary">{position}</span>
                             </label>
@@ -1689,7 +1689,7 @@ export default function CareStaffPage() {
                                     language: newLanguages
                                   })
                                 }}
-                                className="rounded border-border-light text-mingcare-blue focus:ring-mingcare-blue mr-2"
+                                className="rounded border-border-light text-mingcare-blue focus:ring-primary mr-2"
                               />
                               <span className="text-sm text-text-secondary">{language}</span>
                             </label>
