@@ -162,10 +162,10 @@ export default function Dashboard() {
           rainfallRow?.min ??
           rainfallRow?.min1
 
-        const warnings = Array.isArray(json.warningMessage)
+        const warnings: string[] = Array.isArray(json.warningMessage)
           ? json.warningMessage.filter((m) => typeof m === 'string' && m.trim().length > 0)
-          : typeof json.warningMessage === 'string' && json.warningMessage.trim().length > 0
-            ? [json.warningMessage]
+          : typeof json.warningMessage === 'string' && (json.warningMessage as string).trim().length > 0
+            ? [json.warningMessage as string]
             : []
 
         const snapshot: HkoWeatherSnapshot = {
