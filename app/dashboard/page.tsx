@@ -71,6 +71,14 @@ export default function Dashboard() {
   const [hkoForecast, setHkoForecast] = useState<HkoForecastDay[]>([])
   const [expandedForecastIndex, setExpandedForecastIndex] = useState<number | null>(null)
   const [expandedWarningIndex, setExpandedWarningIndex] = useState<number | null>(null)
+  const [allHkoData, setAllHkoData] = useState<{
+    temperature: Array<{ place: string; value: string; unit: string }>
+    humidity: Array<{ place: string; value: string; unit: string }>
+    rainfall: Array<{ place: string; value: string; unit: string }>
+  } | null>(null)
+  const [selectedTempPlace, setSelectedTempPlace] = useState<string>('京士柏')
+  const [selectedHumidityPlace, setSelectedHumidityPlace] = useState<string>('香港天文台')
+  const [selectedRainfallPlace, setSelectedRainfallPlace] = useState<string>('九龍城')
   const router = useRouter()
 
   useEffect(() => {
@@ -149,6 +157,26 @@ export default function Dashboard() {
 
         const json = (await rhrRes.json()) as HkoRhrreadResponse
         const fndJson = (await fndRes.json()) as HkoFndResponse
+
+        // Store all location data for picker
+        const allTempData = (json.temperature?.data ?? [])
+          .filter((d) => d.place && d.value)
+          .map((d) => ({ place: d.place!, value: d.value!, unit: normalizeUnit(d.unit) }))
+        const allHumidityData = (json.humidity?.data ?? [])
+          .filter((d) => d.place && d.value)
+          .map((d) => ({ place: d.place!, value: d.value!, unit: normalizeUnit(d.unit) }))
+        const allRainfallData = (json.rainfall?.data ?? [])
+          .filter((d) => d.place)
+          .map((d) => {
+            const val = d.max ?? d.max1 ?? d.value ?? d.value1 ?? d.min ?? d.min1 ?? '0'
+            return { place: d.place!, value: String(val), unit: normalizeUnit(d.unit ?? d.unit1 ?? 'mm') }
+          })
+
+        setAllHkoData({
+          temperature: allTempData,
+          humidity: allHumidityData,
+          rainfall: allRainfallData,
+        })
 
         const temp = pickReading(json.temperature?.data)
         const humidity = pickReading(json.humidity?.data)
@@ -544,25 +572,56 @@ export default function Dashboard() {
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">氣溫</div>
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
-                        {formatTemp(hkoWeather?.temperature?.value, hkoWeather?.temperature?.unit)}
+                        {formatTemp(
+                          allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
+                          allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
+                        )}
                       </div>
-                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.temperature?.place ?? ''}</div>
+                      <select
+                        value={selectedTempPlace}
+                        onChange={(e) => setSelectedTempPlace(e.target.value)}
+                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                      >
+                        {allHkoData?.temperature.map((d) => (
+                          <option key={d.place} value={d.place}>{d.place}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">濕度</div>
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
-                        {formatHumidity(hkoWeather?.humidity?.value, hkoWeather?.humidity?.unit)}
+                        {formatHumidity(
+                          allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.value ?? hkoWeather?.humidity?.value,
+                          allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.unit ?? hkoWeather?.humidity?.unit
+                        )}
                       </div>
-                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.humidity?.place ?? ''}</div>
+                      <select
+                        value={selectedHumidityPlace}
+                        onChange={(e) => setSelectedHumidityPlace(e.target.value)}
+                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                      >
+                        {allHkoData?.humidity.map((d) => (
+                          <option key={d.place} value={d.place}>{d.place}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
                       <div className="text-xs text-text-tertiary">過去 1 小時雨量</div>
                       <div className="mt-1 text-4xl font-semibold text-text-primary tabular-nums">
-                        {hkoWeather?.rainfall
-                          ? formatRainfall(hkoWeather.rainfall.value, hkoWeather.rainfall.unit)
-                          : '0mm'}
+                        {formatRainfall(
+                          allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
+                          allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
+                        )}
                       </div>
-                      <div className="mt-1 text-xs text-text-tertiary truncate">{hkoWeather?.rainfall?.place ?? ''}</div>
+                      <select
+                        value={selectedRainfallPlace}
+                        onChange={(e) => setSelectedRainfallPlace(e.target.value)}
+                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                      >
+                        {allHkoData?.rainfall.map((d) => (
+                          <option key={d.place} value={d.place}>{d.place}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
