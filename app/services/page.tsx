@@ -6207,9 +6207,9 @@ function ScheduleFormModal({
     if (!data.service_address.trim()) errors.service_address = '服務地址不能為空'
     if (!data.care_staff_name.trim()) errors.care_staff_name = '護理人員不能為空'
     if (!data.staff_id?.trim()) errors.staff_id = '請透過搜尋選擇護理人員'
-    if (data.service_fee < 0) errors.service_fee = '服務費用不能為負數'
-    if (data.staff_salary < 0) errors.staff_salary = '員工薪資不能為負數'
-    if (data.service_hours < 0) errors.service_hours = '服務時數不能為負數'
+    if (data.service_fee == null || data.service_fee < 0) errors.service_fee = '服務費用不能為空或負數'
+    if (data.staff_salary == null || data.staff_salary < 0) errors.staff_salary = '員工薪資不能為空或負數'
+    if (data.service_hours == null || data.service_hours < 0) errors.service_hours = '服務時數不能為空或負數'
     if (!data.service_type) errors.service_type = '請選擇服務類型'
     if (!data.project_category) errors.project_category = '請選擇項目分類'
     if (!data.project_manager) errors.project_manager = '請選擇項目負責人'
@@ -6825,8 +6825,9 @@ function ScheduleFormModal({
                     </label>
                     <input
                       type="number"
-                      value={formData.service_hours ?? ''}
-                      onChange={(e) => updateField('service_hours', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                      value={formData.service_hours === 0 ? '0' : formData.service_hours || ''}
+                      onChange={(e) => updateField('service_hours', e.target.value === '' ? null : parseFloat(e.target.value))}
+                      onBlur={(e) => { if (e.target.value === '') updateField('service_hours', 0); }}
                       className={`form-input-apple w-full ${errors.service_hours ? 'border-danger' : ''}`}
                       placeholder="請輸入服務時數"
                       step="0.5"
@@ -6858,8 +6859,9 @@ function ScheduleFormModal({
                       </label>
                       <input
                         type="number"
-                        value={formData.service_fee ?? ''}
-                        onChange={(e) => updateField('service_fee', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                        value={formData.service_fee === 0 ? '0' : formData.service_fee || ''}
+                        onChange={(e) => updateField('service_fee', e.target.value === '' ? null : parseFloat(e.target.value))}
+                        onBlur={(e) => { if (e.target.value === '') updateField('service_fee', 0); }}
                         className={`form-input-apple w-full ${errors.service_fee ? 'border-danger' : ''}`}
                         placeholder="請輸入服務費用"
                         min="0"
@@ -6877,8 +6879,9 @@ function ScheduleFormModal({
                       </label>
                       <input
                         type="number"
-                        value={formData.staff_salary ?? ''}
-                        onChange={(e) => updateField('staff_salary', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                        value={formData.staff_salary === 0 ? '0' : formData.staff_salary || ''}
+                        onChange={(e) => updateField('staff_salary', e.target.value === '' ? null : parseFloat(e.target.value))}
+                        onBlur={(e) => { if (e.target.value === '') updateField('staff_salary', 0); }}
                         className={`form-input-apple w-full ${errors.staff_salary ? 'border-danger' : ''}`}
                         placeholder="請輸入員工薪資"
                         min="0"
