@@ -6822,13 +6822,12 @@ function ScheduleFormModal({
                     </label>
                     <input
                       type="number"
-                      value={formData.service_hours || ''}
-                      onChange={(e) => updateField('service_hours', parseFloat(e.target.value) || 0)}
+                      value={formData.service_hours ?? ''}
+                      onChange={(e) => updateField('service_hours', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                       className={`form-input-apple w-full ${errors.service_hours ? 'border-danger' : ''}`}
                       placeholder="請輸入服務時數"
                       step="0.5"
                       min="0"
-                      required
                     />
                     {errors.service_hours && (
                       <p className="text-apple-caption text-danger mt-1">{errors.service_hours}</p>
@@ -6856,13 +6855,12 @@ function ScheduleFormModal({
                       </label>
                       <input
                         type="number"
-                        value={formData.service_fee || ''}
-                        onChange={(e) => updateField('service_fee', parseFloat(e.target.value) || 0)}
+                        value={formData.service_fee ?? ''}
+                        onChange={(e) => updateField('service_fee', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                         className={`form-input-apple w-full ${errors.service_fee ? 'border-danger' : ''}`}
                         placeholder="請輸入服務費用"
                         min="0"
                         step="0.01"
-                        required
                       />
                       {errors.service_fee && (
                         <p className="text-apple-caption text-danger mt-1">{errors.service_fee}</p>
@@ -6876,14 +6874,12 @@ function ScheduleFormModal({
                       </label>
                       <input
                         type="number"
-                        value={formData.staff_salary || ''}
-                        onChange={(e) => updateField('staff_salary', parseFloat(e.target.value) || 0)}
+                        value={formData.staff_salary ?? ''}
+                        onChange={(e) => updateField('staff_salary', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                         className={`form-input-apple w-full ${errors.staff_salary ? 'border-danger' : ''}`}
                         placeholder="請輸入員工薪資"
                         min="0"
-                        max={formData.service_fee || undefined}
                         step="0.01"
-                        required
                       />
                       {errors.staff_salary && (
                         <p className="text-apple-caption text-danger mt-1">{errors.staff_salary}</p>
