@@ -59,6 +59,10 @@ export type ServiceType =
   | '新員工培訓課師'
   | '社區活動'
   | '認知障礙訓練'
+  | '介紹人獎金(一)'
+  | '介紹人獎金(二)'
+  | '介紹人獎金(三)'
+  | '介紹人獎金(四)'
 
 export type ProjectCategory = 
   | 'MC社區券(醫點）'
