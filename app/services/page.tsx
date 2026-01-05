@@ -2029,7 +2029,8 @@ function ScheduleTab({
 
     } catch (error) {
       console.error('儲存本地排程失敗:', error)
-      alert('儲存排程時發生錯誤，請稍後再試')
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+      alert(`儲存排程時發生錯誤: ${errorMessage}`)
     } finally {
       setFormSubmitting(false)
     }
@@ -6272,6 +6273,8 @@ function ScheduleFormModal({
       onClose()
     } catch (error) {
       console.error('提交表單失敗:', error)
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+      alert(`提交表單失敗: ${errorMessage}`)
     } finally {
       setSubmitting(false)
     }
