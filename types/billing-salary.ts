@@ -248,7 +248,11 @@ export const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: '外傭培訓服務', label: '外傭培訓服務' },
   { value: '新員工培訓課師', label: '新員工培訓課師' },
   { value: '社區活動', label: '社區活動' },
-  { value: '認知障礙訓練', label: '認知障礙訓練' }
+  { value: '認知障礙訓練', label: '認知障礙訓練' },
+  { value: '介紹人獎金(一)', label: '介紹人獎金(一)' },
+  { value: '介紹人獎金(二)', label: '介紹人獎金(二)' },
+  { value: '介紹人獎金(三)', label: '介紹人獎金(三)' },
+  { value: '介紹人獎金(四)', label: '介紹人獎金(四)' }
 ]
 
 export const PROJECT_CATEGORY_OPTIONS: { value: ProjectCategory; label: string }[] = [
