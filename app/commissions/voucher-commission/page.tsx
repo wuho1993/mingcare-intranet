@@ -175,6 +175,14 @@ export default function VoucherCommissionPage() {
           introducer: customerIntroducerMap.get(record.customer_id) || ''
         }))
         .filter((record: ExtendedBillingRecord) => {
+          // 過濾掉 MC街客 類型
+          const category = record.project_category || ''
+          if (category.includes('MC街客')) {
+            return false
+          }
+          return true
+        })
+        .filter((record: ExtendedBillingRecord) => {
           // 過濾有介紹人且有設定社區券佣金的
           const introducer = record.introducer
           const commRate = commissionRates.find(r => r.introducer === introducer)
@@ -188,6 +196,40 @@ export default function VoucherCommissionPage() {
           return true
         })
 
+      // 服務類型到社區券費率的映射函數
+      const getVoucherRate = (category: string): number => {
+        // MC社區券(醫點）-> NC-護理服務(專業人員) 945/h
+        if (category.includes('醫點') || category.includes('NC') || category.includes('護理')) {
+          return 945
+        }
+        // 復康運動專業人員
+        if (category.includes('RT') && category.includes('專業')) {
+          return 982
+        }
+        // 復康運動輔助人員/OTA
+        if (category.includes('RT') || category.includes('復康') || category.includes('OTA')) {
+          return 248
+        }
+        // 到戶看顧
+        if (category.includes('PC') || category.includes('看顧')) {
+          return 248
+        }
+        // 家居服務
+        if (category.includes('HC') || category.includes('家居')) {
+          return 150
+        }
+        // 護送服務/陪診
+        if (category.includes('ES') || category.includes('護送') || category.includes('陪診')) {
+          return 150
+        }
+        // 社區券通用
+        if (category.includes('社區券')) {
+          return 248  // 預設用輔助人員費率
+        }
+        // 俊佳等其他類型，用實際服務費計算
+        return 0
+      }
+
       // 按客戶和服務類型分組計算
       const groupedData = new Map<string, VoucherCommissionSummary>()
       
@@ -195,18 +237,15 @@ export default function VoucherCommissionPage() {
         const key = `${record.customer_id}-${record.project_category || 'unknown'}-${record.introducer}`
         const existing = groupedData.get(key)
         
-        // 找到對應的社區券費率
-        const voucherRate = voucherRates.find(v => {
-          const category = record.project_category || ''
-          // 匹配服務類型前綴
-          return v.service_type.startsWith(category.substring(0, 2))
-        })
+        // 使用映射函數獲取社區券費率
+        const rate = getVoucherRate(record.project_category || '')
+        // 如果沒有匹配的費率，使用實際服務費 / 服務時數
+        const effectiveRate = rate > 0 ? rate : (record.service_hours > 0 ? record.service_fee / record.service_hours : 0)
         
         // 找到介紹人的佣金百分比
         const commRate = commissionRates.find(r => r.introducer === record.introducer)
         const commissionPercentage = commRate?.voucher_commission_percentage || 0
         
-        const rate = voucherRate?.service_rate || 0
         const hours = record.service_hours || 0
         
         if (existing) {
@@ -214,13 +253,13 @@ export default function VoucherCommissionPage() {
           existing.voucher_total = Math.round(existing.total_hours * existing.voucher_rate * 100) / 100
           existing.commission_amount = Math.round(existing.voucher_total * existing.commission_percentage / 100 * 100) / 100
         } else {
-          const voucher_total = Math.round(hours * rate * 100) / 100
+          const voucher_total = Math.round(hours * effectiveRate * 100) / 100
           groupedData.set(key, {
             customer_id: record.customer_id,
             customer_name: record.customer_name || '',
             service_type: record.project_category || '未分類',
             total_hours: hours,
-            voucher_rate: rate,
+            voucher_rate: effectiveRate,
             voucher_total: voucher_total,
             commission_percentage: commissionPercentage,
             commission_amount: Math.round(voucher_total * commissionPercentage / 100 * 100) / 100
