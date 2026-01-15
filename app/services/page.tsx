@@ -1602,7 +1602,8 @@ function ScheduleSummaryView({
 
         serviceTypeStats[serviceType].count += 1
         serviceTypeStats[serviceType].total_hours += hours
-        serviceTypeStats[serviceType].total_amount += hours * rate
+        // 使用 Math.round 修復浮點數精度問題
+        serviceTypeStats[serviceType].total_amount += Math.round(hours * rate * 100) / 100
       })
 
       const result = Object.entries(serviceTypeStats).map(([serviceType, stats]) => ({
@@ -1968,6 +1969,10 @@ function ScheduleTab({
       // 將篩選後的本地排程直接儲存到 Supabase
       for (const [dateStr, daySchedules] of Object.entries(filteredSchedules)) {
         for (const schedule of daySchedules) {
+          // 使用 Math.round 修復浮點數精度問題
+          const calcHourlyRate = schedule.hourly_rate || (schedule.service_hours > 0 ? Math.round(((schedule.service_fee || 0) / schedule.service_hours) * 100) / 100 : 0)
+          const calcHourlySalary = schedule.hourly_salary || (schedule.service_hours > 0 ? Math.round(((schedule.staff_salary || 0) / schedule.service_hours) * 100) / 100 : 0)
+          
           const supabaseData = {
             customer_id: schedule.customer_id,
             staff_id: schedule.staff_id,
@@ -1977,13 +1982,13 @@ function ScheduleTab({
             end_time: schedule.end_time,
             service_type: schedule.service_type,
             service_address: schedule.service_address,
-            hourly_rate: schedule.hourly_rate || (schedule.service_hours > 0 ? (schedule.service_fee || 0) / schedule.service_hours : 0),
-            service_fee: schedule.service_fee,
-            staff_salary: schedule.staff_salary,
+            hourly_rate: calcHourlyRate,
+            service_fee: Math.round((schedule.service_fee || 0) * 100) / 100,
+            staff_salary: Math.round((schedule.staff_salary || 0) * 100) / 100,
             phone: schedule.phone,
             customer_name: schedule.customer_name,
             service_hours: schedule.service_hours,
-            hourly_salary: schedule.hourly_salary || (schedule.service_hours > 0 ? (schedule.staff_salary || 0) / schedule.service_hours : 0),
+            hourly_salary: calcHourlySalary,
             project_category: schedule.project_category,
             project_manager: schedule.project_manager
           }
@@ -6307,10 +6312,11 @@ function ScheduleFormModal({
       }
 
       // 自動計算每小時收費和時薪薪資（僅用於顯示）
+      // 使用 Math.round 修復浮點數精度問題，避免出現 139.99 這類數值
       if (field === 'service_fee' || field === 'staff_salary' || field === 'service_hours') {
         if (updated.service_hours > 0) {
-          updated.hourly_rate = (updated.service_fee || 0) / updated.service_hours
-          updated.hourly_salary = (updated.staff_salary || 0) / updated.service_hours
+          updated.hourly_rate = Math.round(((updated.service_fee || 0) / updated.service_hours) * 100) / 100
+          updated.hourly_salary = Math.round(((updated.staff_salary || 0) / updated.service_hours) * 100) / 100
         }
       }
 

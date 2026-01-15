@@ -1,0 +1,613 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '../../../lib/supabase'
+
+interface VoucherRate {
+  service_type: string
+  service_rate: number
+}
+
+interface CommissionRate {
+  id?: string
+  introducer: string
+  first_month_commission: number
+  subsequent_month_commission: number
+  voucher_commission_percentage?: number | null
+}
+
+interface ServiceRecord {
+  id: string
+  customer_id: string
+  customer_name: string
+  service_date: string
+  service_hours: number
+  service_fee: number
+  project_category: string
+  introducer: string
+}
+
+interface VoucherCommissionSummary {
+  customer_id: string
+  customer_name: string
+  service_type: string
+  total_hours: number
+  voucher_rate: number
+  voucher_total: number
+  commission_percentage: number
+  commission_amount: number
+}
+
+export default function VoucherCommissionPage() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [voucherRates, setVoucherRates] = useState<VoucherRate[]>([])
+  const [commissionRates, setCommissionRates] = useState<CommissionRate[]>([])
+  const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([])
+  const [selectedIntroducer, setSelectedIntroducer] = useState<string>('all')
+  const [introducerList, setIntroducerList] = useState<string[]>([])
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [summaryData, setSummaryData] = useState<VoucherCommissionSummary[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  // 設定預設日期範圍（當月）
+  useEffect(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    
+    setStartDate(firstDay.toISOString().split('T')[0])
+    setEndDate(lastDay.toISOString().split('T')[0])
+  }, [])
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (user) {
+        setUser(user)
+        await fetchData()
+      } else {
+        router.push('/')
+      }
+      setLoading(false)
+    }
+
+    getUser()
+  }, [router])
+
+  const fetchData = async () => {
+    try {
+      setError(null)
+      
+      // 獲取社區券費率
+      const { data: rates, error: ratesError } = await supabase
+        .from('voucher_rate')
+        .select('*')
+      
+      if (ratesError) throw ratesError
+      if (rates) setVoucherRates(rates)
+
+      // 獲取佣金費率
+      const { data: commRates, error: commError } = await supabase
+        .from('commission_rate_introducer')
+        .select('*')
+      
+      if (commError) throw commError
+      if (commRates) {
+        setCommissionRates(commRates as CommissionRate[])
+        // 過濾出有設定社區券佣金百分比的介紹人
+        const validIntroducers = (commRates as CommissionRate[])
+          .filter((r: CommissionRate) => r.voucher_commission_percentage && r.voucher_commission_percentage > 0)
+          .map((r: CommissionRate) => r.introducer)
+        setIntroducerList(validIntroducers)
+      }
+
+    } catch (err) {
+      console.error('獲取數據失敗:', err)
+      setError('獲取數據失敗')
+    }
+  }
+
+  const calculateCommission = async () => {
+    if (!startDate || !endDate) {
+      alert('請選擇日期範圍')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // 獲取指定日期範圍的服務記錄
+      const { data: billing, error: billingError } = await supabase
+        .from('billing_salary_data')
+        .select(`
+          id,
+          customer_id,
+          customer_name,
+          service_date,
+          service_hours,
+          service_fee,
+          project_category
+        `)
+        .gte('service_date', startDate)
+        .lte('service_date', endDate)
+
+      if (billingError) throw billingError
+
+      // 獲取客戶的介紹人信息
+      const { data: customers, error: custError } = await supabase
+        .from('customer_personal_data')
+        .select('customer_id, introducer')
+
+      if (custError) throw custError
+
+      // 建立客戶->介紹人映射
+      const customerIntroducerMap = new Map<string, string>()
+      customers?.forEach((c: { customer_id: string; introducer: string | null }) => {
+        if (c.introducer) {
+          customerIntroducerMap.set(c.customer_id, c.introducer)
+        }
+      })
+
+      interface BillingRecord {
+        id: string
+        customer_id: string
+        customer_name: string
+        service_date: string
+        service_hours: number
+        service_fee: number
+        project_category: string
+      }
+
+      interface ExtendedBillingRecord extends BillingRecord {
+        introducer: string
+      }
+
+      // 過濾並計算
+      const filteredRecords: ExtendedBillingRecord[] = ((billing || []) as BillingRecord[])
+        .map((record: BillingRecord) => ({
+          ...record,
+          introducer: customerIntroducerMap.get(record.customer_id) || ''
+        }))
+        .filter((record: ExtendedBillingRecord) => {
+          // 過濾有介紹人且有設定社區券佣金的
+          const introducer = record.introducer
+          const commRate = commissionRates.find(r => r.introducer === introducer)
+          return commRate && commRate.voucher_commission_percentage && commRate.voucher_commission_percentage > 0
+        })
+        .filter((record: ExtendedBillingRecord) => {
+          // 如果選擇了特定介紹人，只顯示該介紹人的
+          if (selectedIntroducer !== 'all') {
+            return record.introducer === selectedIntroducer
+          }
+          return true
+        })
+
+      // 按客戶和服務類型分組計算
+      const groupedData = new Map<string, VoucherCommissionSummary>()
+      
+      filteredRecords.forEach((record: ExtendedBillingRecord) => {
+        const key = `${record.customer_id}-${record.project_category || 'unknown'}-${record.introducer}`
+        const existing = groupedData.get(key)
+        
+        // 找到對應的社區券費率
+        const voucherRate = voucherRates.find(v => {
+          const category = record.project_category || ''
+          // 匹配服務類型前綴
+          return v.service_type.startsWith(category.substring(0, 2))
+        })
+        
+        // 找到介紹人的佣金百分比
+        const commRate = commissionRates.find(r => r.introducer === record.introducer)
+        const commissionPercentage = commRate?.voucher_commission_percentage || 0
+        
+        const rate = voucherRate?.service_rate || 0
+        const hours = record.service_hours || 0
+        
+        if (existing) {
+          existing.total_hours += hours
+          existing.voucher_total = Math.round(existing.total_hours * existing.voucher_rate * 100) / 100
+          existing.commission_amount = Math.round(existing.voucher_total * existing.commission_percentage / 100 * 100) / 100
+        } else {
+          const voucher_total = Math.round(hours * rate * 100) / 100
+          groupedData.set(key, {
+            customer_id: record.customer_id,
+            customer_name: record.customer_name || '',
+            service_type: record.project_category || '未分類',
+            total_hours: hours,
+            voucher_rate: rate,
+            voucher_total: voucher_total,
+            commission_percentage: commissionPercentage,
+            commission_amount: Math.round(voucher_total * commissionPercentage / 100 * 100) / 100
+          })
+        }
+      })
+
+      setSummaryData(Array.from(groupedData.values()))
+      setServiceRecords(filteredRecords)
+
+    } catch (err) {
+      console.error('計算失敗:', err)
+      setError('計算失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 計算總計
+  const totalVoucherAmount = summaryData.reduce((sum, item) => sum + item.voucher_total, 0)
+  const totalCommission = summaryData.reduce((sum, item) => sum + item.commission_amount, 0)
+  const totalHours = summaryData.reduce((sum, item) => sum + item.total_hours, 0)
+
+  // 按介紹人分組
+  const groupByIntroducer = () => {
+    const groups = new Map<string, VoucherCommissionSummary[]>()
+    const customerIntroducerMap = new Map<string, string>()
+    
+    // 從 serviceRecords 建立映射
+    serviceRecords.forEach(record => {
+      if (record.introducer) {
+        customerIntroducerMap.set(record.customer_id, record.introducer)
+      }
+    })
+    
+    summaryData.forEach(item => {
+      const introducer = customerIntroducerMap.get(item.customer_id) || '未知'
+      if (!groups.has(introducer)) {
+        groups.set(introducer, [])
+      }
+      groups.get(introducer)!.push(item)
+    })
+    
+    return groups
+  }
+
+  const introducerGroups = groupByIntroducer()
+
+  // PDF 導出功能
+  const generatePDF = () => {
+    try {
+      // 創建打印用的 HTML
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>社區券介紹人佣金報表</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+            h1 { text-align: center; font-size: 18px; margin-bottom: 10px; }
+            h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; }
+            .info { text-align: center; color: #666; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f5f5f7; font-weight: bold; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .summary-row { background-color: #f0f0f0; font-weight: bold; }
+            .total-section { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; }
+            .total-section h3 { margin: 0 0 10px 0; }
+            .total-row { display: flex; justify-content: space-between; margin: 5px 0; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>明護專業護理服務 - 社區券介紹人佣金報表</h1>
+          <div class="info">
+            日期範圍：${startDate} 至 ${endDate}
+            ${selectedIntroducer !== 'all' ? ` | 介紹人：${selectedIntroducer}` : ''}
+          </div>
+          
+          ${Array.from(introducerGroups.entries()).map(([introducer, items]) => {
+            const groupTotal = items.reduce((sum, item) => sum + item.voucher_total, 0)
+            const groupCommission = items.reduce((sum, item) => sum + item.commission_amount, 0)
+            const commRate = commissionRates.find(r => r.introducer === introducer)
+            return `
+              <h2>介紹人：${introducer} (佣金比例: ${commRate?.voucher_commission_percentage || 0}%)</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>客戶編號</th>
+                    <th>客戶姓名</th>
+                    <th>服務類型</th>
+                    <th class="text-right">服務時數</th>
+                    <th class="text-right">社區券費率</th>
+                    <th class="text-right">社區券金額</th>
+                    <th class="text-right">佣金金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map(item => `
+                    <tr>
+                      <td>${item.customer_id}</td>
+                      <td>${item.customer_name}</td>
+                      <td>${item.service_type}</td>
+                      <td class="text-right">${item.total_hours.toFixed(1)}</td>
+                      <td class="text-right">$${item.voucher_rate}</td>
+                      <td class="text-right">$${item.voucher_total.toLocaleString()}</td>
+                      <td class="text-right">$${item.commission_amount.toLocaleString()}</td>
+                    </tr>
+                  `).join('')}
+                  <tr class="summary-row">
+                    <td colspan="5">小計</td>
+                    <td class="text-right">$${groupTotal.toLocaleString()}</td>
+                    <td class="text-right">$${groupCommission.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            `
+          }).join('')}
+          
+          <div class="total-section">
+            <h3>總計</h3>
+            <div class="total-row">
+              <span>總服務時數：</span>
+              <span>${totalHours.toFixed(1)} 小時</span>
+            </div>
+            <div class="total-row">
+              <span>社區券總金額：</span>
+              <span>$${totalVoucherAmount.toLocaleString()}</span>
+            </div>
+            <div class="total-row" style="font-size: 16px; font-weight: bold; color: #2e7d32;">
+              <span>應付佣金總額：</span>
+              <span>$${totalCommission.toLocaleString()}</span>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; text-align: center; color: #999; font-size: 10px;">
+            生成時間：${new Date().toLocaleString('zh-TW')}
+          </div>
+        </body>
+        </html>
+      `
+
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(printContent)
+        printWindow.document.close()
+        printWindow.onload = () => {
+          printWindow.print()
+        }
+      }
+    } catch (err) {
+      console.error('生成 PDF 失敗:', err)
+      alert('生成 PDF 失敗')
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toLocaleString()}`
+  }
+
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="loading-spinner mx-auto mb-4"></div>
+          <p className="text-text-secondary">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-bg-primary">
+      {/* Header */}
+      <header className="bg-bg-primary/80 backdrop-blur-apple border-b border-border-light sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <button
+                onClick={() => router.push('/commissions')}
+                className="mr-4 text-text-secondary hover:text-text-primary transition-colors"
+              >
+                ← 返回
+              </button>
+              <h1 className="text-xl font-semibold text-text-primary">社區券介紹人佣金報表</h1>
+            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn-apple-secondary text-sm"
+            >
+              返回主頁
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* 篩選條件 */}
+        <div className="card-apple mb-6">
+          <div className="card-apple-content">
+            <h2 className="text-lg font-semibold text-text-primary mb-4">查詢條件</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">開始日期</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="form-input-apple w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">結束日期</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="form-input-apple w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">介紹人</label>
+                <select
+                  value={selectedIntroducer}
+                  onChange={(e) => setSelectedIntroducer(e.target.value)}
+                  className="form-input-apple w-full"
+                >
+                  <option value="all">全部</option>
+                  {introducerList.map(intro => (
+                    <option key={intro} value={intro}>{intro}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={calculateCommission}
+                  disabled={loading}
+                  className="btn-apple-primary w-full"
+                >
+                  {loading ? '計算中...' : '計算佣金'}
+                </button>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={generatePDF}
+                  disabled={summaryData.length === 0}
+                  className="btn-apple-primary w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                >
+                  📄 導出PDF
+                </button>
+              </div>
+            </div>
+            
+            {introducerList.length === 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                <p>⚠️ 目前沒有設定社區券佣金百分比的介紹人。請到「佣金總覽」頁面點擊「⚙️ 佣金設定」設定介紹人的社區券佣金百分比。</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 總覽統計 */}
+        {summaryData.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="card-apple">
+              <div className="card-apple-content text-center py-4">
+                <h3 className="text-sm font-medium text-text-secondary mb-2">總服務時數</h3>
+                <p className="text-xl font-bold text-primary">{totalHours.toFixed(1)} 小時</p>
+              </div>
+            </div>
+            <div className="card-apple">
+              <div className="card-apple-content text-center py-4">
+                <h3 className="text-sm font-medium text-text-secondary mb-2">社區券總金額</h3>
+                <p className="text-xl font-bold text-blue-600">{formatCurrency(totalVoucherAmount)}</p>
+              </div>
+            </div>
+            <div className="card-apple">
+              <div className="card-apple-content text-center py-4">
+                <h3 className="text-sm font-medium text-text-secondary mb-2">應付佣金總額</h3>
+                <p className="text-xl font-bold text-mingcare-green">{formatCurrency(totalCommission)}</p>
+              </div>
+            </div>
+            <div className="card-apple">
+              <div className="card-apple-content text-center py-4">
+                <h3 className="text-sm font-medium text-text-secondary mb-2">介紹人數量</h3>
+                <p className="text-xl font-bold text-mingcare-purple">{introducerGroups.size}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 按介紹人分組顯示 */}
+        {Array.from(introducerGroups.entries()).map(([introducer, items]) => {
+          const groupTotal = items.reduce((sum, item) => sum + item.voucher_total, 0)
+          const groupCommission = items.reduce((sum, item) => sum + item.commission_amount, 0)
+          const groupHours = items.reduce((sum, item) => sum + item.total_hours, 0)
+          const commRate = commissionRates.find(r => r.introducer === introducer)
+
+          return (
+            <div key={introducer} className="card-apple mb-6">
+              <div className="bg-bg-secondary px-6 py-4 border-b border-border-light rounded-t-apple">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-lg font-semibold text-text-primary">
+                      介紹人：{introducer}
+                    </h2>
+                    <div className="text-sm text-text-secondary mt-1">
+                      <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded mr-2">
+                        佣金比例: {commRate?.voucher_commission_percentage || 0}%
+                      </span>
+                      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        服務時數: {groupHours.toFixed(1)}h
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-mingcare-green">
+                      佣金：{formatCurrency(groupCommission)}
+                    </p>
+                    <p className="text-sm text-text-secondary">
+                      社區券：{formatCurrency(groupTotal)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-bg-secondary">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶編號</th>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶姓名</th>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">服務類型</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">服務時數</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">社區券費率</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">社區券金額</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">佣金金額</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-light">
+                    {items.map((item, index) => (
+                      <tr key={`${item.customer_id}-${item.service_type}-${index}`} className="hover:bg-bg-secondary transition-colors">
+                        <td className="px-4 py-3 text-text-primary">{item.customer_id}</td>
+                        <td className="px-4 py-3 text-text-primary">{item.customer_name}</td>
+                        <td className="px-4 py-3 text-text-secondary">{item.service_type}</td>
+                        <td className="px-4 py-3 text-right text-text-secondary">{item.total_hours.toFixed(1)}h</td>
+                        <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(item.voucher_rate)}/h</td>
+                        <td className="px-4 py-3 text-right text-blue-600 font-medium">{formatCurrency(item.voucher_total)}</td>
+                        <td className="px-4 py-3 text-right text-mingcare-green font-semibold">{formatCurrency(item.commission_amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        })}
+
+        {/* 無數據提示 */}
+        {summaryData.length === 0 && !loading && (
+          <div className="card-apple">
+            <div className="card-apple-content text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-bg-tertiary rounded-full flex items-center justify-center mb-4">
+                <svg className="h-8 w-8 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">請選擇日期範圍並計算</h3>
+              <p className="text-text-secondary">選擇開始和結束日期，然後點擊「計算佣金」按鈕</p>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="card-apple bg-red-50 border-red-200">
+            <div className="card-apple-content text-center py-6">
+              <p className="text-red-600">{error}</p>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}

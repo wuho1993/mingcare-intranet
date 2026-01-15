@@ -1358,7 +1358,7 @@ export async function calculateVoucherSummary(
       current.total_hours += hours
     })
 
-    // 計算費用
+    // 計算費用 - 使用 Math.round 修復浮點數精度問題
     const serviceTypeSummary = Array.from(serviceTypeMap.entries()).map(([serviceType, stats]) => {
       const rate = rateMap.get(serviceType) || 0
       return {
@@ -1366,15 +1366,15 @@ export async function calculateVoucherSummary(
         count: stats.count,
         total_hours: stats.total_hours,
         total_rate: rate,
-        total_amount: stats.total_hours * rate
+        total_amount: Math.round(stats.total_hours * rate * 100) / 100
       }
     }).sort((a, b) => a.service_type.localeCompare(b.service_type))
 
-    // 計算總計
+    // 計算總計 - 使用 Math.round 確保精度
     const grandTotal = {
       total_count: serviceTypeSummary.reduce((sum, item) => sum + item.count, 0),
-      total_hours: serviceTypeSummary.reduce((sum, item) => sum + item.total_hours, 0),
-      total_amount: serviceTypeSummary.reduce((sum, item) => sum + item.total_amount, 0)
+      total_hours: Math.round(serviceTypeSummary.reduce((sum, item) => sum + item.total_hours, 0) * 100) / 100,
+      total_amount: Math.round(serviceTypeSummary.reduce((sum, item) => sum + item.total_amount, 0) * 100) / 100
     }
 
     return {

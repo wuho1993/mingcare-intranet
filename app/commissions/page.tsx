@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
 interface CommissionRate {
+  id?: string
   introducer: string
   first_month_commission: number
   subsequent_month_commission: number
+  voucher_commission_percentage?: number | null
 }
 
 interface CustomerData {
@@ -66,6 +68,10 @@ export default function CommissionsPage() {
   const [selectedIntroducer, setSelectedIntroducer] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
+  const [showRateSettings, setShowRateSettings] = useState(false)
+  const [editingRates, setEditingRates] = useState<CommissionRate[]>([])
+  const [savingRates, setSavingRates] = useState(false)
+  const [allIntroducers, setAllIntroducers] = useState<string[]>([])
   const router = useRouter()
 
   // PDF生成函數
@@ -755,6 +761,20 @@ export default function CommissionsPage() {
 
       if (customerError) throw customerError
 
+      // 獲取所有介紹人列表（用於佣金設定）
+      const { data: allCustomers } = await supabase
+        .from('customer_personal_data')
+        .select('introducer')
+        .not('introducer', 'is', null)
+      
+      if (allCustomers) {
+        const introducerSet = new Set<string>()
+        allCustomers.forEach((c: { introducer: string | null }) => {
+          if (c.introducer) introducerSet.add(c.introducer)
+        })
+        setAllIntroducers(Array.from(introducerSet).sort())
+      }
+
       // 獲取所有記錄，使用分頁避免超時
       let allBillingData: any[] = []
       let from = 0
@@ -1133,12 +1153,20 @@ export default function CommissionsPage() {
               <p className="text-xs sm:text-sm text-text-secondary hidden md:block">計算業務佣金、獎金及績效獎勵</p>
               <p className="text-xs text-orange-600 mt-1">達標：月費 ≥ $6,000</p>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="btn-apple-secondary text-xs px-2 sm:px-3 py-2 ml-2 sm:ml-3 flex-shrink-0"
-            >
-              返回
-            </button>
+            <div className="flex gap-2 ml-2 sm:ml-3 flex-shrink-0">
+              <button
+                onClick={() => router.push('/commissions/voucher-commission')}
+                className="btn-apple-primary text-xs px-2 sm:px-3 py-2 bg-purple-600 hover:bg-purple-700"
+              >
+                📊 社區券佣金
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="btn-apple-secondary text-xs px-2 sm:px-3 py-2"
+              >
+                返回
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1220,10 +1248,183 @@ export default function CommissionsPage() {
                 >
                   📄 導出PDF
                 </button>
+                <button
+                  onClick={() => {
+                    // 準備編輯數據：合併現有費率和所有介紹人
+                    const ratesMap = new Map(commissionRatesData.map(r => [r.introducer, r]))
+                    const allRates = allIntroducers.map(intro => 
+                      ratesMap.get(intro) || {
+                        introducer: intro,
+                        first_month_commission: 0,
+                        subsequent_month_commission: 0,
+                        voucher_commission_percentage: null
+                      }
+                    )
+                    setEditingRates(allRates)
+                    setShowRateSettings(true)
+                  }}
+                  className="btn-apple-secondary col-span-2 sm:col-span-1 sm:flex-1 text-xs sm:text-sm py-2 sm:py-3"
+                >
+                  ⚙️ 佣金設定
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* 佣金費率設定面板 */}
+        {showRateSettings && (
+          <div className="card-apple mb-6 fade-in-apple">
+            <div className="bg-bg-secondary px-4 sm:px-6 py-4 border-b border-border-light rounded-t-apple flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-text-primary">介紹人佣金費率設定</h2>
+              <button
+                onClick={() => setShowRateSettings(false)}
+                className="text-text-secondary hover:text-text-primary"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-bg-secondary">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">介紹人</th>
+                      <th className="px-4 py-3 text-center font-medium text-text-secondary">首月佣金 ($)</th>
+                      <th className="px-4 py-3 text-center font-medium text-text-secondary">後續月份佣金 ($)</th>
+                      <th className="px-4 py-3 text-center font-medium text-text-secondary">社區券佣金 (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-light">
+                    {editingRates.map((rate, index) => (
+                      <tr key={rate.introducer} className="hover:bg-bg-secondary transition-colors">
+                        <td className="px-4 py-3 font-medium text-text-primary">{rate.introducer}</td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="number"
+                            value={rate.first_month_commission || 0}
+                            onChange={(e) => {
+                              const newRates = [...editingRates]
+                              newRates[index].first_month_commission = parseFloat(e.target.value) || 0
+                              setEditingRates(newRates)
+                            }}
+                            className="form-input-apple w-24 text-center text-sm"
+                            min="0"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="number"
+                            value={rate.subsequent_month_commission || 0}
+                            onChange={(e) => {
+                              const newRates = [...editingRates]
+                              newRates[index].subsequent_month_commission = parseFloat(e.target.value) || 0
+                              setEditingRates(newRates)
+                            }}
+                            className="form-input-apple w-24 text-center text-sm"
+                            min="0"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="number"
+                            value={rate.voucher_commission_percentage || ''}
+                            onChange={(e) => {
+                              const newRates = [...editingRates]
+                              newRates[index].voucher_commission_percentage = e.target.value ? parseFloat(e.target.value) : null
+                              setEditingRates(newRates)
+                            }}
+                            className="form-input-apple w-24 text-center text-sm"
+                            placeholder="不設定"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowRateSettings(false)}
+                  className="btn-apple-secondary text-sm py-2 px-4"
+                  disabled={savingRates}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={async () => {
+                    setSavingRates(true)
+                    try {
+                      // 先刪除所有現有記錄，再重新插入
+                      for (const rate of editingRates) {
+                        if (rate.first_month_commission > 0 || rate.subsequent_month_commission > 0 || rate.voucher_commission_percentage) {
+                          const { error } = await supabase
+                            .from('commission_rate_introducer')
+                            .upsert({
+                              introducer: rate.introducer,
+                              first_month_commission: rate.first_month_commission,
+                              subsequent_month_commission: rate.subsequent_month_commission,
+                              voucher_commission_percentage: rate.voucher_commission_percentage
+                            }, { onConflict: 'introducer' })
+                          if (error) {
+                            // 如果沒有 unique constraint，嘗試更新或插入
+                            const { data: existing } = await supabase
+                              .from('commission_rate_introducer')
+                              .select('id')
+                              .eq('introducer', rate.introducer)
+                              .single()
+                            
+                            if (existing) {
+                              await supabase
+                                .from('commission_rate_introducer')
+                                .update({
+                                  first_month_commission: rate.first_month_commission,
+                                  subsequent_month_commission: rate.subsequent_month_commission,
+                                  voucher_commission_percentage: rate.voucher_commission_percentage
+                                })
+                                .eq('introducer', rate.introducer)
+                            } else {
+                              await supabase
+                                .from('commission_rate_introducer')
+                                .insert({
+                                  introducer: rate.introducer,
+                                  first_month_commission: rate.first_month_commission,
+                                  subsequent_month_commission: rate.subsequent_month_commission,
+                                  voucher_commission_percentage: rate.voucher_commission_percentage
+                                })
+                            }
+                          }
+                        }
+                      }
+                      alert('佣金費率已保存！')
+                      setShowRateSettings(false)
+                      await fetchCommissionData()
+                    } catch (err) {
+                      console.error('保存失敗:', err)
+                      alert('保存失敗，請重試')
+                    } finally {
+                      setSavingRates(false)
+                    }
+                  }}
+                  className="btn-apple-primary text-sm py-2 px-4"
+                  disabled={savingRates}
+                >
+                  {savingRates ? '保存中...' : '保存設定'}
+                </button>
+              </div>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <p><strong>說明：</strong></p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li><strong>首月/後續月份佣金：</strong>固定金額佣金（$800, $700 等）</li>
+                  <li><strong>社區券佣金 (%)：</strong>按社區券費率計算的百分比佣金（例如 15% = 服務費 × 15%）</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 總覽統計 - 移動端優化 */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
