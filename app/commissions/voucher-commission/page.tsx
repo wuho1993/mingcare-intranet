@@ -28,6 +28,20 @@ interface ServiceRecord {
   introducer: string
 }
 
+interface VoucherCommissionDetail {
+  id: string
+  customer_id: string
+  customer_name: string
+  service_date: string
+  service_type: string
+  service_hours: number
+  voucher_rate: number
+  voucher_total: number
+  commission_percentage: number
+  commission_amount: number
+  introducer: string
+}
+
 interface VoucherCommissionSummary {
   customer_id: string
   customer_name: string
@@ -50,6 +64,7 @@ export default function VoucherCommissionPage() {
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [summaryData, setSummaryData] = useState<VoucherCommissionSummary[]>([])
+  const [detailData, setDetailData] = useState<VoucherCommissionDetail[]>([])
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
@@ -230,45 +245,67 @@ export default function VoucherCommissionPage() {
         return 0
       }
 
-      // 按客戶和服務類型分組計算
-      const groupedData = new Map<string, VoucherCommissionSummary>()
+      // 創建每筆服務的詳細記錄
+      const detailRecords: VoucherCommissionDetail[] = []
       
       filteredRecords.forEach((record: ExtendedBillingRecord) => {
-        const key = `${record.customer_id}-${record.project_category || 'unknown'}-${record.introducer}`
-        const existing = groupedData.get(key)
-        
         // 使用映射函數獲取社區券費率
         const rate = getVoucherRate(record.project_category || '')
         // 如果沒有匹配的費率，使用實際服務費 / 服務時數
-        const effectiveRate = rate > 0 ? rate : (record.service_hours > 0 ? record.service_fee / record.service_hours : 0)
+        const effectiveRate = rate > 0 ? rate : (record.service_hours > 0 ? Math.round(record.service_fee / record.service_hours * 100) / 100 : 0)
         
         // 找到介紹人的佣金百分比
         const commRate = commissionRates.find(r => r.introducer === record.introducer)
         const commissionPercentage = commRate?.voucher_commission_percentage || 0
         
         const hours = record.service_hours || 0
+        const voucher_total = Math.round(hours * effectiveRate * 100) / 100
+        const commission_amount = Math.round(voucher_total * commissionPercentage / 100 * 100) / 100
         
+        detailRecords.push({
+          id: record.id,
+          customer_id: record.customer_id,
+          customer_name: record.customer_name || '',
+          service_date: record.service_date,
+          service_type: record.project_category || '未分類',
+          service_hours: hours,
+          voucher_rate: effectiveRate,
+          voucher_total: voucher_total,
+          commission_percentage: commissionPercentage,
+          commission_amount: commission_amount,
+          introducer: record.introducer
+        })
+      })
+
+      // 按日期排序
+      detailRecords.sort((a, b) => a.service_date.localeCompare(b.service_date))
+      
+      setDetailData(detailRecords)
+      setServiceRecords(filteredRecords)
+      
+      // 同時計算匯總數據（用於總覽）
+      const groupedData = new Map<string, VoucherCommissionSummary>()
+      detailRecords.forEach(record => {
+        const key = `${record.customer_id}-${record.service_type}-${record.introducer}`
+        const existing = groupedData.get(key)
         if (existing) {
-          existing.total_hours += hours
-          existing.voucher_total = Math.round(existing.total_hours * existing.voucher_rate * 100) / 100
-          existing.commission_amount = Math.round(existing.voucher_total * existing.commission_percentage / 100 * 100) / 100
+          existing.total_hours += record.service_hours
+          existing.voucher_total += record.voucher_total
+          existing.commission_amount += record.commission_amount
         } else {
-          const voucher_total = Math.round(hours * effectiveRate * 100) / 100
           groupedData.set(key, {
             customer_id: record.customer_id,
-            customer_name: record.customer_name || '',
-            service_type: record.project_category || '未分類',
-            total_hours: hours,
-            voucher_rate: effectiveRate,
-            voucher_total: voucher_total,
-            commission_percentage: commissionPercentage,
-            commission_amount: Math.round(voucher_total * commissionPercentage / 100 * 100) / 100
+            customer_name: record.customer_name,
+            service_type: record.service_type,
+            total_hours: record.service_hours,
+            voucher_rate: record.voucher_rate,
+            voucher_total: record.voucher_total,
+            commission_percentage: record.commission_percentage,
+            commission_amount: record.commission_amount
           })
         }
       })
-
       setSummaryData(Array.from(groupedData.values()))
-      setServiceRecords(filteredRecords)
 
     } catch (err) {
       console.error('計算失敗:', err)
@@ -278,12 +315,28 @@ export default function VoucherCommissionPage() {
     }
   }
 
-  // 計算總計
-  const totalVoucherAmount = summaryData.reduce((sum, item) => sum + item.voucher_total, 0)
-  const totalCommission = summaryData.reduce((sum, item) => sum + item.commission_amount, 0)
-  const totalHours = summaryData.reduce((sum, item) => sum + item.total_hours, 0)
+  // 計算總計 - 使用詳細記錄
+  const totalVoucherAmount = detailData.reduce((sum, item) => sum + item.voucher_total, 0)
+  const totalCommission = detailData.reduce((sum, item) => sum + item.commission_amount, 0)
+  const totalHours = detailData.reduce((sum, item) => sum + item.service_hours, 0)
 
-  // 按介紹人分組
+  // 按介紹人分組詳細記錄
+  const groupDetailByIntroducer = () => {
+    const groups = new Map<string, VoucherCommissionDetail[]>()
+    
+    detailData.forEach(record => {
+      if (!groups.has(record.introducer)) {
+        groups.set(record.introducer, [])
+      }
+      groups.get(record.introducer)!.push(record)
+    })
+    
+    return groups
+  }
+
+  const introducerDetailGroups = groupDetailByIntroducer()
+
+  // 按介紹人分組（舊的匯總用）
   const groupByIntroducer = () => {
     const groups = new Map<string, VoucherCommissionSummary[]>()
     const customerIntroducerMap = new Map<string, string>()
@@ -319,12 +372,12 @@ export default function VoucherCommissionPage() {
           <meta charset="UTF-8">
           <title>社區券介紹人佣金報表</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; }
             h1 { text-align: center; font-size: 18px; margin-bottom: 10px; }
             h2 { font-size: 14px; margin: 15px 0 10px 0; color: #333; }
             .info { text-align: center; color: #666; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
             th { background-color: #f5f5f7; font-weight: bold; }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
@@ -345,38 +398,41 @@ export default function VoucherCommissionPage() {
             ${selectedIntroducer !== 'all' ? ` | 介紹人：${selectedIntroducer}` : ''}
           </div>
           
-          ${Array.from(introducerGroups.entries()).map(([introducer, items]) => {
+          ${Array.from(introducerDetailGroups.entries()).map(([introducer, items]) => {
             const groupTotal = items.reduce((sum, item) => sum + item.voucher_total, 0)
             const groupCommission = items.reduce((sum, item) => sum + item.commission_amount, 0)
+            const groupHours = items.reduce((sum, item) => sum + item.service_hours, 0)
             const commRate = commissionRates.find(r => r.introducer === introducer)
             return `
-              <h2>介紹人：${introducer} (佣金比例: ${commRate?.voucher_commission_percentage || 0}%)</h2>
+              <h2>介紹人：${introducer} (佣金比例: ${commRate?.voucher_commission_percentage || 0}%) | 服務次數: ${items.length} | 總時數: ${groupHours.toFixed(1)}h</h2>
               <table>
                 <thead>
                   <tr>
+                    <th>服務日期</th>
                     <th>客戶編號</th>
                     <th>客戶姓名</th>
                     <th>服務類型</th>
-                    <th class="text-right">服務時數</th>
-                    <th class="text-right">社區券費率</th>
+                    <th class="text-right">時數</th>
+                    <th class="text-right">費率</th>
                     <th class="text-right">社區券金額</th>
-                    <th class="text-right">佣金金額</th>
+                    <th class="text-right">佣金</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${items.map(item => `
                     <tr>
+                      <td>${item.service_date}</td>
                       <td>${item.customer_id}</td>
                       <td>${item.customer_name}</td>
                       <td>${item.service_type}</td>
-                      <td class="text-right">${item.total_hours.toFixed(1)}</td>
+                      <td class="text-right">${item.service_hours.toFixed(1)}</td>
                       <td class="text-right">$${item.voucher_rate}</td>
                       <td class="text-right">$${item.voucher_total.toLocaleString()}</td>
                       <td class="text-right">$${item.commission_amount.toLocaleString()}</td>
                     </tr>
                   `).join('')}
                   <tr class="summary-row">
-                    <td colspan="5">小計</td>
+                    <td colspan="6">小計</td>
                     <td class="text-right">$${groupTotal.toLocaleString()}</td>
                     <td class="text-right">$${groupCommission.toLocaleString()}</td>
                   </tr>
@@ -511,7 +567,7 @@ export default function VoucherCommissionPage() {
               <div className="flex items-end">
                 <button
                   onClick={generatePDF}
-                  disabled={summaryData.length === 0}
+                  disabled={detailData.length === 0}
                   className="btn-apple-primary w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
                 >
                   📄 導出PDF
@@ -528,7 +584,7 @@ export default function VoucherCommissionPage() {
         </div>
 
         {/* 總覽統計 */}
-        {summaryData.length > 0 && (
+        {detailData.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="card-apple">
               <div className="card-apple-content text-center py-4">
@@ -550,18 +606,18 @@ export default function VoucherCommissionPage() {
             </div>
             <div className="card-apple">
               <div className="card-apple-content text-center py-4">
-                <h3 className="text-sm font-medium text-text-secondary mb-2">介紹人數量</h3>
-                <p className="text-xl font-bold text-mingcare-purple">{introducerGroups.size}</p>
+                <h3 className="text-sm font-medium text-text-secondary mb-2">服務記錄數</h3>
+                <p className="text-xl font-bold text-mingcare-purple">{detailData.length}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* 按介紹人分組顯示 */}
-        {Array.from(introducerGroups.entries()).map(([introducer, items]) => {
+        {/* 按介紹人分組顯示每筆服務記錄 */}
+        {Array.from(introducerDetailGroups.entries()).map(([introducer, items]) => {
           const groupTotal = items.reduce((sum, item) => sum + item.voucher_total, 0)
           const groupCommission = items.reduce((sum, item) => sum + item.commission_amount, 0)
-          const groupHours = items.reduce((sum, item) => sum + item.total_hours, 0)
+          const groupHours = items.reduce((sum, item) => sum + item.service_hours, 0)
           const commRate = commissionRates.find(r => r.introducer === introducer)
 
           return (
@@ -576,8 +632,11 @@ export default function VoucherCommissionPage() {
                       <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded mr-2">
                         佣金比例: {commRate?.voucher_commission_percentage || 0}%
                       </span>
-                      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
                         服務時數: {groupHours.toFixed(1)}h
+                      </span>
+                      <span className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                        服務次數: {items.length}
                       </span>
                     </div>
                   </div>
@@ -596,23 +655,25 @@ export default function VoucherCommissionPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-bg-secondary">
                     <tr>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">服務日期</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶編號</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶姓名</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">服務類型</th>
-                      <th className="px-4 py-3 text-right font-medium text-text-secondary">服務時數</th>
-                      <th className="px-4 py-3 text-right font-medium text-text-secondary">社區券費率</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">時數</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">費率</th>
                       <th className="px-4 py-3 text-right font-medium text-text-secondary">社區券金額</th>
-                      <th className="px-4 py-3 text-right font-medium text-text-secondary">佣金金額</th>
+                      <th className="px-4 py-3 text-right font-medium text-text-secondary">佣金</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-light">
                     {items.map((item, index) => (
-                      <tr key={`${item.customer_id}-${item.service_type}-${index}`} className="hover:bg-bg-secondary transition-colors">
+                      <tr key={`${item.id}-${index}`} className="hover:bg-bg-secondary transition-colors">
+                        <td className="px-4 py-3 text-text-secondary">{item.service_date}</td>
                         <td className="px-4 py-3 text-text-primary">{item.customer_id}</td>
                         <td className="px-4 py-3 text-text-primary">{item.customer_name}</td>
                         <td className="px-4 py-3 text-text-secondary">{item.service_type}</td>
-                        <td className="px-4 py-3 text-right text-text-secondary">{item.total_hours.toFixed(1)}h</td>
-                        <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(item.voucher_rate)}/h</td>
+                        <td className="px-4 py-3 text-right text-text-secondary">{item.service_hours.toFixed(1)}h</td>
+                        <td className="px-4 py-3 text-right text-text-secondary">${item.voucher_rate}/h</td>
                         <td className="px-4 py-3 text-right text-blue-600 font-medium">{formatCurrency(item.voucher_total)}</td>
                         <td className="px-4 py-3 text-right text-mingcare-green font-semibold">{formatCurrency(item.commission_amount)}</td>
                       </tr>
@@ -625,7 +686,7 @@ export default function VoucherCommissionPage() {
         })}
 
         {/* 無數據提示 */}
-        {summaryData.length === 0 && !loading && (
+        {detailData.length === 0 && !loading && (
           <div className="card-apple">
             <div className="card-apple-content text-center py-12">
               <div className="mx-auto w-16 h-16 bg-bg-tertiary rounded-full flex items-center justify-center mb-4">
