@@ -4539,12 +4539,42 @@ export default function ServicesPage() {
         care_staff_name: '護理員姓名',
         service_fee: '服務費用',
         staff_salary: '護理員工資',
+        service_profit: '服務利潤',
         staff_id: '護理員編號',
         hourly_rate: '每小時收費',
         hourly_salary: '每小時工資',
         service_type: '服務類型',
         project_category: '所屬項目',
         project_manager: '項目經理'
+      }
+      
+      // 獲取欄位值的輔助函數（處理特殊欄位如服務利潤）
+      const getColumnValue = (record: any, col: string): string => {
+        if (col === 'service_profit') {
+          // 優先使用 profit 欄位（從 API 返回的計算結果）
+          if (record.profit !== undefined && record.profit !== null) {
+            const profitValue = typeof record.profit === 'number' ? record.profit : parseFloat(String(record.profit))
+            return `$${profitValue.toFixed(2)}`
+          } else {
+            // 備用計算方式
+            const serviceFee = parseFloat(record.service_fee || '0')
+            const staffSalary = parseFloat(record.staff_salary || '0')
+            return `$${(serviceFee - staffSalary).toFixed(2)}`
+          }
+        }
+        
+        // 處理數字類型欄位格式化
+        const isMoneyField = ['service_fee', 'staff_salary', 'hourly_rate', 'hourly_salary'].includes(col)
+        const value = record[col]
+        
+        if (isMoneyField && value !== undefined && value !== null) {
+          const numValue = typeof value === 'number' ? value : parseFloat(String(value))
+          if (!isNaN(numValue)) {
+            return `$${numValue.toFixed(2)}`
+          }
+        }
+        
+        return String(value || '')
       }
 
       // 檢查是否為對數模式
@@ -4587,9 +4617,9 @@ export default function ServicesPage() {
             return `
               <tr>
                 ${columns.map(col => {
-                  const value = record[col] || ''
+                  const value = getColumnValue(record, col)
                   const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
-                  return `<td class="${isNumber ? 'number' : ''}">${String(value)}</td>`
+                  return `<td class="${isNumber ? 'number' : ''}">${value}</td>`
                 }).join('')}
               </tr>
             `
@@ -4982,23 +5012,10 @@ export default function ServicesPage() {
         tableContent = records.map(record => `
           <tr>
             ${columns.map(col => {
-              let value = record[col] || ''
+              const value = getColumnValue(record, col)
               const isNumber = ['hourly_rate', 'hourly_salary', 'service_hours', 'service_fee', 'staff_salary', 'service_profit'].includes(col)
 
-              // 特殊處理服務利潤 - 使用 profit 欄位或計算
-              if (col === 'service_profit') {
-                // 優先使用 profit 欄位（從 API 返回的計算結果）
-                if (record.profit !== undefined && record.profit !== null) {
-                  value = typeof record.profit === 'number' ? record.profit.toFixed(2) : String(record.profit)
-                } else {
-                  // 備用計算方式
-                  const serviceFee = parseFloat(record.service_fee || '0')
-                  const staffSalary = parseFloat(record.staff_salary || '0')
-                  value = (serviceFee - staffSalary).toFixed(2)
-                }
-              }
-
-              return `<td class="${isNumber ? 'number' : ''}">${String(value)}</td>`
+              return `<td class="${isNumber ? 'number' : ''}">${value}</td>`
             }).join('')}
           </tr>
         `).join('')
@@ -5387,12 +5404,21 @@ export default function ServicesPage() {
           if (col === 'service_profit') {
             // 優先使用 profit 欄位（從 API 返回的計算結果）
             if (record.profit !== undefined && record.profit !== null) {
-              value = typeof record.profit === 'number' ? record.profit.toFixed(2) : String(record.profit)
+              const profitValue = typeof record.profit === 'number' ? record.profit : parseFloat(String(record.profit))
+              value = `$${profitValue.toFixed(2)}`
             } else {
               // 備用計算方式
               const serviceFee = parseFloat(record.service_fee || '0')
               const staffSalary = parseFloat(record.staff_salary || '0')
-              value = (serviceFee - staffSalary).toFixed(2)
+              value = `$${(serviceFee - staffSalary).toFixed(2)}`
+            }
+          }
+          
+          // 處理金額欄位格式化
+          if (['service_fee', 'staff_salary', 'hourly_rate', 'hourly_salary'].includes(col)) {
+            const numValue = typeof value === 'number' ? value : parseFloat(String(value))
+            if (!isNaN(numValue)) {
+              value = `$${numValue.toFixed(2)}`
             }
           }
 
