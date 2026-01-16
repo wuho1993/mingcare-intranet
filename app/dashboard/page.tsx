@@ -718,6 +718,34 @@ export default function Dashboard() {
                       資料來源：香港天文台開放數據
                     </div>
                   </div>
+                  
+                  {/* 快速提示日曆 */}
+                  <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                          </svg>
+                        </div>
+                        <div className="text-xs font-semibold text-text-primary">快速提示</div>
+                      </div>
+                      <div className="text-xs text-text-tertiary">{formatDate(currentTime).split(' ')[0]}</div>
+                    </div>
+                    <div className="space-y-2">
+                      {/* 提示項目 - 稍後可配置 */}
+                      <div className="flex items-center gap-3 p-2 rounded-xl bg-bg-primary border border-border-light">
+                        <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-text-primary">今日待辦</div>
+                          <div className="text-[10px] text-text-tertiary">點擊設定提示內容</div>
+                        </div>
+                        <svg className="w-4 h-4 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
