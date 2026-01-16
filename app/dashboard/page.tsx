@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '../../lib/supabase'
 import { getAssetPath } from '../../utils/asset-path'
+import LoadingScreen from '../../components/LoadingScreen'
 
 interface User {
   id: string
@@ -269,14 +270,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-border-light border-t-primary rounded-full animate-spin"></div>
-          <p className="text-text-secondary text-sm">載入中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入控制台..." />
   }
 
   const getGreeting = () => {
@@ -493,36 +487,47 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="relative max-w-screen-2xl mx-auto px-3 sm:px-6 py-6">
-        {/* Hero */}
-        <div className="card-apple mb-4 animate-fade-in">
-          <div className="card-apple-content">
+        {/* Hero - 2026 Premium Design */}
+        <div className="card-apple mb-4 animate-fade-in overflow-hidden relative">
+          {/* 背景裝飾 */}
+          <div className="absolute inset-0 opacity-30 pointer-events-none">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-success/20 to-transparent rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+          </div>
+          
+          <div className="card-apple-content relative">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  2026 High-Tech • Apple Minimal
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
+                  <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                  <span className="text-primary text-xs font-semibold">系統運行正常</span>
                 </div>
                 <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
-                  {getGreeting()}，開始今天的管理工作
+                  {getGreeting()}，歡迎回來
                 </h1>
                 <p className="mt-2 text-text-secondary">
-                  直接進入模組，快速完成日常管理。
+                  {formatDate(currentTime)} · <span className="font-mono tabular-nums">{formatTime(currentTime)}</span>
                 </p>
               </div>
-
-
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 onClick={() => router.push('/clients/new')}
-                className="btn-apple-primary w-full py-3 min-h-[48px] text-sm sm:text-base"
+                className="btn-apple-primary w-full py-3.5 min-h-[52px] text-sm sm:text-base group"
               >
+                <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 新增客戶
               </button>
               <button
                 onClick={() => router.push('/services?tab=schedule')}
-                className="btn-apple-secondary w-full py-3 min-h-[48px] text-sm sm:text-base"
+                className="btn-apple-secondary w-full py-3.5 min-h-[52px] text-sm sm:text-base group"
               >
+                <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 新增服務記錄
               </button>
             </div>
@@ -719,20 +724,26 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Bento Navigation */}
+        {/* Bento Navigation - 2026 Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4">
-          {navigationItems.map((item) => {
+          {navigationItems.map((item, index) => {
             const accent = accentClasses(item.accent)
             return (
               <button
                 key={item.href}
                 onClick={() => router.push(item.href)}
                 className={`group ${item.layout} card-apple text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 bg-white hover:shadow-apple-hover transition-all duration-300`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="card-apple-content">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="card-apple-content relative overflow-hidden">
+                  {/* 背景光效 */}
+                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}>
+                    <div className={`absolute top-0 right-0 w-32 h-32 ${accent.iconBg} rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2`} />
+                  </div>
+                  
+                  <div className="relative flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <div className={`w-14 h-14 rounded-2xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-14 h-14 rounded-2xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
                         {item.icon}
                       </div>
                       <h3 className="text-2xl font-semibold text-text-primary group-hover:text-primary transition-colors">
@@ -744,7 +755,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex-shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-bg-secondary border border-border-light flex items-center justify-center text-text-tertiary group-hover:text-primary group-hover:border-border-medium transition-all">
+                      <div className="w-9 h-9 rounded-full bg-bg-secondary border border-border-light flex items-center justify-center text-text-tertiary group-hover:text-white group-hover:bg-primary group-hover:border-primary transition-all duration-300">
                         <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -752,12 +763,10 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-5 flex items-center gap-2 text-xs text-text-tertiary">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-bg-secondary border border-border-light">
+                  <div className="relative mt-5 flex items-center gap-2 text-xs text-text-tertiary">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-bg-secondary border border-border-light group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
                       快速進入
                     </span>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="hidden sm:inline">更新與資料同步</span>
                   </div>
                 </div>
               </button>
@@ -766,7 +775,12 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-10 text-center">
-          <p className="text-sm text-text-tertiary">© 2025 明家居家護理服務有限公司</p>
+          <div className="inline-flex items-center gap-2 text-sm text-text-tertiary">
+            <span className="w-2 h-2 bg-success rounded-full" />
+            <span>系統運行正常</span>
+            <span className="mx-2">•</span>
+            <span>© 2025 明家居家護理服務有限公司</span>
+          </div>
         </div>
       </main>
     </div>
