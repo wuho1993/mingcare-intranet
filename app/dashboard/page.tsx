@@ -81,7 +81,111 @@ export default function Dashboard() {
   const [selectedHumidityPlace, setSelectedHumidityPlace] = useState<string>('香港天文台')
   const [selectedRainfallPlace, setSelectedRainfallPlace] = useState<string>('九龍城')
   const [calendarDate, setCalendarDate] = useState(new Date())
+  const [reminderPopup, setReminderPopup] = useState<{
+    type: 'serviceFee3' | 'serviceFee5' | 'commission'
+    isToday: boolean
+  } | null>(null)
   const router = useRouter()
+
+  // 檢查是否需要顯示提醒
+  useEffect(() => {
+    const today = new Date()
+    const day = today.getDate()
+    
+    // 檢查 localStorage 是否已關閉提醒
+    const dismissedKey = `reminder_dismissed_${today.getFullYear()}_${today.getMonth()}_${day}`
+    const isDismissed = localStorage.getItem(dismissedKey)
+    
+    if (isDismissed) return
+    
+    // 3日或2日（提前一天）
+    if (day === 3) {
+      setReminderPopup({ type: 'serviceFee3', isToday: true })
+    } else if (day === 2) {
+      setReminderPopup({ type: 'serviceFee3', isToday: false })
+    }
+    // 5日或4日（提前一天）
+    else if (day === 5) {
+      setReminderPopup({ type: 'serviceFee5', isToday: true })
+    } else if (day === 4) {
+      setReminderPopup({ type: 'serviceFee5', isToday: false })
+    }
+    // 7日或6日（提前一天）
+    else if (day === 7) {
+      setReminderPopup({ type: 'commission', isToday: true })
+    } else if (day === 6) {
+      setReminderPopup({ type: 'commission', isToday: false })
+    }
+  }, [])
+
+  const dismissReminder = (dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      const today = new Date()
+      const day = today.getDate()
+      const dismissedKey = `reminder_dismissed_${today.getFullYear()}_${today.getMonth()}_${day}`
+      localStorage.setItem(dismissedKey, 'true')
+    }
+    setReminderPopup(null)
+  }
+
+  // 獲取提醒內容
+  const getReminderContent = () => {
+    if (!reminderPopup) return null
+    
+    const today = new Date()
+    const month = today.getMonth()
+    const year = today.getFullYear()
+    
+    // getMonthInfo helper
+    const getMonthInfoLocal = (m: number, y: number) => {
+      let adjustedMonth = m
+      let adjustedYear = y
+      while (adjustedMonth < 0) { adjustedMonth += 12; adjustedYear -= 1 }
+      while (adjustedMonth > 11) { adjustedMonth -= 12; adjustedYear += 1 }
+      const lastDay = new Date(adjustedYear, adjustedMonth + 1, 0).getDate()
+      const monthName = `${adjustedMonth + 1}月`
+      return { name: monthName, range: `${adjustedMonth + 1}月1日 - ${adjustedMonth + 1}月${lastDay}日` }
+    }
+    
+    const twoMonthsAgo = getMonthInfoLocal(month - 2, year)
+    const threeMonthsAgo = getMonthInfoLocal(month - 3, year)
+    const prevMonth = getMonthInfoLocal(month - 1, year)
+    const fourMonthsAgo = getMonthInfoLocal(month - 4, year)
+    
+    const timeLabel = reminderPopup.isToday ? '今日' : '明日'
+    
+    switch (reminderPopup.type) {
+      case 'serviceFee3':
+        return {
+          icon: '💵',
+          title: `${timeLabel}服務費收取日 (3號)`,
+          items: [
+            { name: 'Steven140', period: twoMonthsAgo.range },
+            { name: 'Steven200', period: twoMonthsAgo.range }
+          ]
+        }
+      case 'serviceFee5':
+        return {
+          icon: '💵',
+          title: `${timeLabel}服務費收取日 (5號)`,
+          items: [
+            { name: '俊佳218', period: threeMonthsAgo.range },
+            { name: '醫點', period: threeMonthsAgo.range }
+          ]
+        }
+      case 'commission':
+        return {
+          icon: '💰',
+          title: `${timeLabel}佣金發放日 (7號)`,
+          items: [
+            { name: 'Doctor Lee', period: prevMonth.range },
+            { name: 'Annie', period: prevMonth.range },
+            { name: 'Carmen', period: prevMonth.range },
+            { name: 'Steven', period: fourMonthsAgo.range, highlight: true }
+          ]
+        }
+    }
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -437,8 +541,53 @@ export default function Dashboard() {
     return `${value}${unit ?? 'mm'}`
   }
 
+  const reminderContent = getReminderContent()
+
   return (
     <div className="min-h-screen bg-bg-primary">
+      {/* 提醒彈出框 */}
+      {reminderPopup && reminderContent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 w-[90%] max-w-md mx-4 animate-scale-in">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">{reminderContent.icon}</div>
+              <h2 className="text-xl font-bold text-text-primary">{reminderContent.title}</h2>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 mb-5">
+              {reminderContent.items.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className={`p-3 rounded-xl text-center ${
+                    item.highlight 
+                      ? 'bg-warning/10 border border-warning/20' 
+                      : 'bg-bg-secondary'
+                  }`}
+                >
+                  <div className="text-sm font-semibold text-text-primary">{item.name}</div>
+                  <div className="text-xs text-text-secondary mt-1">{item.period}</div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => dismissReminder(false)}
+                className="w-full py-3 px-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors"
+              >
+                知道了
+              </button>
+              <button
+                onClick={() => dismissReminder(true)}
+                className="w-full py-2 px-4 text-text-tertiary text-sm hover:text-text-secondary transition-colors"
+              >
+                今日不再顯示
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 背景光暈（不影響白底，但更有質感） */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
@@ -697,12 +846,42 @@ export default function Dashboard() {
                     </svg>
                   </button>
                 </div>
-                <button
-                  onClick={() => setCalendarDate(new Date())}
-                  className="text-sm text-primary font-medium hover:underline"
-                >
-                  今日
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* 測試提醒按鈕 */}
+                  <div className="relative group/test">
+                    <button
+                      className="text-xs text-text-tertiary hover:text-text-secondary px-2 py-1 rounded border border-border-light hover:border-border-dark transition-colors"
+                    >
+                      🔔 測試
+                    </button>
+                    <div className="absolute top-full right-0 mt-1 w-36 p-2 rounded-xl bg-white border border-border-light shadow-apple-hover opacity-0 invisible group-hover/test:opacity-100 group-hover/test:visible transition-all duration-200 z-50">
+                      <button
+                        onClick={() => setReminderPopup({ type: 'serviceFee3', isToday: true })}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
+                      >
+                        3號 服務費
+                      </button>
+                      <button
+                        onClick={() => setReminderPopup({ type: 'serviceFee5', isToday: true })}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
+                      >
+                        5號 服務費
+                      </button>
+                      <button
+                        onClick={() => setReminderPopup({ type: 'commission', isToday: true })}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
+                      >
+                        7號 佣金
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setCalendarDate(new Date())}
+                    className="text-sm text-primary font-medium hover:underline"
+                  >
+                    今日
+                  </button>
+                </div>
               </div>
               
               {/* 星期標題 */}
