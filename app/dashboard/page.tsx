@@ -152,13 +152,13 @@ export default function Dashboard() {
     const prevMonth = getMonthInfoLocal(month - 1, year)
     const fourMonthsAgo = getMonthInfoLocal(month - 4, year)
     
-    const timeLabel = reminderPopup.isToday ? '今日' : '明日'
+    const timeLabel = reminderPopup.isToday ? '【今天】' : '【明天】'
     
     switch (reminderPopup.type) {
       case 'serviceFee3':
         return {
           icon: '💵',
-          title: `${timeLabel}服務費收取日 (3號)`,
+          title: `${timeLabel} 3號 服務費收取提醒`,
           items: [
             { name: 'Steven140', period: twoMonthsAgo.range },
             { name: 'Steven200', period: twoMonthsAgo.range }
@@ -167,7 +167,7 @@ export default function Dashboard() {
       case 'serviceFee5':
         return {
           icon: '💵',
-          title: `${timeLabel}服務費收取日 (5號)`,
+          title: `${timeLabel} 5號 服務費收取提醒`,
           items: [
             { name: '俊佳218', period: threeMonthsAgo.range },
             { name: '醫點', period: threeMonthsAgo.range }
@@ -176,7 +176,7 @@ export default function Dashboard() {
       case 'commission':
         return {
           icon: '💰',
-          title: `${timeLabel}佣金發放日 (7號)`,
+          title: `${timeLabel} 7號 佣金發放提醒`,
           items: [
             { name: 'Doctor Lee', period: prevMonth.range },
             { name: 'Annie', period: prevMonth.range },
