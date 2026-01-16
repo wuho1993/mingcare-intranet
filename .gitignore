@@ -36,6 +36,9 @@ next-env.d.ts
 ehthumbs.db
 Thumbs.db
 
+# Archive folder (debug scripts, old SQL, reports)
+_archive/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

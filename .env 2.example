@@ -1,6 +1,0 @@
-# Supabase 配置
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# 開發環境
-NODE_ENV=development
