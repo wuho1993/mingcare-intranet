@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { supabaseAdmin } from '../../lib/supabase-admin'
+import LoadingScreen from '../../components/LoadingScreen'
 
 interface User {
   id: string
@@ -215,14 +216,7 @@ export default function NotificationsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-          <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入通知訊息..." />
   }
 
   return (

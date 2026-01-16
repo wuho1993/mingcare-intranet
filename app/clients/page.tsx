@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CustomerManagementService } from '../../services/customer-management'
 import SearchSuggestionsPortal from '../../components/SearchSuggestionsPortal'
+import LoadingScreen from '../../components/LoadingScreen'
 import { generateCustomerPDF } from '../../services/pdf-export'
 import type {
   CustomerListItem,
@@ -695,11 +696,7 @@ export default function ClientsPage() {
   const endItem = Math.min(currentPage * pageSize, totalCount)
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">載入中...</div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入客戶資料..." />
   }
 
   return (

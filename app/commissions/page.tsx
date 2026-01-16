@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import LoadingScreen from '../../components/LoadingScreen'
 
 interface CommissionRate {
   id?: string
@@ -1114,14 +1115,7 @@ export default function CommissionsPage() {
   console.log(`   介紹人分組總佣金: $${filteredData.reduce((sum, item) => sum + item.total_commission, 0)}`)
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-          <p className="text-apple-body text-text-secondary mt-4">載入佣金數據中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入佣金數據..." />
   }
 
   if (error) {

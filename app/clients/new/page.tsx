@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { CustomerManagementService } from '../../../services/customer-management'
 import LastUpdateIndicator from '../../../components/LastUpdateIndicator'
+import LoadingScreen from '../../../components/LoadingScreen'
 import Script from 'next/script'
 import type {
   CustomerFormData,
@@ -651,12 +652,7 @@ export default function NewCustomerPage() {
       />
       
       {loading ? (
-        <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-            <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
-          </div>
-        </div>
+        <LoadingScreen message="正在載入表單..." />
       ) : (
       
       <div className="bg-bg-primary min-h-screen" style={{ minHeight: '100vh', height: 'auto' }}>

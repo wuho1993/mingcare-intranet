@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { CareStaffManagementService } from '../../services/care-staff-management'
 import { FileUploadCard } from '../../components/FileUploadCard'
+import LoadingScreen from '../../components/LoadingScreen'
 import { FileUploadService } from '../../services/file-upload'
 import CardUpdateIndicator from '../../components/CardUpdateIndicator'
 import type {
@@ -624,14 +625,7 @@ export default function CareStaffPage() {
 
   // 載入中狀態
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-text-secondary">載入中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入護理人員資料..." />
   }
 
   return (

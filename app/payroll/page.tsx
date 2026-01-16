@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { BackToHomeButton } from '../../components/BackToHomeButton'
+import LoadingScreen from '../../components/LoadingScreen'
 
 export default function PayrollPage() {
   const [user, setUser] = useState<any>(null)
@@ -25,14 +26,7 @@ export default function PayrollPage() {
   }, [router])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-          <p className="text-apple-body text-text-secondary mt-4">載入中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="正在載入薪資資料..." />
   }
 
   return (
