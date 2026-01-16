@@ -537,187 +537,94 @@ export default function Dashboard() {
         {/* 香港天文台天氣 */}
         <div className="card-apple mb-4">
           <div className="card-apple-content">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center text-primary">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 014-4 5 5 0 019.8-1.2A4 4 0 1120 15H3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-text-primary">香港天文台</div>
-                    <div className="text-xs text-text-tertiary">即時天氣（開放數據）</div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-text-tertiary">更新：{formatHkoUpdateTime(hkoWeather?.updatedAt)}</div>
-              </div>
-            </div>
-
             {hkoStatus === 'loading' && (
-              <div className="mt-4 flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3 py-6">
                 <div className="w-5 h-5 border-2 border-border-light border-t-primary rounded-full animate-spin" />
                 <div className="text-sm text-text-secondary">載入天氣資料中…</div>
               </div>
             )}
 
             {hkoStatus === 'error' && (
-              <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
-                <div className="text-sm text-text-secondary">暫時無法讀取天文台資料。</div>
-                <div className="mt-1 text-xs text-text-tertiary">請稍後再試（或檢查網絡連線）。</div>
+              <div className="text-center py-6">
+                <div className="text-sm text-text-secondary">暫時無法讀取天文台資料</div>
               </div>
             )}
 
             {hkoStatus === 'ready' && (
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                <div className="lg:col-span-7">
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
-                      <div className="text-[10px] sm:text-xs text-text-tertiary">氣溫</div>
-                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
+              <div className="space-y-4">
+                {/* 頂部：即時天氣 + 警告 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* 氣溫 */}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-semibold text-text-primary tabular-nums">
                         {formatTemp(
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
                           allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
                         )}
-                      </div>
-                      <select
-                        value={selectedTempPlace}
-                        onChange={(e) => setSelectedTempPlace(e.target.value)}
-                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-                      >
-                        {allHkoData?.temperature.map((d) => (
-                          <option key={d.place} value={d.place}>{d.place}</option>
-                        ))}
-                      </select>
+                      </span>
                     </div>
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
-                      <div className="text-[10px] sm:text-xs text-text-tertiary">濕度</div>
-                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
+                    {/* 濕度 */}
+                    <div className="flex items-center gap-1 text-text-secondary">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                      </svg>
+                      <span className="text-sm tabular-nums">
                         {formatHumidity(
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.value ?? hkoWeather?.humidity?.value,
                           allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.unit ?? hkoWeather?.humidity?.unit
                         )}
-                      </div>
-                      <select
-                        value={selectedHumidityPlace}
-                        onChange={(e) => setSelectedHumidityPlace(e.target.value)}
-                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-                      >
-                        {allHkoData?.humidity.map((d) => (
-                          <option key={d.place} value={d.place}>{d.place}</option>
-                        ))}
-                      </select>
+                      </span>
                     </div>
-                    <div className="rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
-                      <div className="text-[10px] sm:text-xs text-text-tertiary">雨量</div>
-                      <div className="mt-0.5 sm:mt-1 text-xl sm:text-4xl font-semibold text-text-primary tabular-nums">
-                        {formatRainfall(
-                          allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
-                          allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
-                        )}
+                    {/* 雨量（只在有雨時顯示） */}
+                    {(Number(allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? 0) > 0) && (
+                      <div className="flex items-center gap-1 text-text-secondary">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
+                        </svg>
+                        <span className="text-sm tabular-nums">
+                          {formatRainfall(
+                            allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
+                            allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
+                          )}
+                        </span>
                       </div>
-                      <select
-                        value={selectedRainfallPlace}
-                        onChange={(e) => setSelectedRainfallPlace(e.target.value)}
-                        className="mt-1 w-full text-xs text-text-tertiary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-                      >
-                        {allHkoData?.rainfall.map((d) => (
-                          <option key={d.place} value={d.place}>{d.place}</option>
-                        ))}
-                      </select>
-                    </div>
+                    )}
                   </div>
-
-                  {hkoForecast.length > 0 && (
-                    <div className="mt-3 sm:mt-4 rounded-2xl border border-border-light bg-bg-secondary p-2 sm:p-4">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="text-xs font-semibold text-text-primary">未來天氣預報</div>
-                        <div className="text-xs text-text-tertiary">4 天預報</div>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-1 sm:gap-3 items-start">
-                        {hkoForecast.map((d, idx) => (
-                          <div key={idx} className="rounded-lg sm:rounded-2xl border border-border-light bg-bg-primary p-1.5 sm:p-3 h-auto">
-                            <div className="flex items-center justify-between">
-                              <div className="text-[10px] sm:text-xs text-text-tertiary">
-                                {d.dateLabel}
-                              </div>
-                              {d.iconUrl ? (
-                                <img
-                                  src={d.iconUrl}
-                                  alt={d.weather ?? '天氣圖示'}
-                                  className="w-4 h-4 sm:w-8 sm:h-8 object-contain"
-                                  loading="lazy"
-                                />
-                              ) : null}
-                            </div>
-
-                            <div
-                              className={
-                                `mt-1 text-[10px] sm:text-sm font-medium text-text-primary leading-snug ` +
-                                (expandedForecastIndex === idx ? '' : 'line-clamp-2')
-                              }
-                            >
-                              {d.weather ?? '—'}
-                            </div>
-                            {(d.weather?.length ?? 0) > 15 && (
-                              <button
-                                type="button"
-                                onClick={() => setExpandedForecastIndex(expandedForecastIndex === idx ? null : idx)}
-                                className="mt-1 text-[10px] sm:text-xs text-primary"
-                              >
-                                {expandedForecastIndex === idx ? '收起' : '展開'}
-                              </button>
-                            )}
-                            <div className="mt-1 text-[10px] sm:text-sm text-text-secondary tabular-nums">
-                              {d.minTemp ?? '—'}/{d.maxTemp ?? '—'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                  {/* 警告標籤 */}
+                  {hkoWeather?.warnings.length ? (
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-warning/10 text-warning text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                      <span>{hkoWeather.warnings.length} 則警告</span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
-                <div className="lg:col-span-5">
-                  <div className="rounded-2xl border border-border-light bg-bg-secondary p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-semibold text-text-primary">天氣警告</div>
-                      <div className="text-xs text-text-tertiary">{hkoWeather?.warnings.length ? `${hkoWeather.warnings.length} 則` : '暫無'}</div>
-                    </div>
-                    <div className="mt-3 space-y-3">
-                      {hkoWeather?.warnings.length ? (
-                        hkoWeather.warnings.slice(0, 5).map((m, idx) => (
-                          <div key={idx} className="rounded-xl border border-border-light bg-bg-primary p-3">
-                            <div
-                              className={
-                                `text-sm text-text-secondary leading-relaxed ` +
-                                (expandedWarningIndex === idx ? '' : 'line-clamp-2')
-                              }
-                            >
-                              {m}
-                            </div>
-                            {m.length > 50 && (
-                              <button
-                                type="button"
-                                onClick={() => setExpandedWarningIndex(expandedWarningIndex === idx ? null : idx)}
-                                className="mt-2 text-xs text-primary hover:underline"
-                              >
-                                {expandedWarningIndex === idx ? '收起' : '展開'}
-                              </button>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-text-secondary">暫無天氣警告。</div>
-                      )}
-                    </div>
-                    <div className="mt-3 text-xs text-text-tertiary">
-                      資料來源：香港天文台開放數據
-                    </div>
+                {/* 未來天氣預報 - 簡化版 */}
+                {hkoForecast.length > 0 && (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    {hkoForecast.slice(0, 5).map((d, idx) => (
+                      <div key={idx} className="flex flex-col items-center gap-1 min-w-[48px] p-2 rounded-xl bg-bg-secondary">
+                        <div className="text-[10px] text-text-tertiary">{d.dateLabel}</div>
+                        {d.iconUrl && (
+                          <img
+                            src={d.iconUrl}
+                            alt={d.weather ?? ''}
+                            className="w-6 h-6 object-contain"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="text-xs text-text-primary tabular-nums">
+                          {d.minTemp?.replace('°C', '')}°-{d.maxTemp?.replace('°C', '')}°
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                )}
+
+                {/* 資料來源 */}
+                <div className="text-[10px] text-text-tertiary text-right">
+                  香港天文台 · {formatHkoUpdateTime(hkoWeather?.updatedAt)}
                 </div>
               </div>
             )}
