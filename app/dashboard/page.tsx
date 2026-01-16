@@ -707,10 +707,10 @@ export default function Dashboard() {
                     const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
                     return monthNames[(m + 12) % 12];
                   };
-                  // Doctor Lee, Annie, Carmen: 上個月
+                  // Doctor Lee, Annie, Carmen: 上個月（發放月份 - 1）
                   const prevMonth = getMonthName(month - 1);
-                  // Steven: 前2個月
-                  const twoMonthsAgo = getMonthName(month - 2);
+                  // Steven: 前4個月（發放月份 - 4）
+                  const fourMonthsAgo = getMonthName(month - 4);
                   
                   // 填充月初空白
                   for (let i = 0; i < firstDay; i++) {
@@ -756,7 +756,7 @@ export default function Dashboard() {
                               </div>
                               <div className="text-text-secondary border-t border-border-light pt-1.5 mt-1.5">
                                 <span className="font-medium text-text-primary">Steven</span>
-                                <span className="text-text-tertiary ml-1">({twoMonthsAgo}份佣金)</span>
+                                <span className="text-text-tertiary ml-1">({fourMonthsAgo}份佣金)</span>
                               </div>
                             </div>
                             {/* 箭頭 */}
