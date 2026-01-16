@@ -70,13 +70,26 @@ export default function VoucherCommissionPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  // 格式化日期為 YYYY-MM-DD（避免時區問題）
+  const formatDateString = (year: number, month: number, day: number): string => {
+    const mm = String(month).padStart(2, '0')
+    const dd = String(day).padStart(2, '0')
+    return `${year}-${mm}-${dd}`
+  }
+
+  // 獲取某月的最後一天
+  const getLastDayOfMonth = (year: number, month: number): number => {
+    // month 是 1-12，new Date(year, month, 0) 會返回上個月的最後一天
+    // 所以 new Date(2026, 1, 0) 返回 2026年1月的最後一天 (31)
+    return new Date(year, month, 0).getDate()
+  }
+
   // 根據選擇的年月更新日期範圍
   useEffect(() => {
-    const firstDay = new Date(selectedYear, selectedMonth - 1, 1)
-    const lastDay = new Date(selectedYear, selectedMonth, 0)
+    const lastDay = getLastDayOfMonth(selectedYear, selectedMonth)
     
-    setStartDate(firstDay.toISOString().split('T')[0])
-    setEndDate(lastDay.toISOString().split('T')[0])
+    setStartDate(formatDateString(selectedYear, selectedMonth, 1))
+    setEndDate(formatDateString(selectedYear, selectedMonth, lastDay))
   }, [selectedYear, selectedMonth])
 
   // 生成年份選項（過去5年到未來1年）
