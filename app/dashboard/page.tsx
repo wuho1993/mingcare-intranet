@@ -854,42 +854,12 @@ export default function Dashboard() {
                     </svg>
                   </button>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* 測試提醒按鈕 */}
-                  <div className="relative group/test">
-                    <button
-                      className="text-xs text-text-tertiary hover:text-text-secondary px-2 py-1 rounded border border-border-light hover:border-border-dark transition-colors"
-                    >
-                      🔔 測試
-                    </button>
-                    <div className="absolute top-full right-0 mt-1 w-36 p-2 rounded-xl bg-white border border-border-light shadow-apple-hover opacity-0 invisible group-hover/test:opacity-100 group-hover/test:visible transition-all duration-200 z-50">
-                      <button
-                        onClick={() => setReminderPopup({ type: 'serviceFee3', isToday: true })}
-                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
-                      >
-                        3號 服務費
-                      </button>
-                      <button
-                        onClick={() => setReminderPopup({ type: 'serviceFee5', isToday: true })}
-                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
-                      >
-                        5號 服務費
-                      </button>
-                      <button
-                        onClick={() => setReminderPopup({ type: 'commission', isToday: true })}
-                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-bg-secondary"
-                      >
-                        7號 佣金
-                      </button>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setCalendarDate(new Date())}
-                    className="text-sm text-primary font-medium hover:underline"
-                  >
-                    今日
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCalendarDate(new Date())}
+                  className="text-sm text-primary font-medium hover:underline"
+                >
+                  今日
+                </button>
               </div>
               
               {/* 星期標題 */}
