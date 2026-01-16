@@ -61,6 +61,8 @@ export default function VoucherCommissionPage() {
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([])
   const [selectedIntroducer, setSelectedIntroducer] = useState<string>('all')
   const [introducerList, setIntroducerList] = useState<string[]>([])
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [summaryData, setSummaryData] = useState<VoucherCommissionSummary[]>([])
@@ -68,17 +70,40 @@ export default function VoucherCommissionPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // 設定預設日期範圍（當月）
+  // 根據選擇的年月更新日期範圍
   useEffect(() => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
+    const firstDay = new Date(selectedYear, selectedMonth - 1, 1)
+    const lastDay = new Date(selectedYear, selectedMonth, 0)
     
     setStartDate(firstDay.toISOString().split('T')[0])
     setEndDate(lastDay.toISOString().split('T')[0])
-  }, [])
+  }, [selectedYear, selectedMonth])
+
+  // 生成年份選項（過去5年到未來1年）
+  const yearOptions = () => {
+    const currentYear = new Date().getFullYear()
+    const years = []
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+      years.push(y)
+    }
+    return years
+  }
+
+  // 月份選項
+  const monthOptions = [
+    { value: 1, label: '1月' },
+    { value: 2, label: '2月' },
+    { value: 3, label: '3月' },
+    { value: 4, label: '4月' },
+    { value: 5, label: '5月' },
+    { value: 6, label: '6月' },
+    { value: 7, label: '7月' },
+    { value: 8, label: '8月' },
+    { value: 9, label: '9月' },
+    { value: 10, label: '10月' },
+    { value: 11, label: '11月' },
+    { value: 12, label: '12月' }
+  ]
 
   useEffect(() => {
     const getUser = async () => {
@@ -284,8 +309,12 @@ export default function VoucherCommissionPage() {
         })
       })
 
-      // 按日期排序
-      detailRecords.sort((a, b) => a.service_date.localeCompare(b.service_date))
+      // 按客戶編號排序，同一客戶內按日期排序
+      detailRecords.sort((a, b) => {
+        const customerCompare = a.customer_id.localeCompare(b.customer_id)
+        if (customerCompare !== 0) return customerCompare
+        return a.service_date.localeCompare(b.service_date)
+      })
       
       setDetailData(detailRecords)
       setServiceRecords(filteredRecords)
@@ -401,7 +430,7 @@ export default function VoucherCommissionPage() {
         <body>
           <h1>明護專業護理服務 - 社區券介紹人佣金報表</h1>
           <div class="info">
-            日期範圍：${startDate} 至 ${endDate}
+            ${selectedYear}年${selectedMonth}月 (${startDate} 至 ${endDate})
             ${selectedIntroducer !== 'all' ? ` | 介紹人：${selectedIntroducer}` : ''}
           </div>
           
@@ -410,14 +439,20 @@ export default function VoucherCommissionPage() {
             const groupCommission = items.reduce((sum, item) => sum + item.commission_amount, 0)
             const groupHours = items.reduce((sum, item) => sum + item.service_hours, 0)
             const commRate = commissionRates.find(r => r.introducer === introducer)
+            // 按客戶編號排序
+            const sortedItems = [...items].sort((a, b) => {
+              const customerCompare = a.customer_id.localeCompare(b.customer_id)
+              if (customerCompare !== 0) return customerCompare
+              return a.service_date.localeCompare(b.service_date)
+            })
             return `
               <h2>介紹人：${introducer} (佣金比例: ${commRate?.voucher_commission_percentage || 0}%) | 服務次數: ${items.length} | 總時數: ${groupHours.toFixed(1)}h</h2>
               <table>
                 <thead>
                   <tr>
-                    <th>服務日期</th>
                     <th>客戶編號</th>
                     <th>客戶姓名</th>
+                    <th>服務日期</th>
                     <th>服務類型</th>
                     <th class="text-right">時數</th>
                     <th class="text-right">費率</th>
@@ -426,11 +461,11 @@ export default function VoucherCommissionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${items.map(item => `
+                  ${sortedItems.map(item => `
                     <tr>
-                      <td>${item.service_date}</td>
                       <td>${item.customer_id}</td>
                       <td>${item.customer_name}</td>
+                      <td>${item.service_date}</td>
                       <td>${item.service_type}</td>
                       <td class="text-right">${item.service_hours.toFixed(1)}</td>
                       <td class="text-right">$${item.voucher_rate}</td>
@@ -532,22 +567,28 @@ export default function VoucherCommissionPage() {
             <h2 className="text-lg font-semibold text-text-primary mb-4">查詢條件</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">開始日期</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                <label className="block text-sm font-medium text-text-primary mb-2">年份</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
                   className="form-input-apple w-full"
-                />
+                >
+                  {yearOptions().map(year => (
+                    <option key={year} value={year}>{year}年</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">結束日期</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                <label className="block text-sm font-medium text-text-primary mb-2">月份</label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
                   className="form-input-apple w-full"
-                />
+                >
+                  {monthOptions.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">介紹人</label>
@@ -662,9 +703,9 @@ export default function VoucherCommissionPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-bg-secondary">
                     <tr>
-                      <th className="px-4 py-3 text-left font-medium text-text-secondary">服務日期</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶編號</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">客戶姓名</th>
+                      <th className="px-4 py-3 text-left font-medium text-text-secondary">服務日期</th>
                       <th className="px-4 py-3 text-left font-medium text-text-secondary">服務類型</th>
                       <th className="px-4 py-3 text-right font-medium text-text-secondary">時數</th>
                       <th className="px-4 py-3 text-right font-medium text-text-secondary">費率</th>
@@ -673,11 +714,18 @@ export default function VoucherCommissionPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-light">
-                    {items.map((item, index) => (
+                    {items
+                      .slice()
+                      .sort((a, b) => {
+                        const customerCompare = a.customer_id.localeCompare(b.customer_id)
+                        if (customerCompare !== 0) return customerCompare
+                        return a.service_date.localeCompare(b.service_date)
+                      })
+                      .map((item, index) => (
                       <tr key={`${item.id}-${index}`} className="hover:bg-bg-secondary transition-colors">
-                        <td className="px-4 py-3 text-text-secondary">{item.service_date}</td>
                         <td className="px-4 py-3 text-text-primary">{item.customer_id}</td>
                         <td className="px-4 py-3 text-text-primary">{item.customer_name}</td>
+                        <td className="px-4 py-3 text-text-secondary">{item.service_date}</td>
                         <td className="px-4 py-3 text-text-secondary">{item.service_type}</td>
                         <td className="px-4 py-3 text-right text-text-secondary">{item.service_hours.toFixed(1)}h</td>
                         <td className="px-4 py-3 text-right text-text-secondary">${item.voucher_rate}/h</td>
