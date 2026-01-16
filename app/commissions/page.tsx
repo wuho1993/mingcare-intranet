@@ -124,7 +124,7 @@ export default function CommissionsPage() {
         const monthQualifiedCount = monthData.filter(item => item.is_qualified).length
         const monthUnqualifiedCount = monthData.filter(item => !item.is_qualified && item.commission_amount > 0).length
         
-        // 修正：計算所有佣金（包括Steven Kwok不達標的減半佣金）
+        // 計算所有佣金（只有達標才有佣金）
         const monthCommission = monthData.reduce((sum: number, item: CustomerCommissionData) => {
           // 只計算實際有佣金的記錄
           return sum + (item.commission_amount || 0)
@@ -258,8 +258,8 @@ export default function CommissionsPage() {
         const commissionRateRecord = commissionRatesData.find((r: CommissionRate) => r.introducer === customer.introducer)
         const hasCommissionRate = commissionRateRecord && commissionRateRecord.first_month_commission > 0
         
-        // 包含所有有佣金的客戶：達標的所有人 + 不達標的Steven Kwok
-        const hasCommission = hasCommissionRate && (customer.is_qualified || customer.introducer === 'Steven Kwok')
+        // 只包含達標且有佣金的客戶
+        const hasCommission = hasCommissionRate && customer.is_qualified
         
         if (hasCommission && customer.total_commission > 0) {
           if (!introducerSummary.has(customer.introducer)) {
@@ -944,11 +944,9 @@ export default function CommissionsPage() {
               ? commissionRate.first_month_commission 
               : commissionRate.subsequent_month_commission
             
-            // 特殊處理：只有 Steven Kwok 在不達標時佣金除以2，其他人不達標沒有佣金
+            // 只有達標才有佣金，不達標一律為0（包括 Steven Kwok）
             if (isQualified) {
               commissionAmount = baseCommission
-            } else if (monthData.introducer === 'Steven Kwok') {
-              commissionAmount = baseCommission / 2
             } else {
               commissionAmount = 0
             }
@@ -971,7 +969,7 @@ export default function CommissionsPage() {
       // 儲存所有數據用於篩選
       setAllCommissionData(allResults)
 
-      // 按介紹人分組（計算所有佣金：達標全額，Steven Kwok不達標減半，其他人不達標為0）
+      // 按介紹人分組（只有達標才有佣金）
       const groupedByIntroducer = new Map<string, IntroducerSummary>()
 
       allResults.forEach(result => {
@@ -988,7 +986,7 @@ export default function CommissionsPage() {
         const summary = groupedByIntroducer.get(result.introducer)!
         summary.customers.push(result)
         
-        // 計算所有佣金（達標全額，Steven Kwok不達標減半，其他人不達標為0）
+        // 只有達標才計算佣金
         summary.total_commission += result.commission_amount
         
         if (result.month_sequence === 1) {
@@ -1530,9 +1528,8 @@ export default function CommissionsPage() {
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
                           {customer.commission_amount > 0 ? (
-                            <span className={customer.is_qualified ? "text-mingcare-green" : "text-orange-600"}>
+                            <span className="text-mingcare-green">
                               {formatCurrency(customer.commission_amount)}
-                              {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
                             </span>
                           ) : (
                             <span className="text-text-secondary">
@@ -1588,9 +1585,8 @@ export default function CommissionsPage() {
                       <div>
                         <span className="text-text-secondary">佣金金額：</span>
                         {customer.commission_amount > 0 ? (
-                          <span className={`font-semibold ${customer.is_qualified ? "text-mingcare-green" : "text-orange-600"}`}>
+                          <span className="font-semibold text-mingcare-green">
                             {formatCurrency(customer.commission_amount)}
-                            {!customer.is_qualified && customer.introducer === 'Steven Kwok' && <span className="text-xs ml-1">(減半)</span>}
                           </span>
                         ) : (
                           <span className="text-text-secondary">$0</span>
