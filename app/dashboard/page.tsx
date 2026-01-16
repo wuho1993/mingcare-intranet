@@ -80,6 +80,7 @@ export default function Dashboard() {
   const [selectedTempPlace, setSelectedTempPlace] = useState<string>('京士柏')
   const [selectedHumidityPlace, setSelectedHumidityPlace] = useState<string>('香港天文台')
   const [selectedRainfallPlace, setSelectedRainfallPlace] = useState<string>('九龍城')
+  const [calendarDate, setCalendarDate] = useState(new Date())
   const router = useRouter()
 
   useEffect(() => {
@@ -675,12 +676,33 @@ export default function Dashboard() {
           <div className="card-apple">
             <div className="card-apple-content">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-lg font-semibold text-text-primary">
-                  {currentTime.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long' })}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-bg-secondary transition-colors text-text-tertiary hover:text-text-primary"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="text-lg font-semibold text-text-primary min-w-[120px] text-center">
+                    {calendarDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long' })}
+                  </div>
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-bg-secondary transition-colors text-text-tertiary hover:text-text-primary"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="text-sm text-primary font-medium">
+                <button
+                  onClick={() => setCalendarDate(new Date())}
+                  className="text-sm text-primary font-medium hover:underline"
+                >
                   今日
-                </div>
+                </button>
               </div>
               
               {/* 星期標題 */}
@@ -695,17 +717,27 @@ export default function Dashboard() {
               {/* 日曆格子 */}
               <div className="grid grid-cols-7 gap-1">
                 {(() => {
-                  const year = currentTime.getFullYear();
-                  const month = currentTime.getMonth();
-                  const today = currentTime.getDate();
+                  const year = calendarDate.getFullYear();
+                  const month = calendarDate.getMonth();
+                  const todayDate = new Date();
+                  const isCurrentMonth = todayDate.getFullYear() === year && todayDate.getMonth() === month;
+                  const today = isCurrentMonth ? todayDate.getDate() : -1;
                   const firstDay = new Date(year, month, 1).getDay();
                   const daysInMonth = new Date(year, month + 1, 0).getDate();
                   const days = [];
                   
                   // 計算佣金月份和日期範圍
-                  const getMonthInfo = (m: number) => {
-                    const adjustedMonth = ((m % 12) + 12) % 12;
-                    const adjustedYear = m < 0 ? year - 1 : (m >= 12 ? year + 1 : year);
+                  const getMonthInfo = (m: number, baseYear: number) => {
+                    let adjustedYear = baseYear;
+                    let adjustedMonth = m;
+                    while (adjustedMonth < 0) {
+                      adjustedMonth += 12;
+                      adjustedYear -= 1;
+                    }
+                    while (adjustedMonth >= 12) {
+                      adjustedMonth -= 12;
+                      adjustedYear += 1;
+                    }
                     const monthNum = adjustedMonth + 1;
                     const lastDay = new Date(adjustedYear, adjustedMonth + 1, 0).getDate();
                     return {
@@ -714,9 +746,9 @@ export default function Dashboard() {
                     };
                   };
                   // Doctor Lee, Annie, Carmen: 上個月（發放月份 - 1）
-                  const prevMonthInfo = getMonthInfo(month - 1);
+                  const prevMonthInfo = getMonthInfo(month - 1, year);
                   // Steven: 前4個月（發放月份 - 4）
-                  const fourMonthsAgoInfo = getMonthInfo(month - 4);
+                  const fourMonthsAgoInfo = getMonthInfo(month - 4, year);
                   
                   // 填充月初空白
                   for (let i = 0; i < firstDay; i++) {
