@@ -762,13 +762,19 @@ export default function Dashboard() {
                     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                     const isCommissionDay = d === 7;
                     const isSettlementDay = d === daysInMonth; // 月尾結算日
+                    const isServiceFeeDay3 = d === 3; // Steven140/Steven200 收費日
+                    const isServiceFeeDay5 = d === 5; // 俊佳218/醫點 收費日
                     
-                    // 計算結算日對應的佣金資訊
-                    // 當月結算 -> Doctor Lee/Annie/Carmen 下月7日發放
-                    // 當月結算 -> Steven 4個月後7日發放
+                    // 計算各種月份資訊
                     const currentMonthInfo = getMonthInfo(month, year);
                     const nextPaymentMonth = getMonthInfo(month + 1, year);
                     const stevenPaymentMonth = getMonthInfo(month + 4, year);
+                    // 服務費收取：3日收2個月前、5日收3個月前
+                    const twoMonthsAgoInfo = getMonthInfo(month - 2, year);
+                    const threeMonthsAgoInfo = getMonthInfo(month - 3, year);
+                    // 結算日計算發放月份
+                    const serviceFee3PayMonth = getMonthInfo(month + 2, year);
+                    const serviceFee5PayMonth = getMonthInfo(month + 3, year);
                     
                     days.push(
                       <div
@@ -781,32 +787,81 @@ export default function Dashboard() {
                               : 'text-text-primary hover:bg-bg-secondary'
                           }
                           ${isCommissionDay && !isToday ? 'ring-2 ring-success/50' : ''}
-                          ${isSettlementDay && !isToday ? 'ring-2 ring-warning/50' : ''}`}
+                          ${isSettlementDay && !isToday ? 'ring-2 ring-warning/50' : ''}
+                          ${(isServiceFeeDay3 || isServiceFeeDay5) && !isToday ? 'ring-2 ring-primary/50' : ''}`}
                       >
                         {d}
-                        {/* 7日佣金發放提示 */}
-                        {isCommissionDay && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-4 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
-                            <div className="text-base font-semibold text-text-primary mb-3">💰 佣金發放日</div>
-                            <div className="space-y-3">
-                              <div>
-                                <div className="text-sm font-medium text-text-primary">Doctor Lee</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{prevMonthInfo.range} 服務費用佣金</div>
+                        
+                        {/* 3日服務費收取提示 - Steven140/Steven200 */}
+                        {isServiceFeeDay3 && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-5 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="text-lg font-bold text-text-primary mb-4">💵 服務費收取日</div>
+                            <div className="space-y-4">
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">Steven140</div>
+                                <div className="text-sm text-text-secondary mt-1">{twoMonthsAgoInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用收取</div>
                               </div>
-                              <div>
-                                <div className="text-sm font-medium text-text-primary">Annie</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{prevMonthInfo.range} 服務費用佣金</div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-text-primary">Carmen</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{prevMonthInfo.range} 服務費用佣金</div>
-                              </div>
-                              <div className="border-t border-border-light pt-3">
-                                <div className="text-sm font-medium text-text-primary">Steven</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{fourMonthsAgoInfo.range} 服務費用佣金</div>
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">Steven200</div>
+                                <div className="text-sm text-text-secondary mt-1">{twoMonthsAgoInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用收取</div>
                               </div>
                             </div>
-                            {/* 箭頭 */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                              <div className="w-3 h-3 bg-bg-primary border-r border-b border-border-light transform rotate-45" />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* 5日服務費收取提示 - 俊佳218/醫點 */}
+                        {isServiceFeeDay5 && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-5 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="text-lg font-bold text-text-primary mb-4">💵 服務費收取日</div>
+                            <div className="space-y-4">
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">俊佳218</div>
+                                <div className="text-sm text-text-secondary mt-1">{threeMonthsAgoInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用收取</div>
+                              </div>
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">醫點</div>
+                                <div className="text-sm text-text-secondary mt-1">{threeMonthsAgoInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用收取</div>
+                              </div>
+                            </div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                              <div className="w-3 h-3 bg-bg-primary border-r border-b border-border-light transform rotate-45" />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* 7日佣金發放提示 */}
+                        {isCommissionDay && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-5 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="text-lg font-bold text-text-primary mb-4">💰 佣金發放日</div>
+                            <div className="space-y-3">
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">Doctor Lee</div>
+                                <div className="text-sm text-text-secondary mt-1">{prevMonthInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用佣金</div>
+                              </div>
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">Annie</div>
+                                <div className="text-sm text-text-secondary mt-1">{prevMonthInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用佣金</div>
+                              </div>
+                              <div className="p-3 rounded-xl bg-bg-secondary">
+                                <div className="text-base font-semibold text-text-primary">Carmen</div>
+                                <div className="text-sm text-text-secondary mt-1">{prevMonthInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用佣金</div>
+                              </div>
+                              <div className="p-3 rounded-xl bg-warning/10 border border-warning/20">
+                                <div className="text-base font-semibold text-text-primary">Steven</div>
+                                <div className="text-sm text-text-secondary mt-1">{fourMonthsAgoInfo.range}</div>
+                                <div className="text-sm text-text-tertiary">服務費用佣金</div>
+                              </div>
+                            </div>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
                               <div className="w-3 h-3 bg-bg-primary border-r border-b border-border-light transform rotate-45" />
                             </div>
@@ -815,21 +870,63 @@ export default function Dashboard() {
                         
                         {/* 月尾結算日提示 */}
                         {isSettlementDay && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-4 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
-                            <div className="text-base font-semibold text-text-primary mb-3">📋 佣金結算日</div>
-                            <div className="space-y-3">
-                              <div>
-                                <div className="text-sm font-medium text-text-primary">Doctor Lee / Annie / Carmen</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{currentMonthInfo.range} 服務費用結算</div>
-                                <div className="text-xs text-success mt-0.5">→ {nextPaymentMonth.name}7日發放</div>
-                              </div>
-                              <div className="border-t border-border-light pt-3">
-                                <div className="text-sm font-medium text-text-primary">Steven</div>
-                                <div className="text-xs text-text-tertiary mt-0.5">{currentMonthInfo.range} 服務費用結算</div>
-                                <div className="text-xs text-success mt-0.5">→ {stevenPaymentMonth.name}7日發放</div>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-80 p-5 rounded-2xl bg-bg-primary border border-border-light shadow-apple-hover opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="text-lg font-bold text-text-primary mb-4">📋 結算日</div>
+                            
+                            {/* 佣金結算 */}
+                            <div className="mb-4">
+                              <div className="text-sm font-semibold text-success mb-2">💰 佣金結算</div>
+                              <div className="space-y-2">
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">Doctor Lee</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-success">→ {nextPaymentMonth.name}7日發放</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">Annie</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-success">→ {nextPaymentMonth.name}7日發放</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">Carmen</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-success">→ {nextPaymentMonth.name}7日發放</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-warning/10 border border-warning/20">
+                                  <div className="text-base font-semibold text-text-primary">Steven</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-success">→ {stevenPaymentMonth.name}7日發放</div>
+                                </div>
                               </div>
                             </div>
-                            {/* 箭頭 */}
+                            
+                            {/* 服務費結算 */}
+                            <div>
+                              <div className="text-sm font-semibold text-primary mb-2">💵 服務費結算</div>
+                              <div className="space-y-2">
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">Steven140</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-primary">→ {serviceFee3PayMonth.name}3日收取</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">Steven200</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-primary">→ {serviceFee3PayMonth.name}3日收取</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">俊佳218</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-primary">→ {serviceFee5PayMonth.name}5日收取</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-bg-secondary">
+                                  <div className="text-base font-semibold text-text-primary">醫點</div>
+                                  <div className="text-sm text-text-secondary">{currentMonthInfo.range}</div>
+                                  <div className="text-sm text-primary">→ {serviceFee5PayMonth.name}5日收取</div>
+                                </div>
+                              </div>
+                            </div>
+                            
                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
                               <div className="w-3 h-3 bg-bg-primary border-r border-b border-border-light transform rotate-45" />
                             </div>
