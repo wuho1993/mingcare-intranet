@@ -535,13 +535,13 @@ export default function Dashboard() {
         </div>
 
         {/* 天氣 + 日曆 並排 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           {/* 香港天文台天氣 */}
-          <div className="card-apple">
-            <div className="card-apple-content">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-lg font-semibold text-text-primary">天氣預報</div>
-                <div className="text-xs text-text-tertiary">香港天文台</div>
+          <div className="card-apple !p-0">
+            <div className="card-apple-content !p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold text-text-primary">天氣預報</div>
+                <div className="text-[10px] text-text-tertiary">香港天文台</div>
               </div>
               
               {hkoStatus === 'loading' && (
@@ -557,36 +557,36 @@ export default function Dashboard() {
             )}
 
             {hkoStatus === 'ready' && (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {/* 頂部：地點 + 今日天氣 */}
                 <div className="text-center">
                   <div className="relative inline-block">
                     <select
                       value={selectedTempPlace}
                       onChange={(e) => setSelectedTempPlace(e.target.value)}
-                      className="text-lg text-text-primary font-medium bg-transparent border-none cursor-pointer text-center appearance-none pr-5 focus:ring-0 focus:outline-none"
+                      className="text-sm text-text-primary font-medium bg-transparent border-none cursor-pointer text-center appearance-none pr-4 focus:ring-0 focus:outline-none"
                     >
                       {allHkoData?.temperature.map((d) => (
                         <option key={d.place} value={d.place}>{d.place}</option>
                       ))}
                     </select>
-                    <svg className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-text-tertiary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
-                  <div className="text-6xl font-extralight text-text-primary tabular-nums mt-1">
+                  <div className="text-4xl font-extralight text-text-primary tabular-nums">
                     {formatTemp(
                       allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
                       allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
                     )}
                   </div>
-                  <div className="flex items-center justify-center gap-2 mt-1">
+                  <div className="flex items-center justify-center gap-2">
                     {hkoForecast[0] && (
                       <>
-                        <span className="text-sm text-text-secondary">
+                        <span className="text-xs text-text-secondary">
                           最高 {hkoForecast[0].maxTemp?.replace('°C', '')}°
                         </span>
-                        <span className="text-sm text-text-secondary">
+                        <span className="text-xs text-text-secondary">
                           最低 {hkoForecast[0].minTemp?.replace('°C', '')}°
                         </span>
                       </>
@@ -595,8 +595,8 @@ export default function Dashboard() {
                   
                   {/* 天氣警告 - 顯示在今日天氣下面 */}
                   {hkoWeather?.warnings.length ? (
-                    <div className="mt-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20">
-                      <div className="text-xs text-warning line-clamp-1">
+                    <div className="mt-2 px-2 py-1.5 rounded-lg bg-warning/10 border border-warning/20">
+                      <div className="text-[10px] text-warning line-clamp-1">
                         ⚠️ {hkoWeather.warnings[0]}
                       </div>
                     </div>
@@ -608,8 +608,8 @@ export default function Dashboard() {
 
                 {/* 未來天氣預報 - iOS 風格 */}
                 {hkoForecast.length > 0 && (
-                  <div className="space-y-2">
-                    {hkoForecast.slice(0, 5).map((d, idx) => {
+                  <div className="space-y-1">
+                    {hkoForecast.slice(0, 4).map((d, idx) => {
                       const minTemp = parseInt(d.minTemp?.replace('°C', '') ?? '15');
                       const maxTemp = parseInt(d.maxTemp?.replace('°C', '') ?? '25');
                       // 計算溫度條位置 (假設範圍 10-35°C)
@@ -619,21 +619,21 @@ export default function Dashboard() {
                       const widthPercent = ((maxTemp - minTemp) / (rangeMax - rangeMin)) * 100;
                       
                       return (
-                        <div key={idx} className="flex items-center gap-3">
-                          <div className="w-10 text-sm text-text-secondary">{d.dateLabel}</div>
+                        <div key={idx} className="flex items-center gap-2">
+                          <div className="w-8 text-xs text-text-secondary">{d.dateLabel}</div>
                           {d.iconUrl && (
                             <img
                               src={d.iconUrl}
                               alt=""
-                              className="w-6 h-6 object-contain"
+                              className="w-5 h-5 object-contain"
                               loading="lazy"
                             />
                           )}
-                          <div className="w-8 text-sm text-text-tertiary tabular-nums text-right">
+                          <div className="w-6 text-xs text-text-tertiary tabular-nums text-right">
                             {minTemp}°
                           </div>
                           {/* 溫度條 */}
-                          <div className="flex-1 h-1.5 bg-bg-tertiary rounded-full relative overflow-hidden">
+                          <div className="flex-1 h-1 bg-bg-tertiary rounded-full relative overflow-hidden">
                             <div
                               className="absolute h-full rounded-full"
                               style={{
@@ -643,7 +643,7 @@ export default function Dashboard() {
                               }}
                             />
                           </div>
-                          <div className="w-8 text-sm text-text-primary tabular-nums">
+                          <div className="w-6 text-xs text-text-primary tabular-nums">
                             {maxTemp}°
                           </div>
                         </div>
@@ -657,28 +657,28 @@ export default function Dashboard() {
           </div>
 
           {/* 當月日曆 */}
-          <div className="card-apple">
-            <div className="card-apple-content">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-lg font-semibold text-text-primary">
+          <div className="card-apple !p-0">
+            <div className="card-apple-content !p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold text-text-primary">
                   {currentTime.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long' })}
                 </div>
-                <div className="text-sm text-primary font-medium">
+                <div className="text-xs text-primary font-medium">
                   今日
                 </div>
               </div>
               
               {/* 星期標題 */}
-              <div className="grid grid-cols-7 gap-1 mb-2">
+              <div className="grid grid-cols-7 gap-0.5 mb-1">
                 {['日', '一', '二', '三', '四', '五', '六'].map((day, idx) => (
-                  <div key={day} className={`text-center text-xs font-medium py-1 ${idx === 0 || idx === 6 ? 'text-text-tertiary' : 'text-text-secondary'}`}>
+                  <div key={day} className={`text-center text-[10px] font-medium py-0.5 ${idx === 0 || idx === 6 ? 'text-text-tertiary' : 'text-text-secondary'}`}>
                     {day}
                   </div>
                 ))}
               </div>
               
               {/* 日曆格子 */}
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5">
                 {(() => {
                   const year = currentTime.getFullYear();
                   const month = currentTime.getMonth();
@@ -701,7 +701,7 @@ export default function Dashboard() {
                     days.push(
                       <div
                         key={d}
-                        className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors
+                        className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-colors
                           ${isToday 
                             ? 'bg-primary text-white font-semibold' 
                             : isWeekend 
