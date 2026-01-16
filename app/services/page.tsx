@@ -4552,26 +4552,31 @@ export default function ServicesPage() {
       const getColumnValue = (record: any, col: string): string => {
         if (col === 'service_profit') {
           // 優先使用 profit 欄位（從 API 返回的計算結果）
+          let profitValue: number
           if (record.profit !== undefined && record.profit !== null) {
-            const profitValue = typeof record.profit === 'number' ? record.profit : parseFloat(String(record.profit))
-            return `$${profitValue.toFixed(2)}`
+            profitValue = typeof record.profit === 'number' ? record.profit : parseFloat(String(record.profit))
           } else {
             // 備用計算方式
-            const serviceFee = parseFloat(record.service_fee || '0')
-            const staffSalary = parseFloat(record.staff_salary || '0')
-            return `$${(serviceFee - staffSalary).toFixed(2)}`
+            const serviceFee = parseFloat(String(record.service_fee || '0'))
+            const staffSalary = parseFloat(String(record.staff_salary || '0'))
+            profitValue = serviceFee - staffSalary
           }
+          return isNaN(profitValue) ? '$0.00' : `$${profitValue.toFixed(2)}`
         }
         
         // 處理數字類型欄位格式化
         const isMoneyField = ['service_fee', 'staff_salary', 'hourly_rate', 'hourly_salary'].includes(col)
         const value = record[col]
         
-        if (isMoneyField && value !== undefined && value !== null) {
-          const numValue = typeof value === 'number' ? value : parseFloat(String(value))
-          if (!isNaN(numValue)) {
-            return `$${numValue.toFixed(2)}`
-          }
+        if (isMoneyField) {
+          const numValue = typeof value === 'number' ? value : parseFloat(String(value || '0'))
+          return isNaN(numValue) ? '$0.00' : `$${numValue.toFixed(2)}`
+        }
+        
+        // 處理服務時數
+        if (col === 'service_hours') {
+          const numValue = typeof value === 'number' ? value : parseFloat(String(value || '0'))
+          return isNaN(numValue) ? '0' : numValue.toFixed(1)
         }
         
         return String(value || '')
