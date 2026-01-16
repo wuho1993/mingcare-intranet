@@ -458,6 +458,52 @@ export default function VoucherCommissionPage() {
               if (customerCompare !== 0) return customerCompare
               return a.service_date.localeCompare(b.service_date)
             })
+            
+            // 按客戶分組
+            const customerGroups = new Map<string, typeof sortedItems>()
+            sortedItems.forEach(item => {
+              const key = item.customer_id
+              if (!customerGroups.has(key)) {
+                customerGroups.set(key, [])
+              }
+              customerGroups.get(key)!.push(item)
+            })
+            
+            // 生成表格行（包含客戶小結）
+            let tableRows = ''
+            customerGroups.forEach((customerItems, customerId) => {
+              // 添加該客戶的所有記錄
+              customerItems.forEach(item => {
+                tableRows += `
+                  <tr>
+                    <td>${item.customer_id}</td>
+                    <td>${item.customer_name}</td>
+                    <td>${item.service_date}</td>
+                    <td>${item.service_type}</td>
+                    <td class="text-right">${item.service_hours.toFixed(1)}</td>
+                    <td class="text-right">$${item.voucher_rate}</td>
+                    <td class="text-right">$${item.voucher_total.toLocaleString()}</td>
+                    <td class="text-right">$${item.commission_amount.toLocaleString()}</td>
+                  </tr>
+                `
+              })
+              // 添加客戶小結
+              const customerTotalHours = customerItems.reduce((sum, i) => sum + i.service_hours, 0)
+              const customerTotalVoucher = customerItems.reduce((sum, i) => sum + i.voucher_total, 0)
+              const customerTotalCommission = customerItems.reduce((sum, i) => sum + i.commission_amount, 0)
+              tableRows += `
+                <tr style="background-color: #f0f0f0; border-top: 2px solid #ccc;">
+                  <td colspan="2" style="font-weight: 500;">${customerItems[0].customer_name} 小結</td>
+                  <td style="font-size: 10px; color: #666;">${customerItems.length} 次服務</td>
+                  <td></td>
+                  <td class="text-right" style="font-weight: 500;">${customerTotalHours.toFixed(1)}</td>
+                  <td></td>
+                  <td class="text-right" style="font-weight: 600; color: #2563eb;">$${customerTotalVoucher.toLocaleString()}</td>
+                  <td class="text-right" style="font-weight: 700; color: #16a34a;">$${customerTotalCommission.toLocaleString()}</td>
+                </tr>
+              `
+            })
+            
             return `
               <h2>介紹人：${introducer} (佣金比例: ${commRate?.voucher_commission_percentage || 0}%) | 服務次數: ${items.length} | 總時數: ${groupHours.toFixed(1)}h</h2>
               <table>
@@ -474,20 +520,9 @@ export default function VoucherCommissionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${sortedItems.map(item => `
-                    <tr>
-                      <td>${item.customer_id}</td>
-                      <td>${item.customer_name}</td>
-                      <td>${item.service_date}</td>
-                      <td>${item.service_type}</td>
-                      <td class="text-right">${item.service_hours.toFixed(1)}</td>
-                      <td class="text-right">$${item.voucher_rate}</td>
-                      <td class="text-right">$${item.voucher_total.toLocaleString()}</td>
-                      <td class="text-right">$${item.commission_amount.toLocaleString()}</td>
-                    </tr>
-                  `).join('')}
+                  ${tableRows}
                   <tr class="summary-row">
-                    <td colspan="6">小計</td>
+                    <td colspan="6">介紹人總計</td>
                     <td class="text-right">$${groupTotal.toLocaleString()}</td>
                     <td class="text-right">$${groupCommission.toLocaleString()}</td>
                   </tr>
@@ -727,25 +762,65 @@ export default function VoucherCommissionPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-light">
-                    {items
-                      .slice()
-                      .sort((a, b) => {
+                    {(() => {
+                      // 按客戶分組
+                      const sortedItems = items.slice().sort((a, b) => {
                         const customerCompare = a.customer_id.localeCompare(b.customer_id)
                         if (customerCompare !== 0) return customerCompare
                         return a.service_date.localeCompare(b.service_date)
                       })
-                      .map((item, index) => (
-                      <tr key={`${item.id}-${index}`} className="hover:bg-bg-secondary transition-colors">
-                        <td className="px-4 py-3 text-text-primary">{item.customer_id}</td>
-                        <td className="px-4 py-3 text-text-primary">{item.customer_name}</td>
-                        <td className="px-4 py-3 text-text-secondary">{item.service_date}</td>
-                        <td className="px-4 py-3 text-text-secondary">{item.service_type}</td>
-                        <td className="px-4 py-3 text-right text-text-secondary">{item.service_hours.toFixed(1)}h</td>
-                        <td className="px-4 py-3 text-right text-text-secondary">${item.voucher_rate}/h</td>
-                        <td className="px-4 py-3 text-right text-blue-600 font-medium">{formatCurrency(item.voucher_total)}</td>
-                        <td className="px-4 py-3 text-right text-mingcare-green font-semibold">{formatCurrency(item.commission_amount)}</td>
-                      </tr>
-                    ))}
+                      
+                      // 分組客戶
+                      const customerGroups = new Map<string, typeof sortedItems>()
+                      sortedItems.forEach(item => {
+                        const key = item.customer_id
+                        if (!customerGroups.has(key)) {
+                          customerGroups.set(key, [])
+                        }
+                        customerGroups.get(key)!.push(item)
+                      })
+                      
+                      const rows: React.ReactNode[] = []
+                      customerGroups.forEach((customerItems, customerId) => {
+                        // 添加該客戶的所有記錄
+                        customerItems.forEach((item, index) => {
+                          rows.push(
+                            <tr key={`${item.id}-${index}`} className="hover:bg-bg-secondary transition-colors">
+                              <td className="px-4 py-3 text-text-primary">{item.customer_id}</td>
+                              <td className="px-4 py-3 text-text-primary">{item.customer_name}</td>
+                              <td className="px-4 py-3 text-text-secondary">{item.service_date}</td>
+                              <td className="px-4 py-3 text-text-secondary">{item.service_type}</td>
+                              <td className="px-4 py-3 text-right text-text-secondary">{item.service_hours.toFixed(1)}h</td>
+                              <td className="px-4 py-3 text-right text-text-secondary">${item.voucher_rate}/h</td>
+                              <td className="px-4 py-3 text-right text-blue-600 font-medium">{formatCurrency(item.voucher_total)}</td>
+                              <td className="px-4 py-3 text-right text-mingcare-green font-semibold">{formatCurrency(item.commission_amount)}</td>
+                            </tr>
+                          )
+                        })
+                        
+                        // 添加客戶小結行
+                        const customerTotalHours = customerItems.reduce((sum, i) => sum + i.service_hours, 0)
+                        const customerTotalVoucher = customerItems.reduce((sum, i) => sum + i.voucher_total, 0)
+                        const customerTotalCommission = customerItems.reduce((sum, i) => sum + i.commission_amount, 0)
+                        rows.push(
+                          <tr key={`subtotal-${customerId}`} className="bg-gray-50 border-t-2 border-gray-200">
+                            <td colSpan={2} className="px-4 py-2 text-text-primary font-medium">
+                              {customerItems[0].customer_name} 小結
+                            </td>
+                            <td className="px-4 py-2 text-text-secondary text-sm">
+                              {customerItems.length} 次服務
+                            </td>
+                            <td className="px-4 py-2"></td>
+                            <td className="px-4 py-2 text-right text-text-primary font-medium">{customerTotalHours.toFixed(1)}h</td>
+                            <td className="px-4 py-2"></td>
+                            <td className="px-4 py-2 text-right text-blue-600 font-semibold">{formatCurrency(customerTotalVoucher)}</td>
+                            <td className="px-4 py-2 text-right text-mingcare-green font-bold">{formatCurrency(customerTotalCommission)}</td>
+                          </tr>
+                        )
+                      })
+                      
+                      return rows
+                    })()}
                   </tbody>
                 </table>
               </div>
