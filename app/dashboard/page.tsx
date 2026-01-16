@@ -538,94 +538,99 @@ export default function Dashboard() {
         <div className="card-apple mb-4">
           <div className="card-apple-content">
             {hkoStatus === 'loading' && (
-              <div className="flex items-center justify-center gap-3 py-6">
-                <div className="w-5 h-5 border-2 border-border-light border-t-primary rounded-full animate-spin" />
-                <div className="text-sm text-text-secondary">載入天氣資料中…</div>
+              <div className="flex items-center justify-center gap-3 py-8">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               </div>
             )}
 
             {hkoStatus === 'error' && (
-              <div className="text-center py-6">
-                <div className="text-sm text-text-secondary">暫時無法讀取天文台資料</div>
+              <div className="text-center py-8">
+                <div className="text-sm text-white/60">暫時無法讀取天文台資料</div>
               </div>
             )}
 
             {hkoStatus === 'ready' && (
               <div className="space-y-4">
-                {/* 頂部：即時天氣 + 警告 */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* 氣溫 */}
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-semibold text-text-primary tabular-nums">
-                        {formatTemp(
-                          allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
-                          allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
-                        )}
-                      </span>
-                    </div>
-                    {/* 濕度 */}
-                    <div className="flex items-center gap-1 text-text-secondary">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-                      </svg>
-                      <span className="text-sm tabular-nums">
-                        {formatHumidity(
-                          allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.value ?? hkoWeather?.humidity?.value,
-                          allHkoData?.humidity.find((d) => d.place === selectedHumidityPlace)?.unit ?? hkoWeather?.humidity?.unit
-                        )}
-                      </span>
-                    </div>
-                    {/* 雨量（只在有雨時顯示） */}
-                    {(Number(allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? 0) > 0) && (
-                      <div className="flex items-center gap-1 text-text-secondary">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
-                        </svg>
-                        <span className="text-sm tabular-nums">
-                          {formatRainfall(
-                            allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.value ?? hkoWeather?.rainfall?.value ?? '0',
-                            allHkoData?.rainfall.find((d) => d.place === selectedRainfallPlace)?.unit ?? hkoWeather?.rainfall?.unit ?? 'mm'
-                          )}
-                        </span>
-                      </div>
+                {/* 頂部：地點 + 今日天氣 */}
+                <div className="text-center">
+                  <div className="text-lg text-text-primary font-medium">{selectedTempPlace}</div>
+                  <div className="text-6xl font-extralight text-text-primary tabular-nums mt-1">
+                    {formatTemp(
+                      allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
+                      allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
                     )}
                   </div>
-                  {/* 警告標籤 */}
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    {hkoForecast[0] && (
+                      <>
+                        <span className="text-sm text-text-secondary">
+                          最高 {hkoForecast[0].maxTemp?.replace('°C', '')}°
+                        </span>
+                        <span className="text-sm text-text-secondary">
+                          最低 {hkoForecast[0].minTemp?.replace('°C', '')}°
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* 天氣警告 - 顯示在今日天氣下面 */}
                   {hkoWeather?.warnings.length ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-warning/10 text-warning text-xs">
-                      <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-                      <span>{hkoWeather.warnings.length} 則警告</span>
+                    <div className="mt-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20">
+                      <div className="text-xs text-warning line-clamp-1">
+                        ⚠️ {hkoWeather.warnings[0]}
+                      </div>
                     </div>
                   ) : null}
                 </div>
 
-                {/* 未來天氣預報 - 簡化版 */}
+                {/* 分隔線 */}
+                <div className="border-t border-border-light" />
+
+                {/* 未來天氣預報 - iOS 風格 */}
                 {hkoForecast.length > 0 && (
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    {hkoForecast.slice(0, 5).map((d, idx) => (
-                      <div key={idx} className="flex flex-col items-center gap-1 min-w-[48px] p-2 rounded-xl bg-bg-secondary">
-                        <div className="text-[10px] text-text-tertiary">{d.dateLabel}</div>
-                        {d.iconUrl && (
-                          <img
-                            src={d.iconUrl}
-                            alt={d.weather ?? ''}
-                            className="w-6 h-6 object-contain"
-                            loading="lazy"
-                          />
-                        )}
-                        <div className="text-xs text-text-primary tabular-nums">
-                          {d.minTemp?.replace('°C', '')}°-{d.maxTemp?.replace('°C', '')}°
+                  <div className="space-y-2">
+                    {hkoForecast.slice(0, 5).map((d, idx) => {
+                      const minTemp = parseInt(d.minTemp?.replace('°C', '') ?? '15');
+                      const maxTemp = parseInt(d.maxTemp?.replace('°C', '') ?? '25');
+                      // 計算溫度條位置 (假設範圍 10-35°C)
+                      const rangeMin = 10;
+                      const rangeMax = 35;
+                      const leftPercent = ((minTemp - rangeMin) / (rangeMax - rangeMin)) * 100;
+                      const widthPercent = ((maxTemp - minTemp) / (rangeMax - rangeMin)) * 100;
+                      
+                      return (
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="w-10 text-sm text-text-secondary">{d.dateLabel}</div>
+                          {d.iconUrl && (
+                            <img
+                              src={d.iconUrl}
+                              alt=""
+                              className="w-6 h-6 object-contain"
+                              loading="lazy"
+                            />
+                          )}
+                          <div className="w-8 text-sm text-text-tertiary tabular-nums text-right">
+                            {minTemp}°
+                          </div>
+                          {/* 溫度條 */}
+                          <div className="flex-1 h-1.5 bg-bg-tertiary rounded-full relative overflow-hidden">
+                            <div
+                              className="absolute h-full rounded-full"
+                              style={{
+                                left: `${Math.max(0, leftPercent)}%`,
+                                width: `${Math.min(100 - leftPercent, widthPercent)}%`,
+                                background: 'linear-gradient(to right, #3b82f6, #22c55e, #eab308, #f97316)',
+                              }}
+                            />
+                          </div>
+                          <div className="w-8 text-sm text-text-primary tabular-nums">
+                            {maxTemp}°
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
-
-                {/* 資料來源 */}
-                <div className="text-[10px] text-text-tertiary text-right">
-                  香港天文台 · {formatHkoUpdateTime(hkoWeather?.updatedAt)}
-                </div>
               </div>
             )}
           </div>
