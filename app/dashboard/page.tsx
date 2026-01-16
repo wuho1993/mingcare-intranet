@@ -534,14 +534,21 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 香港天文台天氣 */}
-        <div className="card-apple mb-4">
-          <div className="card-apple-content">
-            {hkoStatus === 'loading' && (
-              <div className="flex items-center justify-center gap-3 py-8">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        {/* 天氣 + 日曆 並排 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          {/* 香港天文台天氣 */}
+          <div className="card-apple">
+            <div className="card-apple-content">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-lg font-semibold text-text-primary">天氣預報</div>
+                <div className="text-xs text-text-tertiary">香港天文台</div>
               </div>
-            )}
+              
+              {hkoStatus === 'loading' && (
+                <div className="flex items-center justify-center gap-3 py-8">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
 
             {hkoStatus === 'error' && (
               <div className="text-center py-8">
@@ -553,7 +560,20 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {/* 頂部：地點 + 今日天氣 */}
                 <div className="text-center">
-                  <div className="text-lg text-text-primary font-medium">{selectedTempPlace}</div>
+                  <div className="relative inline-block">
+                    <select
+                      value={selectedTempPlace}
+                      onChange={(e) => setSelectedTempPlace(e.target.value)}
+                      className="text-lg text-text-primary font-medium bg-transparent border-none cursor-pointer text-center appearance-none pr-5 focus:ring-0 focus:outline-none"
+                    >
+                      {allHkoData?.temperature.map((d) => (
+                        <option key={d.place} value={d.place}>{d.place}</option>
+                      ))}
+                    </select>
+                    <svg className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   <div className="text-6xl font-extralight text-text-primary tabular-nums mt-1">
                     {formatTemp(
                       allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.value ?? hkoWeather?.temperature?.value,
@@ -633,56 +653,69 @@ export default function Dashboard() {
                 )}
               </div>
             )}
-          </div>
-        </div>
-
-        {/* 快速提示日曆 - 獨立區塊 */}
-        <div className="card-apple mb-4">
-          <div className="card-apple-content">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-warning/10 ring-1 ring-warning/20 flex items-center justify-center text-warning">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-text-primary">快速提示</div>
-                  <div className="text-xs text-text-tertiary">今日重要事項提醒</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-text-primary">{currentTime.getDate()}</div>
-                <div className="text-xs text-text-tertiary">{currentTime.toLocaleDateString('zh-TW', { month: 'short', weekday: 'short' })}</div>
-              </div>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {/* 提示項目 1 */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-warning/30 hover:bg-warning/5 transition-colors cursor-pointer">
-                <div className="w-3 h-3 rounded-full bg-error animate-pulse flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-text-primary truncate">緊急待辦</div>
-                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
+          </div>
+
+          {/* 當月日曆 */}
+          <div className="card-apple">
+            <div className="card-apple-content">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-lg font-semibold text-text-primary">
+                  {currentTime.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long' })}
+                </div>
+                <div className="text-sm text-primary font-medium">
+                  今日
                 </div>
               </div>
               
-              {/* 提示項目 2 */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer">
-                <div className="w-3 h-3 rounded-full bg-warning flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-text-primary truncate">今日提醒</div>
-                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
-                </div>
+              {/* 星期標題 */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['日', '一', '二', '三', '四', '五', '六'].map((day, idx) => (
+                  <div key={day} className={`text-center text-xs font-medium py-1 ${idx === 0 || idx === 6 ? 'text-text-tertiary' : 'text-text-secondary'}`}>
+                    {day}
+                  </div>
+                ))}
               </div>
               
-              {/* 提示項目 3 */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-success/30 hover:bg-success/5 transition-colors cursor-pointer">
-                <div className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-text-primary truncate">備忘事項</div>
-                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
-                </div>
+              {/* 日曆格子 */}
+              <div className="grid grid-cols-7 gap-1">
+                {(() => {
+                  const year = currentTime.getFullYear();
+                  const month = currentTime.getMonth();
+                  const today = currentTime.getDate();
+                  const firstDay = new Date(year, month, 1).getDay();
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  const days = [];
+                  
+                  // 填充月初空白
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="aspect-square" />);
+                  }
+                  
+                  // 填充日期
+                  for (let d = 1; d <= daysInMonth; d++) {
+                    const isToday = d === today;
+                    const dayOfWeek = new Date(year, month, d).getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    
+                    days.push(
+                      <div
+                        key={d}
+                        className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors
+                          ${isToday 
+                            ? 'bg-primary text-white font-semibold' 
+                            : isWeekend 
+                              ? 'text-text-tertiary hover:bg-bg-secondary' 
+                              : 'text-text-primary hover:bg-bg-secondary'
+                          }`}
+                      >
+                        {d}
+                      </div>
+                    );
+                  }
+                  
+                  return days;
+                })()}
               </div>
             </div>
           </div>
