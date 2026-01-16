@@ -135,6 +135,13 @@ export default function Dashboard() {
     const today = new Date()
     const month = today.getMonth()
     const year = today.getFullYear()
+    const day = today.getDate()
+    
+    // 計算提醒對應的實際日期
+    const reminderDay = reminderPopup.isToday ? day : day + 1
+    const reminderDate = new Date(year, month, reminderDay)
+    const reminderMonth = reminderDate.getMonth() + 1
+    const reminderDayOfMonth = reminderDate.getDate()
     
     // getMonthInfo helper
     const getMonthInfoLocal = (m: number, y: number) => {
@@ -153,12 +160,13 @@ export default function Dashboard() {
     const fourMonthsAgo = getMonthInfoLocal(month - 4, year)
     
     const timeLabel = reminderPopup.isToday ? '【今天】' : '【明天】'
+    const dateLabel = `${reminderMonth}月${reminderDayOfMonth}日`
     
     switch (reminderPopup.type) {
       case 'serviceFee3':
         return {
           icon: '💵',
-          title: `${timeLabel} 3號 服務費收取提醒`,
+          title: `${timeLabel} ${dateLabel} 服務費收取提醒`,
           items: [
             { name: 'Steven140', period: twoMonthsAgo.range },
             { name: 'Steven200', period: twoMonthsAgo.range }
@@ -167,7 +175,7 @@ export default function Dashboard() {
       case 'serviceFee5':
         return {
           icon: '💵',
-          title: `${timeLabel} 5號 服務費收取提醒`,
+          title: `${timeLabel} ${dateLabel} 服務費收取提醒`,
           items: [
             { name: '俊佳218', period: threeMonthsAgo.range },
             { name: '醫點', period: threeMonthsAgo.range }
@@ -176,7 +184,7 @@ export default function Dashboard() {
       case 'commission':
         return {
           icon: '💰',
-          title: `${timeLabel} 7號 佣金發放提醒`,
+          title: `${timeLabel} ${dateLabel} 佣金發放提醒`,
           items: [
             { name: 'Doctor Lee', period: prevMonth.range },
             { name: 'Annie', period: prevMonth.range },
