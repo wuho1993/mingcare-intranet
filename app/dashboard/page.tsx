@@ -718,37 +718,61 @@ export default function Dashboard() {
                       資料來源：香港天文台開放數據
                     </div>
                   </div>
-                  
-                  {/* 快速提示日曆 */}
-                  <div className="mt-4 rounded-2xl border border-border-light bg-bg-secondary p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                          </svg>
-                        </div>
-                        <div className="text-xs font-semibold text-text-primary">快速提示</div>
-                      </div>
-                      <div className="text-xs text-text-tertiary">{formatDate(currentTime).split(' ')[0]}</div>
-                    </div>
-                    <div className="space-y-2">
-                      {/* 提示項目 - 稍後可配置 */}
-                      <div className="flex items-center gap-3 p-2 rounded-xl bg-bg-primary border border-border-light">
-                        <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-                        <div className="flex-1">
-                          <div className="text-xs font-medium text-text-primary">今日待辦</div>
-                          <div className="text-[10px] text-text-tertiary">點擊設定提示內容</div>
-                        </div>
-                        <svg className="w-4 h-4 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* 快速提示日曆 - 獨立區塊 */}
+        <div className="card-apple mb-4">
+          <div className="card-apple-content">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-warning/10 ring-1 ring-warning/20 flex items-center justify-center text-warning">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-text-primary">快速提示</div>
+                  <div className="text-xs text-text-tertiary">今日重要事項提醒</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-text-primary">{currentTime.getDate()}</div>
+                <div className="text-xs text-text-tertiary">{currentTime.toLocaleDateString('zh-TW', { month: 'short', weekday: 'short' })}</div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* 提示項目 1 */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-warning/30 hover:bg-warning/5 transition-colors cursor-pointer">
+                <div className="w-3 h-3 rounded-full bg-error animate-pulse flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-primary truncate">緊急待辦</div>
+                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
+                </div>
+              </div>
+              
+              {/* 提示項目 2 */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer">
+                <div className="w-3 h-3 rounded-full bg-warning flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-primary truncate">今日提醒</div>
+                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
+                </div>
+              </div>
+              
+              {/* 提示項目 3 */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary border border-border-light hover:border-success/30 hover:bg-success/5 transition-colors cursor-pointer">
+                <div className="w-3 h-3 rounded-full bg-success flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-primary truncate">備忘事項</div>
+                  <div className="text-xs text-text-tertiary">點擊設定內容</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
