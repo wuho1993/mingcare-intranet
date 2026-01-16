@@ -580,6 +580,21 @@ export default function Dashboard() {
                       allHkoData?.temperature.find((d) => d.place === selectedTempPlace)?.unit ?? hkoWeather?.temperature?.unit
                     )}
                   </div>
+                  {/* 今日天氣描述 + 圖標 */}
+                  {hkoForecast[0] && (
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                      {hkoForecast[0].iconUrl && (
+                        <img
+                          src={hkoForecast[0].iconUrl}
+                          alt=""
+                          className="w-6 h-6 object-contain"
+                        />
+                      )}
+                      <span className="text-sm text-text-secondary">
+                        {hkoForecast[0].weather || '—'}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-center gap-2 mt-1">
                     {hkoForecast[0] && (
                       <>
