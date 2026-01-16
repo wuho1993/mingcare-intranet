@@ -702,6 +702,16 @@ export default function Dashboard() {
                   const daysInMonth = new Date(year, month + 1, 0).getDate();
                   const days = [];
                   
+                  // 計算佣金月份
+                  const getMonthName = (m: number) => {
+                    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    return monthNames[(m + 12) % 12];
+                  };
+                  // Doctor Lee, Annie, Carmen: 上個月
+                  const prevMonth = getMonthName(month - 1);
+                  // Steven: 前2個月
+                  const twoMonthsAgo = getMonthName(month - 2);
+                  
                   // 填充月初空白
                   for (let i = 0; i < firstDay; i++) {
                     days.push(<div key={`empty-${i}`} className="aspect-square" />);
@@ -712,19 +722,49 @@ export default function Dashboard() {
                     const isToday = d === today;
                     const dayOfWeek = new Date(year, month, d).getDay();
                     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const isCommissionDay = d === 7;
                     
                     days.push(
                       <div
                         key={d}
-                        className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors
+                        className={`aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-colors relative group/day
                           ${isToday 
                             ? 'bg-primary text-white font-semibold' 
                             : isWeekend 
                               ? 'text-text-tertiary hover:bg-bg-secondary' 
                               : 'text-text-primary hover:bg-bg-secondary'
-                          }`}
+                          }
+                          ${isCommissionDay && !isToday ? 'ring-2 ring-success/50' : ''}`}
                       >
                         {d}
+                        {/* 7日佣金發放提示 */}
+                        {isCommissionDay && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 rounded-xl bg-bg-primary border border-border-light shadow-apple opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="text-xs font-semibold text-text-primary mb-2">💰 佣金發放日</div>
+                            <div className="space-y-1.5 text-[11px]">
+                              <div className="text-text-secondary">
+                                <span className="font-medium text-text-primary">Doctor Lee</span>
+                                <span className="text-text-tertiary ml-1">({prevMonth}份佣金)</span>
+                              </div>
+                              <div className="text-text-secondary">
+                                <span className="font-medium text-text-primary">Annie</span>
+                                <span className="text-text-tertiary ml-1">({prevMonth}份佣金)</span>
+                              </div>
+                              <div className="text-text-secondary">
+                                <span className="font-medium text-text-primary">Carmen</span>
+                                <span className="text-text-tertiary ml-1">({prevMonth}份佣金)</span>
+                              </div>
+                              <div className="text-text-secondary border-t border-border-light pt-1.5 mt-1.5">
+                                <span className="font-medium text-text-primary">Steven</span>
+                                <span className="text-text-tertiary ml-1">({twoMonthsAgo}份佣金)</span>
+                              </div>
+                            </div>
+                            {/* 箭頭 */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                              <div className="w-2 h-2 bg-bg-primary border-r border-b border-border-light transform rotate-45" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   }
