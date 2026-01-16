@@ -147,7 +147,8 @@ export default function VoucherCommissionPage() {
           service_date,
           service_hours,
           service_fee,
-          project_category
+          project_category,
+          service_type
         `)
         .gte('service_date', startDate)
         .lte('service_date', endDate)
@@ -177,6 +178,7 @@ export default function VoucherCommissionPage() {
         service_hours: number
         service_fee: number
         project_category: string
+        service_type: string
       }
 
       interface ExtendedBillingRecord extends BillingRecord {
@@ -211,37 +213,42 @@ export default function VoucherCommissionPage() {
           return true
         })
 
-      // 服務類型到社區券費率的映射函數
-      const getVoucherRate = (category: string): number => {
-        // MC社區券(醫點）-> NC-護理服務(專業人員) 945/h
-        if (category.includes('醫點') || category.includes('NC') || category.includes('護理')) {
+      // 使用 service_type 欄位匹配社區券費率
+      const getVoucherRate = (serviceType: string): number => {
+        // 直接匹配 voucher_rate 表
+        const matchedRate = voucherRates.find(v => {
+          // 完全匹配
+          if (v.service_type === serviceType) return true
+          // 部分匹配（處理全形/半形差異）
+          const normalizedServiceType = serviceType.replace(/[⼀-⿿]/g, char => char) // 保持原樣
+          const normalizedVoucherType = v.service_type.replace(/[⼀-⿿]/g, char => char)
+          return normalizedVoucherType.includes(serviceType.substring(0, 2)) || 
+                 serviceType.includes(v.service_type.substring(0, 2))
+        })
+        
+        if (matchedRate) {
+          return matchedRate.service_rate
+        }
+        
+        // 備用匹配邏輯
+        if (serviceType.includes('NC') || serviceType.includes('護理')) {
           return 945
         }
-        // 復康運動專業人員
-        if (category.includes('RT') && category.includes('專業')) {
+        if (serviceType.includes('RT') && serviceType.includes('專業')) {
           return 982
         }
-        // 復康運動輔助人員/OTA
-        if (category.includes('RT') || category.includes('復康') || category.includes('OTA')) {
+        if (serviceType.includes('RT') || serviceType.includes('復康') || serviceType.includes('OTA') || serviceType.includes('RA')) {
           return 248
         }
-        // 到戶看顧
-        if (category.includes('PC') || category.includes('看顧')) {
+        if (serviceType.includes('PC') || serviceType.includes('看顧')) {
           return 248
         }
-        // 家居服務
-        if (category.includes('HC') || category.includes('家居')) {
+        if (serviceType.includes('HC') || serviceType.includes('家居')) {
           return 150
         }
-        // 護送服務/陪診
-        if (category.includes('ES') || category.includes('護送') || category.includes('陪診')) {
+        if (serviceType.includes('ES') || serviceType.includes('護送') || serviceType.includes('陪診')) {
           return 150
         }
-        // 社區券通用
-        if (category.includes('社區券')) {
-          return 248  // 預設用輔助人員費率
-        }
-        // 俊佳等其他類型，用實際服務費計算
         return 0
       }
 
@@ -249,8 +256,8 @@ export default function VoucherCommissionPage() {
       const detailRecords: VoucherCommissionDetail[] = []
       
       filteredRecords.forEach((record: ExtendedBillingRecord) => {
-        // 使用映射函數獲取社區券費率
-        const rate = getVoucherRate(record.project_category || '')
+        // 使用 service_type 欄位獲取社區券費率
+        const rate = getVoucherRate(record.service_type || '')
         // 如果沒有匹配的費率，使用實際服務費 / 服務時數
         const effectiveRate = rate > 0 ? rate : (record.service_hours > 0 ? Math.round(record.service_fee / record.service_hours * 100) / 100 : 0)
         
@@ -267,7 +274,7 @@ export default function VoucherCommissionPage() {
           customer_id: record.customer_id,
           customer_name: record.customer_name || '',
           service_date: record.service_date,
-          service_type: record.project_category || '未分類',
+          service_type: record.service_type || record.project_category || '未分類',
           service_hours: hours,
           voucher_rate: effectiveRate,
           voucher_total: voucher_total,
