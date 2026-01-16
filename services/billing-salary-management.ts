@@ -1028,8 +1028,16 @@ function generateDateList(formData: MultipleDayFormData): string[] {
   const end = new Date(formData.dateRange.end)
   const current = new Date(start)
 
+  // 使用本地日期格式避免時區問題
+  const formatDateLocal = (d: Date): string => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
   while (current <= end) {
-    const dateStr = current.toISOString().split('T')[0]
+    const dateStr = formatDateLocal(current)
     
     // 檢查是否在排除列表中
     if (formData.excludeDates?.includes(dateStr)) {

@@ -423,7 +423,9 @@ async function getVoucherStatsForExport(customers: CustomerListItem[], dateRange
       // 為每個月份分別查詢數據
       for (const monthInfo of months) {
         const monthStart = `${monthInfo.year}-${String(monthInfo.month).padStart(2, '0')}-01`
-        const monthEnd = new Date(monthInfo.year, monthInfo.month, 0).toISOString().split('T')[0]
+        // 使用本地日期格式避免時區問題
+        const lastDayOfMonth = new Date(monthInfo.year, monthInfo.month, 0).getDate()
+        const monthEnd = `${monthInfo.year}-${String(monthInfo.month).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`
         
         // 分批獲取該月所有服務記錄
         let serviceUsage: any[] = []

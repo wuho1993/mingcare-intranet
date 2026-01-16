@@ -352,6 +352,10 @@ export class StatisticsService {
   // 獲取儀表板統計
   static async getDashboardStats() {
     try {
+      // 使用本地日期格式避免時區問題
+      const now = new Date();
+      const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      
       const [customersCount, staffCount, servicesCount, monthlyRevenue] = await Promise.all([
         supabase.from('customer_personal_data').select('*', { count: 'exact', head: true }),
         supabase.from('care_staff_profiles').select('*', { count: 'exact', head: true }),
@@ -359,7 +363,7 @@ export class StatisticsService {
         supabase
           .from('billing_salary_data')
           .select('service_fee')
-          .gte('service_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+          .gte('service_date', startOfMonth)
       ])
 
       const totalRevenue = monthlyRevenue.data?.reduce((sum: number, record: any) => sum + (record.service_fee || 0), 0) || 0

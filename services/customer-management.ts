@@ -521,11 +521,15 @@ export class CustomerManagementService {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
-      const startOfMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
-      const endOfMonth = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
+      // 使用本地日期格式避免時區問題
+      const formatDateLocal = (y: number, m: number, d: number) => 
+        `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const startOfMonth = formatDateLocal(currentYear, currentMonth, 1);
+      const endOfMonth = formatDateLocal(currentYear, currentMonth, lastDayOfMonth);
 
       console.log('=== Monthly Voucher Service Usage Query ===');
-      console.log('Current date:', now.toISOString().split('T')[0]);
+      console.log('Current date:', formatDateLocal(currentYear, currentMonth, now.getDate()));
       console.log('Current year:', currentYear);
       console.log('Current month (0-indexed):', currentMonth);
       console.log('Current month (display):', currentMonth + 1);
