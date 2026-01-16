@@ -4604,6 +4604,8 @@ export default function ServicesPage() {
         let totalServices = records.length
         let totalHours = 0
         let totalFees = 0
+        let totalSalary = 0
+        let totalProfit = 0
 
         // 為每個客戶生成獨立的表格
         const customerTables = Object.keys(customerGroups).map((customerName, index) => {
@@ -4612,12 +4614,16 @@ export default function ServicesPage() {
           // 客戶小結計算
           let customerHours = 0
           let customerFees = 0
+          let customerSalaryTotal = 0
+          let customerProfitTotal = 0
 
           // 生成客戶記錄
           const customerRows = customerRecords.map(record => {
             // 累計小結數據
             customerHours += parseFloat(record.service_hours || '0')
             customerFees += parseFloat(record.service_fee || '0')
+            customerSalaryTotal += parseFloat(String(record.staff_salary || '0'))
+            customerProfitTotal += (record.profit !== undefined ? record.profit : ((record.service_fee || 0) - (record.staff_salary || 0)))
 
             return `
               <tr>
@@ -4630,24 +4636,39 @@ export default function ServicesPage() {
             `
           }).join('')
 
-          // 客戶小結行
-          const subtotalRow = `
-            <tr class="customer-subtotal">
-              <td colspan="${columns.length - 2}" style="text-align: right; font-weight: bold; background-color: #f0f8ff; border-top: 2px solid #428bca;">
-                ${customerName} 小結：
-              </td>
-              <td style="text-align: right; font-weight: bold; background-color: #f0f8ff; border-top: 2px solid #428bca;">
-                ${customerHours.toFixed(1)}
-              </td>
-              <td style="text-align: right; font-weight: bold; background-color: #f0f8ff; border-top: 2px solid #428bca;">
-                $${customerFees.toFixed(2)}
-              </td>
-            </tr>
-          `
+          // 動態生成客戶小結行 - 根據所選欄位顯示對應的合計
+          const subtotalCells = columns.map((col, index) => {
+            const isLast = index === columns.length - 1
+            const cellStyle = 'text-align: right; font-weight: bold; background-color: #f0f8ff; border-top: 2px solid #428bca;'
+            
+            // 第一個欄位顯示小結標籤
+            if (index === 0) {
+              return `<td colspan="1" style="${cellStyle} text-align: left;">${customerName} 小結</td>`
+            }
+            
+            // 根據欄位類型顯示合計
+            switch (col) {
+              case 'service_hours':
+                return `<td style="${cellStyle}">${customerHours.toFixed(1)}</td>`
+              case 'service_fee':
+                return `<td style="${cellStyle}">$${customerFees.toFixed(2)}</td>`
+              case 'staff_salary':
+                return `<td style="${cellStyle}">$${customerSalaryTotal.toFixed(2)}</td>`
+              case 'service_profit':
+                return `<td style="${cellStyle}">$${customerProfitTotal.toFixed(2)}</td>`
+              default:
+                // 其他欄位留空
+                return `<td style="${cellStyle}"></td>`
+            }
+          }).join('')
+          
+          const subtotalRow = `<tr class="customer-subtotal">${subtotalCells}</tr>`
 
           // 累計大結數據
           totalHours += customerHours
           totalFees += customerFees
+          totalSalary += customerSalaryTotal
+          totalProfit += customerProfitTotal
 
           // 生成客戶獨立表格
           return `
@@ -4677,6 +4698,8 @@ export default function ServicesPage() {
           count: number
           hours: number
           amount: number
+          salary: number
+          profit: number
         }> = {}
 
         // 計算項目統計
@@ -4684,6 +4707,8 @@ export default function ServicesPage() {
           count: number
           hours: number
           amount: number
+          salary: number
+          profit: number
         }> = {}
 
         records.forEach(record => {
@@ -4691,37 +4716,149 @@ export default function ServicesPage() {
           const project = record.project_category || '未分類'
           const hours = parseFloat(record.service_hours || '0')
           const amount = parseFloat(record.service_fee || '0')
+          const salary = parseFloat(String(record.staff_salary || '0'))
+          const profit = record.profit !== undefined ? record.profit : (amount - salary)
 
           if (!serviceTypeStats[serviceType]) {
-            serviceTypeStats[serviceType] = { count: 0, hours: 0, amount: 0 }
+            serviceTypeStats[serviceType] = { count: 0, hours: 0, amount: 0, salary: 0, profit: 0 }
           }
 
           if (!projectStats[project]) {
-            projectStats[project] = { count: 0, hours: 0, amount: 0 }
+            projectStats[project] = { count: 0, hours: 0, amount: 0, salary: 0, profit: 0 }
           }
 
           serviceTypeStats[serviceType].count += 1
           serviceTypeStats[serviceType].hours += hours
           serviceTypeStats[serviceType].amount += amount
+          serviceTypeStats[serviceType].salary += salary
+          serviceTypeStats[serviceType].profit += profit
 
           projectStats[project].count += 1
           projectStats[project].hours += hours
           projectStats[project].amount += amount
+          projectStats[project].salary += salary
+          projectStats[project].profit += profit
         })
 
-        // 生成服務類型統計表格
-        const serviceTypeTable = Object.keys(serviceTypeStats)
+        // 動態生成總覽統計項目 - 根據選擇的欄位
+        const summaryItems: string[] = []
+        summaryItems.push(`
+          <div style="text-align: center;">
+            <div style="font-weight: bold; color: #428bca;">客戶總數</div>
+            <div style="font-size: 18px; font-weight: bold;">${totalCustomers}</div>
+          </div>
+        `)
+        summaryItems.push(`
+          <div style="text-align: center;">
+            <div style="font-weight: bold; color: #428bca;">服務次數</div>
+            <div style="font-size: 18px; font-weight: bold;">${totalServices}</div>
+          </div>
+        `)
+        if (columns.includes('service_hours')) {
+          summaryItems.push(`
+            <div style="text-align: center;">
+              <div style="font-weight: bold; color: #428bca;">總服務時數</div>
+              <div style="font-size: 18px; font-weight: bold;">${totalHours.toFixed(1)}</div>
+            </div>
+          `)
+        }
+        if (columns.includes('service_fee')) {
+          summaryItems.push(`
+            <div style="text-align: center;">
+              <div style="font-weight: bold; color: #428bca;">總服務費用</div>
+              <div style="font-size: 18px; font-weight: bold;">$${totalFees.toFixed(2)}</div>
+            </div>
+          `)
+        }
+        if (columns.includes('staff_salary')) {
+          summaryItems.push(`
+            <div style="text-align: center;">
+              <div style="font-weight: bold; color: #428bca;">總人工</div>
+              <div style="font-size: 18px; font-weight: bold;">$${totalSalary.toFixed(2)}</div>
+            </div>
+          `)
+        }
+        if (columns.includes('service_profit')) {
+          summaryItems.push(`
+            <div style="text-align: center;">
+              <div style="font-weight: bold; color: #428bca;">總利潤</div>
+              <div style="font-size: 18px; font-weight: bold;">$${totalProfit.toFixed(2)}</div>
+            </div>
+          `)
+        }
+
+        // 動態生成項目統計表格的欄位
+        const projectTableHeaders: string[] = ['<th style="padding: 8px; border: 1px solid #ddd; text-align: left;">所屬項目</th>']
+        const hasProjectCount = true  // 總是顯示次數
+        projectTableHeaders.push('<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">次數</th>')
+        if (columns.includes('service_hours')) {
+          projectTableHeaders.push('<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">時數</th>')
+        }
+        if (columns.includes('service_fee')) {
+          projectTableHeaders.push('<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">金額</th>')
+        }
+        if (columns.includes('staff_salary')) {
+          projectTableHeaders.push('<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">人工</th>')
+        }
+        if (columns.includes('service_profit')) {
+          projectTableHeaders.push('<th style="padding: 8px; border: 1px solid #ddd; text-align: center;">利潤</th>')
+        }
+
+        // 動態生成項目統計表格的數據行
+        const projectTableRows = Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b, 'zh-TW')).map(([project, stats]) => {
+          const cells: string[] = [`<td style="padding: 8px; border: 1px solid #ddd;">${project}</td>`]
+          cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>`)
+          if (columns.includes('service_hours')) {
+            cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>`)
+          }
+          if (columns.includes('service_fee')) {
+            cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>`)
+          }
+          if (columns.includes('staff_salary')) {
+            cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.salary.toFixed(2)}</td>`)
+          }
+          if (columns.includes('service_profit')) {
+            cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.profit.toFixed(2)}</td>`)
+          }
+          return `<tr>${cells.join('')}</tr>`
+        }).join('')
+
+        // 項目統計總計行
+        const projectTotalCells: string[] = [`<td style="padding: 8px; border: 1px solid #ddd;">總計</td>`]
+        projectTotalCells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalServices}</td>`)
+        if (columns.includes('service_hours')) {
+          projectTotalCells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)}</td>`)
+        }
+        if (columns.includes('service_fee')) {
+          projectTotalCells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalFees.toFixed(2)}</td>`)
+        }
+        if (columns.includes('staff_salary')) {
+          projectTotalCells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalSalary.toFixed(2)}</td>`)
+        }
+        if (columns.includes('service_profit')) {
+          projectTotalCells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalProfit.toFixed(2)}</td>`)
+        }
+
+        // 動態生成服務類型統計表格
+        const serviceTypeTableRows = Object.keys(serviceTypeStats)
           .sort()
           .map(serviceType => {
             const stats = serviceTypeStats[serviceType]
-            return `
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd;">${serviceType}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>
-              </tr>
-            `
+            const cells: string[] = [`<td style="padding: 8px; border: 1px solid #ddd;">${serviceType}</td>`]
+            cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>`)
+            if (columns.includes('service_hours')) {
+              cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>`)
+            }
+            if (columns.includes('service_fee')) {
+              cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>`)
+            }
+            if (columns.includes('staff_salary')) {
+              cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.salary.toFixed(2)}</td>`)
+            }
+            if (columns.includes('service_profit')) {
+              cells.push(`<td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.profit.toFixed(2)}</td>`)
+            }
+            return `<tr>${cells.join('')}</tr>`
           }).join('')
 
         // 大結內容
@@ -4731,22 +4868,7 @@ export default function ServicesPage() {
 
             <!-- 總覽統計 -->
             <div style="display: flex; justify-content: space-around; font-size: 14px; margin-bottom: 20px;">
-              <div style="text-align: center;">
-                <div style="font-weight: bold; color: #428bca;">客戶總數</div>
-                <div style="font-size: 18px; font-weight: bold;">${totalCustomers}</div>
-              </div>
-              <div style="text-align: center;">
-                <div style="font-weight: bold; color: #428bca;">服務次數</div>
-                <div style="font-size: 18px; font-weight: bold;">${totalServices}</div>
-              </div>
-              <div style="text-align: center;">
-                <div style="font-weight: bold; color: #428bca;">總服務時數</div>
-                <div style="font-size: 18px; font-weight: bold;">${totalHours.toFixed(1)}</div>
-              </div>
-              <div style="text-align: center;">
-                <div style="font-weight: bold; color: #428bca;">總服務費用</div>
-                <div style="font-size: 18px; font-weight: bold;">$${totalFees.toFixed(2)}</div>
-              </div>
+              ${summaryItems.join('')}
             </div>
 
             <!-- 項目統計 -->
@@ -4755,26 +4877,13 @@ export default function ServicesPage() {
               <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                 <thead>
                   <tr style="background-color: #428bca; color: white;">
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">所屬項目</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">次數</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">時數</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">金額</th>
+                    ${projectTableHeaders.join('')}
                   </tr>
                 </thead>
                 <tbody>
-                  ${Object.entries(projectStats).sort(([a], [b]) => a.localeCompare(b, 'zh-TW')).map(([project, stats]) => `
-                    <tr>
-                      <td style="padding: 8px; border: 1px solid #ddd;">${project}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.count}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${stats.hours.toFixed(1)}</td>
-                      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${stats.amount.toFixed(2)}</td>
-                    </tr>
-                  `).join('')}
+                  ${projectTableRows}
                   <tr style="background-color: #e7f3ff; font-weight: bold; border-top: 2px solid #428bca;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">總計</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalServices}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalFees.toFixed(2)}</td>
+                    ${projectTotalCells.join('')}
                   </tr>
                 </tbody>
               </table>
@@ -4786,19 +4895,13 @@ export default function ServicesPage() {
               <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                 <thead>
                   <tr style="background-color: #428bca; color: white;">
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">服務類型</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">次數</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">時數</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">金額</th>
+                    ${projectTableHeaders.join('')}
                   </tr>
                 </thead>
                 <tbody>
-                  ${serviceTypeTable}
+                  ${serviceTypeTableRows}
                   <tr style="background-color: #e7f3ff; font-weight: bold; border-top: 2px solid #428bca;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">總計</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalServices}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalHours.toFixed(1)}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${totalFees.toFixed(2)}</td>
+                    ${projectTotalCells.join('')}
                   </tr>
                 </tbody>
               </table>
